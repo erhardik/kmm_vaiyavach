@@ -1,4 +1,4 @@
-# KMM Chaturmas ERP
+# KMM ERP
 
 Production-grade Django ERP for Kalyan Mitra Mandal Chaturmas operations.
 
