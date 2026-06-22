@@ -58,10 +58,8 @@
                     <td>{{ contact.designation }}</td>
                     <td>{% if contact.is_primary %}Yes{% else %}No{% endif %}</td>
                     <td class="text-end">
-                      {% if manager_contacts_list_url %}
-                        <a class="btn btn-sm btn-outline-secondary" href="{% url 'masters:event-contact-update' event_pk=contact.event_id pk=contact.pk %}">Edit</a>
-                        <a class="btn btn-sm btn-outline-danger" href="{% url 'masters:event-contact-delete' event_pk=contact.event_id pk=contact.pk %}">Delete</a>
-                      {% endif %}
+                      <a class="btn btn-sm btn-outline-secondary" href="{% url 'masters:event-contact-update' event_pk=contact.event_id pk=contact.pk %}">Edit</a>
+                      <a class="btn btn-sm btn-outline-danger" href="{% url 'masters:event-contact-delete' event_pk=contact.event_id pk=contact.pk %}">Delete</a>
                     </td>
                   </tr>
                 {% empty %}
@@ -76,4 +74,3 @@
   </div>
 </div>
 {% endblock %}
-

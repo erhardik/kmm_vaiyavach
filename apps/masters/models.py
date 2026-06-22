@@ -35,6 +35,8 @@ class Event(TimeStampedModel):
     start_date = models.DateField()
     end_date = models.DateField()
     location = models.CharField(max_length=200, blank=True)
+    primary_contact_name = models.CharField(max_length=120, blank=True, default="")
+    primary_contact_mobile = models.CharField(max_length=20, blank=True, default="")
     status = models.CharField(max_length=40, choices=EventStatus.choices, default=EventStatus.PLANNING)
     is_current = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
@@ -46,7 +48,33 @@ class Event(TimeStampedModel):
         return self.name
 
 
+class EventManagerContact(EventScopedModel):
+    contact_name = models.CharField(max_length=120)
+    mobile = models.CharField(max_length=20, blank=True)
+    email = models.EmailField(blank=True)
+    designation = models.CharField(max_length=120, blank=True)
+    notes = models.TextField(blank=True)
+    is_primary = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["-is_primary", "contact_name"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["event"],
+                condition=models.Q(is_primary=True),
+                name="unique_primary_event_manager_contact",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return self.contact_name
+
+    def primary_label(self) -> str:
+        return "Yes" if self.is_primary else "No"
+
+
 class Item(EventScopedModel):
+    standard_serial = models.PositiveIntegerField(default=0)
     item_code = models.CharField(max_length=50)
     item_name = models.CharField(max_length=200)
     item_name_gu = models.CharField(max_length=200, blank=True)
@@ -57,12 +85,14 @@ class Item(EventScopedModel):
     estimated_rate = models.DecimalField(max_digits=14, decimal_places=2, default=0)
 
     class Meta:
-        ordering = ["item_name"]
+        ordering = ["standard_serial", "item_name"]
         constraints = [
+            models.UniqueConstraint(fields=["event", "standard_serial"], name="unique_event_item_standard_serial"),
             models.UniqueConstraint(fields=["event", "item_code"], name="unique_event_item_code"),
         ]
         indexes = [
             models.Index(fields=["event", "category"]),
+            models.Index(fields=["event", "standard_serial"]),
             models.Index(fields=["event", "item_name"]),
         ]
 

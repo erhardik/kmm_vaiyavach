@@ -9,7 +9,7 @@ from apps.distribution.services import sync_distribution_line
 from apps.funds.models import Donation, FundTransaction, FundTransactionType
 from apps.inventory.models import InventoryTransactionType
 from apps.inventory.services import create_inventory_transaction
-from apps.masters.models import Event, Item, Sponsor, Upashray, Vendor, Volunteer
+from apps.masters.models import Event, EventManagerContact, Item, Sponsor, Upashray, Vendor, Volunteer
 from apps.procurement.models import GoodsReceipt, PurchaseOrder, PurchaseOrderLine
 from apps.procurement.services import sync_goods_receipt
 from apps.requirements.models import RequirementHeader, RequirementLine, RequirementStatus
@@ -26,6 +26,8 @@ def _sample_event(options):
         start_date=date.fromisoformat(options["start_date"]),
         end_date=date.fromisoformat(options["end_date"]),
         location=options["location"],
+        primary_contact_name="Main Coordinator",
+        primary_contact_mobile="9000000000",
         is_current=False,
         is_active=True,
     )
@@ -45,6 +47,28 @@ class Command(BaseCommand):
     @transaction.atomic
     def handle(self, *args, **options):
         event = _sample_event(options)
+
+        EventManagerContact.objects.get_or_create(
+            event=event,
+            contact_name="Main Coordinator",
+            defaults={
+                "mobile": "9000000000",
+                "designation": "Primary Event Manager",
+                "email": "coordinator@example.com",
+                "is_primary": True,
+                "notes": "Main point of contact for event coordination.",
+            },
+        )
+        EventManagerContact.objects.get_or_create(
+            event=event,
+            contact_name="Volunteer Desk",
+            defaults={
+                "mobile": "9000000001",
+                "designation": "Support Contact",
+                "email": "volunteers@example.com",
+                "notes": "Handles volunteer and on-ground support queries.",
+            },
+        )
 
         if options["replace"]:
             SponsorMaterialReceipt.objects.filter(event=event).delete()
@@ -73,6 +97,7 @@ class Command(BaseCommand):
                 items.append(
                     Item.objects.create(
                         event=event,
+                        standard_serial=source.standard_serial,
                         item_code=source.item_code,
                         item_name=source.item_name,
                         item_name_gu=source.item_name_gu,

@@ -78,13 +78,21 @@ def build_item_control_export(event, category=None, pending_only=False, fully_co
                 [
                     ("Item", row["item"].display_name()),
                     ("Category", row["item"].get_category_display()),
+                    ("Rate", row["rate"]),
                     ("Required", row["required"]),
+                    ("Acquired", row["acquired"]),
                     ("Sponsored", row["sponsored"]),
                     ("Received", row["received"]),
+                    ("Purchased Qty", row["purchased_qty"]),
                     ("Purchase Needed", row["purchase_needed"]),
+                    ("Remaining", row["remaining"]),
+                    ("Shortage", row["shortage"]),
                     ("Stock", row["stock"]),
                     ("Distributed", row["distributed"]),
                     ("Balance", row["balance"]),
+                    ("Required Cost", row["required_cost"]),
+                    ("Purchase Cost", row["actual_purchase_cost"]),
+                    ("Source", row["source_type"]),
                 ]
             )
         )

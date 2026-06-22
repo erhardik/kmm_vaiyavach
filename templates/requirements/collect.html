@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+{% block title %}{% if LANGUAGE_CODE|slice:":2" == "gu" %}જરૂરિયાતો એકત્ર કરો{% else %}Collect Requirements{% endif %} | KMM ERP{% endblock %}
+{% block content %}
+{% with LANGUAGE_CODE|slice:":2" as lang %}
+<div class="requirement-hero card border-0 shadow-sm mb-4">
+  <div class="card-body p-4 p-lg-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+      <div>
+        <div class="text-uppercase small fw-semibold requirement-kicker mb-2">
+          {% if lang == "gu" %}કલેકશન ફોર્મ{% else %}Collection Form{% endif %}
+        </div>
+        <h1 class="h3 mb-2">{% if lang == "gu" %}જરૂરિયાતો એકત્ર કરો{% else %}Collect Requirements{% endif %}</h1>
+        <p class="text-body-secondary mb-0">
+          {% if lang == "gu" %}
+            મૂળ વિગતો ભરો, પછી આઇટમ્સને તે જ ક્રમમાં પૂર્ણ કરો.
+          {% else %}
+            Fill the basic details first, then complete the items in the exact list order.
+          {% endif %}
+        </p>
+      </div>
+      <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-outline-primary" href="{% url 'requirements:header-list' %}">{% if lang == "gu" %}ઓર્ડર સૂચિ{% else %}Order List{% endif %}</a>
+        <a class="btn btn-outline-secondary" href="{% url 'dashboard:home' %}">{% if lang == "gu" %}ડેશબોર્ડ{% else %}Dashboard{% endif %}</a>
+      </div>
+    </div>
+    <div class="d-flex flex-wrap gap-2 mt-3">
+      {% if event %}
+        <span class="badge rounded-pill text-bg-primary px-3 py-2">{{ event.name }}</span>
+      {% endif %}
+      <span class="badge rounded-pill text-bg-light text-dark px-3 py-2">
+        {% if order_number %}
+          {% if lang == "gu" %}ઓર્ડર નં.{% else %}Order No.{% endif %} {{ order_number }}
+        {% else %}
+          {% if lang == "gu" %}સેવ પછી ઓર્ડર નં. દેખાશે{% else %}Order number appears after save{% endif %}
+        {% endif %}
+      </span>
+    </div>
+  </div>
+</div>
+
+<form method="post" class="row g-4">
+  {% csrf_token %}
+  <div class="col-12" id="saved-order-summary-wrap">
+    {% if header %}
+      {% include "requirements/_saved_order_summary.html" %}
+    {% else %}
+      <div id="saved-order-summary" class="d-none"></div>
+    {% endif %}
+  </div>
+
+  <div class="col-12">
+    <div class="card border-0 shadow-sm requirement-panel basic-details-panel">
+      <div class="card-header bg-white border-0 pt-4 px-4 px-lg-5">
+        <div class="d-flex justify-content-between align-items-center gap-2">
+          <div>
+            <h2 class="h5 mb-1">{% if lang == "gu" %}મૂળ વિગતો{% else %}Basic Details{% endif %}</h2>
+            <p class="text-body-secondary mb-0">
+              {% if lang == "gu" %}પહેલાં આ મૂળ માહિતી ભરો.{% else %}Fill the basic information first.{% endif %}
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="card-body px-4 px-lg-5 pb-4">
+        <div class="row g-3">
+          {{ form.upashray_name }}
+          <div class="col-12">
+            <label class="form-label">{% if lang == "gu" %}પૂજ્ય શ્રી{% else %}Pujya Shri{% endif %} *</label>
+            {{ form.pujya_shri_name }}
+          </div>
+          <div class="col-12">
+            <label class="form-label">{% if lang == "gu" %}વર્તમાન સરનામું{% else %}Current Address{% endif %} *</label>
+            {{ form.current_address }}
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label">{% if lang == "gu" %}થાણા{% else %}Thana{% endif %} *</label>
+            {{ form.thana_count }}
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label">{% if lang == "gu" %}વિસ્તાર{% else %}Area{% endif %} *</label>
+            {{ form.area }}
+          </div>
+          <div class="col-12">
+            <label class="form-label">{% if lang == "gu" %}ચાતુર્માસ સ્થળ સરનામું{% else %}Chaturmas Place Address{% endif %} *</label>
+            {{ form.chaturmas_place_address }}
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label">{% if lang == "gu" %}ચાતુર્માસ પ્રવેશ તારીખ{% else %}Chaturmas Entry Date{% endif %} *</label>
+            {{ form.chaturmas_entry_date }}
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label">{% if lang == "gu" %}Volunteer Name{% else %}Volunteer Name{% endif %} *</label>
+            {{ form.volunteer_name }}
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label">{% if lang == "gu" %}રહેઠાણ પ્રકાર{% else %}Stay Type{% endif %} *</label>
+            {{ form.stay_type }}
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label">{% if lang == "gu" %}સંભાળનાર નામ{% else %}Care Taker Name{% endif %}</label>
+            {{ form.caretaker_name }}
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label">{% if lang == "gu" %}સંભાળનાર સંપર્ક{% else %}Care Taker Contact{% endif %}</label>
+            {{ form.caretaker_mobile }}
+          </div>
+          <div class="col-12">
+            <label class="form-label">{% if lang == "gu" %}ખાસ નોંધ / વિનંતી{% else %}Special Request / Note{% endif %}</label>
+            {{ form.remarks }}
+          </div>
+        </div>
+        <div class="d-flex flex-wrap gap-2 justify-content-end mt-4">
+          <button class="btn btn-outline-warning" type="button" id="save-details-btn">{% if lang == "gu" %}વિગતો સાચવો{% else %}Save Details{% endif %}</button>
+        </div>
+        <div id="save-details-status" class="mt-3"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12">
+    <div class="card border-0 shadow-sm requirement-panel">
+      <div class="card-header bg-white border-0 pt-4 px-4 px-lg-5">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <div>
+            <h2 class="h5 mb-1">{% if lang == "gu" %}આઇટમ સૂચિ{% else %}Item List{% endif %}</h2>
+            <p class="text-body-secondary mb-0">
+              {% if lang == "gu" %}
+                દરેક આઇટમનો ક્રમ ફાઇલ મુજબ સ્થિર રહેશે. માત્ર જથ્થો અને નોંધ ભરો.
+              {% else %}
+                Item order stays fixed as per the standard file. Choose quantity and note for each row.
+              {% endif %}
+            </p>
+          </div>
+          <div class="small text-body-secondary">
+            {% if lang == "gu" %}ડિફૉલ્ટ જથ્થો 3 છે.{% else %}Default quantity is 3.{% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="card-body px-4 px-lg-5 pb-4">
+        {{ formset.management_form }}
+        {% for group in item_groups %}
+          <div class="category-card {{ group.category_class }} mb-3">
+            <div class="category-card-header">
+              <div class="fw-semibold">{{ group.category }}</div>
+            </div>
+            <div class="table-responsive rounded-3 border-0">
+              <table class="table table-hover align-middle mb-0 requirement-table">
+                <thead>
+                  <tr>
+                    <th style="width: 7%">{% if lang == "gu" %}ક્રમ નં.{% else %}Sr. No.{% endif %}</th>
+                    <th>{% if lang == "gu" %}વસ્તુનું નામ{% else %}Name of Item{% endif %}</th>
+                    <th style="width: 12%" class="text-end">{% if lang == "gu" %}જથ્થો{% else %}QTY Req{% endif %}</th>
+                    <th style="width: 22%">{% if lang == "gu" %}નોંધ{% else %}Remark{% endif %}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in group.rows %}
+                    <tr class="{{ row.category_class }}">
+                      {{ row.form.item_id }}
+                      <td class="fw-semibold text-body-secondary">{{ row.serial }}</td>
+                      <td>
+                        <div class="fw-semibold">{{ row.display_name }}</div>
+                        <div class="small text-body-secondary">{{ row.item.default_size|default:"" }}</div>
+                      </td>
+                      <td class="text-end">
+                        <div class="d-inline-flex align-items-center gap-2 qty-cell">
+                          {{ row.form.required_qty }}
+                          <button
+                            class="btn btn-sm btn-danger nr-btn"
+                            type="button"
+                            onclick="(function(btn){const sel=btn.parentElement.querySelector('select'); if(sel){sel.value='0'; sel.dispatchEvent(new Event('change', {bubbles:true}));}})(this);"
+                          >NR</button>
+                        </div>
+                      </td>
+                      <td>
+                        {{ row.form.remarks }}
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        {% empty %}
+          <div class="alert alert-info mt-3 mb-0">{% if lang == "gu" %}આ ઇવેન્ટ માટે હજી કોઈ વસ્તુ ઉપલબ્ધ નથી.{% else %}No items are available for this event yet.{% endif %}</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</form>
+
+<script>
+  (function() {
+    const form = document.querySelector('form');
+    const button = document.getElementById('save-details-btn');
+    const statusBox = document.getElementById('save-details-status');
+    const summaryWrap = document.getElementById('saved-order-summary-wrap');
+    if (!form || !button || !statusBox || !summaryWrap) return;
+
+    function clearInvalidState() {
+      form.querySelectorAll('.is-invalid').forEach((el) => el.classList.remove('is-invalid'));
+      form.querySelectorAll('.inline-field-error').forEach((el) => el.remove());
+    }
+
+    function fieldLabel(name) {
+      const label = form.querySelector(`label[for="id_${name}"]`);
+      if (label) {
+        return label.textContent.replace('*', '').trim();
+      }
+      return name.replaceAll('_', ' ');
+    }
+
+    function showErrors(errors) {
+      clearInvalidState();
+      const items = [];
+      Object.entries(errors || {}).forEach(([name, messages]) => {
+        const field = form.querySelector(`[name="${name}"]`);
+        if (field) {
+          field.classList.add('is-invalid');
+          const feedback = document.createElement('div');
+          feedback.className = 'text-danger small inline-field-error mt-1';
+          feedback.textContent = messages.map((entry) => entry.message || entry).join(', ');
+          field.insertAdjacentElement('afterend', feedback);
+        }
+        items.push(`<div>${fieldLabel(name)}: ${(messages || []).map((entry) => entry.message || entry).join(', ')}</div>`);
+      });
+      statusBox.innerHTML = `<div class="alert alert-danger mb-0">${items.join('')}</div>`;
+    }
+
+    button.addEventListener('click', async function() {
+      const originalLabel = button.textContent;
+      const formData = new FormData(form);
+      formData.set('save_details', '1');
+
+      button.disabled = true;
+      button.textContent = 'Saving...';
+      statusBox.innerHTML = '';
+      clearInvalidState();
+
+      try {
+        const response = await fetch(window.location.href, {
+          method: 'POST',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+          },
+          body: formData,
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.ok) {
+          showErrors(data.errors || {});
+          if (!Object.keys(data.errors || {}).length) {
+            statusBox.innerHTML = '<div class="alert alert-danger mb-0">Please review the highlighted fields and try again.</div>';
+          }
+          return;
+        }
+        clearInvalidState();
+        statusBox.innerHTML = '<div class="alert alert-success mb-0">Saved. You can continue filling items.</div>';
+        if (data.summary_html) {
+          summaryWrap.innerHTML = data.summary_html;
+        }
+      } catch (error) {
+        statusBox.innerHTML = '<div class="alert alert-danger mb-0">Save failed. Please try again.</div>';
+      } finally {
+        button.disabled = false;
+        button.textContent = originalLabel;
+      }
+    });
+  })();
+</script>
+{% endwith %}
+{% endblock %}

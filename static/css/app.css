@@ -1,6 +1,8 @@
 :root {
   --kmm-navy: #14324f;
   --kmm-slate: #f4f6f8;
+  --kmm-sidebar: #10283f;
+  --kmm-sidebar-2: #163757;
 }
 
 body.bg-soft {
@@ -53,5 +55,364 @@ body.bg-soft {
 
 .table-responsive {
   border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.requirement-hero {
+  background: linear-gradient(135deg, rgba(20, 50, 79, 0.98), rgba(22, 55, 87, 0.92));
+  color: #fff;
+  overflow: hidden;
+}
+
+.requirement-hero .text-body-secondary {
+  color: rgba(255, 255, 255, 0.78) !important;
+}
+
+.requirement-hero .btn-outline-primary {
+  border-color: rgba(255, 255, 255, 0.5);
+  color: #fff;
+}
+
+.requirement-hero .btn-outline-primary:hover {
+  background: #fff;
+  color: var(--kmm-navy);
+}
+
+.requirement-hero .btn-outline-secondary {
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #fff;
+}
+
+.requirement-panel {
+  border-top: 4px solid var(--kmm-navy);
+}
+
+.basic-details-panel {
+  background: #fff1df;
+}
+
+.basic-details-panel .card-header {
+  background: rgba(255, 255, 255, 0.42) !important;
+}
+
+.requirement-kicker {
+  color: #b9d5f0;
+  letter-spacing: 0.16em;
+}
+
+.section-band {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(20, 50, 79, 0.08);
+  color: var(--kmm-navy);
+  font-weight: 700;
+}
+
+.requirement-table thead th {
+  background: #f7f9fb;
+  color: var(--kmm-navy);
+  font-size: 0.88rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.requirement-table tbody td {
+  vertical-align: top;
+}
+
+.requirement-table .form-select,
+.requirement-table .form-control {
+  min-width: 100%;
+}
+
+.requirement-panel textarea[name="remarks"] {
+  min-height: 3.6rem;
+}
+
+.item-remark-field {
+  min-height: 2.1rem !important;
+  height: 2.1rem;
+  resize: none;
+}
+
+.qty-cell select {
+  width: 84px;
+  min-width: 84px;
+}
+
+.nr-btn {
+  min-width: 2.4rem;
+  padding: 0.2rem 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.category-card {
+  border: 1px solid rgba(20, 50, 79, 0.08);
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+.category-card-header {
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+}
+
+.category-card.cat-general .category-card-header,
+.category-card.cat-general tbody tr {
+  background: #f8fbff;
+}
+
+.category-card.cat-stationery .category-card-header,
+.category-card.cat-stationery tbody tr {
+  background: #fff7f0;
+}
+
+.category-card.cat-medical .category-card-header,
+.category-card.cat-medical tbody tr {
+  background: #fff5f5;
+}
+
+.category-card.cat-ayurvedic .category-card-header,
+.category-card.cat-ayurvedic tbody tr {
+  background: #f7fff7;
+}
+
+.category-card.cat-color .category-card-header,
+.category-card.cat-color tbody tr {
+  background: #fffdf0;
+}
+
+.category-card .table {
+  margin-bottom: 0;
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.app-sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: 320px;
+  background: linear-gradient(180deg, var(--kmm-sidebar), var(--kmm-sidebar-2));
+  color: #fff;
+  overflow-y: auto;
+  z-index: 1030;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.app-main {
+  min-height: 100vh;
+}
+
+@media (min-width: 992px) {
+  .app-main {
+    margin-left: 320px;
+  }
+}
+
+body.sidebar-collapsed .app-sidebar {
+  width: 84px;
+}
+
+@media (min-width: 992px) {
+  body.sidebar-collapsed .app-main {
+    margin-left: 84px;
+  }
+}
+
+.topbar-shell {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(10px);
+}
+
+.sidebar-brand {
+  padding: 1.25rem 1rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-brand-icon {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.12);
+  margin-bottom: 0.7rem;
+  font-size: 1.1rem;
+}
+
+.sidebar-brand-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.sidebar-brand-subtitle {
+  font-size: 0.8rem;
+  opacity: 0.75;
+}
+
+.sidebar-collapse-btn {
+  width: 2rem;
+  height: 2rem;
+  border-color: rgba(255, 255, 255, 0.28);
+  color: #fff;
+  flex: 0 0 2rem;
+}
+
+.sidebar-collapse-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+.sidebar-links {
+  padding: 0.75rem 1rem 0.5rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.sidebar-link {
+  display: block;
+  color: #fff;
+  text-decoration: none;
+  padding: 0.7rem 0.85rem;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.sidebar-link,
+.sidebar-sub-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sidebar-link i,
+.sidebar-sub-link i,
+.sidebar-event-icon {
+  width: 1.4rem;
+  text-align: center;
+  font-size: 1rem;
+  flex: 0 0 1.4rem;
+}
+
+.sidebar-link:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.sidebar-section-label {
+  padding: 0.75rem 1rem 0.35rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  opacity: 0.7;
+}
+
+.sidebar-accordion .accordion-item {
+  background: transparent;
+  border: 0;
+}
+
+.sidebar-accordion .accordion-button {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  box-shadow: none;
+  border-radius: 0;
+  padding-right: 0.9rem;
+}
+
+.sidebar-accordion .accordion-button:not(.collapsed) {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.sidebar-accordion .accordion-button::after {
+  filter: brightness(0) invert(1);
+}
+
+.sidebar-accordion .accordion-body {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.sidebar-sub-link {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.9);
+  border: 0;
+  padding-left: 1.25rem;
+}
+
+.sidebar-sub-link:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.sidebar-offcanvas {
+  background: linear-gradient(180deg, var(--kmm-sidebar), var(--kmm-sidebar-2));
+  color: #fff;
+}
+
+.sidebar-offcanvas .offcanvas-header {
+  color: #fff;
+}
+
+body.sidebar-collapsed .sidebar-brand {
+  padding: 1rem 0.5rem;
+  text-align: center;
+}
+
+body.sidebar-collapsed .sidebar-collapse-btn {
+  margin-inline-start: auto;
+}
+
+body.sidebar-collapsed .sidebar-brand-title,
+body.sidebar-collapsed .sidebar-brand-subtitle,
+body.sidebar-collapsed .sidebar-link-text,
+body.sidebar-collapsed .sidebar-sub-link-text,
+body.sidebar-collapsed .sidebar-section-label,
+body.sidebar-collapsed .sidebar-event-text,
+body.sidebar-collapsed .accordion-button::after {
+  display: none !important;
+}
+
+body.sidebar-collapsed .sidebar-links {
+  padding-inline: 0.55rem;
+}
+
+body.sidebar-collapsed .sidebar-link {
+  justify-content: center;
+  padding: 0.9rem 0.5rem;
+}
+
+body.sidebar-collapsed .sidebar-accordion .accordion-button {
+  justify-content: center;
+  padding-inline: 0.5rem;
+}
+
+body.sidebar-collapsed .sidebar-accordion .accordion-button > .d-flex {
+  justify-content: center;
+}
+
+body.sidebar-collapsed .sidebar-accordion .accordion-body {
+  padding: 0;
+}
+
+body.sidebar-collapsed .sidebar-sub-link {
+  justify-content: center;
+  padding: 0.65rem 0.5rem;
+}
+
+body.sidebar-collapsed .sidebar-sub-link i {
+  margin: 0;
+}
+
+body.sidebar-collapsed .sidebar-accordion .list-group-item {
+  justify-content: center;
 }
 

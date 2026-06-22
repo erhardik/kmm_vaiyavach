@@ -1,6 +1,7 @@
 from django import forms
+from django.utils.text import slugify
 
-from apps.masters.models import Event, Item, Sponsor, Upashray, Vendor, Volunteer
+from apps.masters.models import Event, EventManagerContact, Item, Sponsor, Upashray, Vendor, Volunteer
 
 
 class BootstrapModelForm(forms.ModelForm):
@@ -22,14 +23,63 @@ class BootstrapModelForm(forms.ModelForm):
                 widget.attrs.setdefault("class", "form-control")
 
 
-class EventForm(BootstrapModelForm):
+def _build_unique_slug(name: str, instance=None) -> str:
+    base_slug = slugify(name) or "event"
+    slug = base_slug
+    counter = 2
+    qs = Event.objects.all()
+    if instance and instance.pk:
+        qs = qs.exclude(pk=instance.pk)
+    while qs.filter(slug=slug).exists():
+        slug = f"{base_slug}-{counter}"
+        counter += 1
+    return slug
+
+
+class EventCreateForm(BootstrapModelForm):
     class Meta:
         model = Event
-        fields = ["name", "slug", "start_date", "end_date", "location", "status", "is_current", "is_active"]
+        fields = ["name", "start_date", "end_date", "primary_contact_name", "primary_contact_mobile"]
         widgets = {
             "start_date": forms.DateInput(attrs={"type": "date"}),
             "end_date": forms.DateInput(attrs={"type": "date"}),
         }
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.slug = _build_unique_slug(instance.name, instance=instance)
+        if commit:
+            instance.save()
+            if hasattr(self, "save_m2m"):
+                self.save_m2m()
+        return instance
+
+
+class EventUpdateForm(BootstrapModelForm):
+    class Meta:
+        model = Event
+        fields = [
+            "name",
+            "slug",
+            "start_date",
+            "end_date",
+            "location",
+            "primary_contact_name",
+            "primary_contact_mobile",
+            "status",
+            "is_current",
+            "is_active",
+        ]
+        widgets = {
+            "start_date": forms.DateInput(attrs={"type": "date"}),
+            "end_date": forms.DateInput(attrs={"type": "date"}),
+        }
+
+
+class EventManagerContactForm(BootstrapModelForm):
+    class Meta:
+        model = EventManagerContact
+        fields = ["contact_name", "mobile", "email", "designation", "is_primary", "notes"]
 
 
 class ItemForm(BootstrapModelForm):

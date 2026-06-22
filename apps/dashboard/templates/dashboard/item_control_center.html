@@ -1,21 +1,27 @@
 {% extends "base.html" %}
-{% block title %}Item Control Center | KMM ERP{% endblock %}
+{% block title %}Item Master | KMM ERP{% endblock %}
 {% block content %}
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
   <div>
-    <h1 class="h3 mb-1">Item Control Center</h1>
+    <h1 class="h3 mb-1">Item Master</h1>
     <p class="text-body-secondary mb-0">{% if selected_event %}{{ selected_event.name }}{% else %}No active event found{% endif %}</p>
   </div>
-  <a class="btn btn-outline-primary" href="{% url 'dashboard:home' %}">Dashboard Summary</a>
+  <div class="d-flex flex-wrap gap-2">
+    {% if selected_event %}
+      <a class="btn btn-outline-primary" href="{% url 'masters:item-create' %}?event={{ selected_event.pk }}">Add Item</a>
+    {% endif %}
+    <a class="btn btn-outline-primary" href="{% url 'dashboard:home' %}">Dashboard Summary</a>
+  </div>
 </div>
 
 <div class="row g-3 mb-4">
-  <div class="col-6 col-xl-2"><div class="metric-card"><div class="label">Required</div><div class="value">{{ summary.required_total|default:0 }}</div></div></div>
-  <div class="col-6 col-xl-2"><div class="metric-card"><div class="label">Sponsored</div><div class="value">{{ summary.sponsored_total|default:0 }}</div></div></div>
-  <div class="col-6 col-xl-2"><div class="metric-card"><div class="label">Received</div><div class="value">{{ summary.received_total|default:0 }}</div></div></div>
-  <div class="col-6 col-xl-2"><div class="metric-card"><div class="label">Purchase Needed</div><div class="value">{{ summary.purchase_needed_total|default:0 }}</div></div></div>
-  <div class="col-6 col-xl-2"><div class="metric-card"><div class="label">Stock</div><div class="value">{{ summary.stock_total|default:0 }}</div></div></div>
-  <div class="col-6 col-xl-2"><div class="metric-card"><div class="label">Balance</div><div class="value">{{ summary.balance_total|default:0 }}</div></div></div>
+  <div class="col-6 col-xl-2"><div class="metric-card"><div class="label">Required Qty</div><div class="value">{{ summary.required_total|default:0 }}</div></div></div>
+  <div class="col-6 col-xl-2"><div class="metric-card"><div class="label">Acquired Qty</div><div class="value">{{ summary.acquired_total|default:0 }}</div></div></div>
+  <div class="col-6 col-xl-2"><div class="metric-card"><div class="label">Distributed</div><div class="value">{{ summary.distributed_total|default:0 }}</div></div></div>
+  <div class="col-6 col-xl-2"><div class="metric-card"><div class="label">Remaining Stock</div><div class="value">{{ summary.remaining_total|default:0 }}</div></div></div>
+  <div class="col-6 col-xl-2"><div class="metric-card"><div class="label">Shortage</div><div class="value">{{ summary.shortage_total|default:0 }}</div></div></div>
+  <div class="col-6 col-xl-2"><div class="metric-card"><div class="label">Required Cost</div><div class="value">{{ summary.required_cost_total|default:0 }}</div></div></div>
+  <div class="col-6 col-xl-2"><div class="metric-card"><div class="label">Purchase Cost</div><div class="value">{{ summary.actual_purchase_cost_total|default:0 }}</div></div></div>
 </div>
 
 <div class="card border-0 shadow-sm mb-4">
@@ -53,38 +59,59 @@
   </div>
 </div>
 
+<div class="section-band mb-3">Item Master Table</div>
 <div class="table-responsive shadow-sm rounded-3 bg-white">
   <table class="table table-hover align-middle mb-0">
     <thead class="table-light sticky-top">
       <tr>
+        <th>Code</th>
         <th>Item</th>
-        <th class="text-end">Required</th>
-        <th class="text-end">Sponsored</th>
-        <th class="text-end">Received</th>
-        <th class="text-end">Purchase Needed</th>
-        <th class="text-end">Stock</th>
-        <th class="text-end">Distributed</th>
-        <th class="text-end">Balance</th>
+        <th class="text-end">Rate / Unit (Rs.)</th>
+        <th class="text-end">Qty Required</th>
+        <th class="text-end">Qty Acquired / Purchased</th>
+        <th class="text-end">Qty Distributed</th>
+        <th class="text-end">Surplus</th>
+        <th class="text-end">Shortage</th>
+        <th class="text-end">Final Stock</th>
+        <th class="text-end">Requiring Cost</th>
+        <th class="text-end">Purchase Cost</th>
+        <th>Vendor</th>
+        <th>Ref. Volunteer</th>
+        <th class="text-end">Actions</th>
       </tr>
     </thead>
     <tbody>
       {% for row in rows %}
         <tr>
           <td>
+            <div class="fw-semibold">{{ row.item.item_code }}</div>
+            <div class="small text-body-secondary">#{{ row.serial|stringformat:"02d" }}</div>
+          </td>
+          <td>
             <div class="fw-semibold">{{ row.item.item_name }}</div>
             <div class="small text-body-secondary">{{ row.item.get_category_display }}</div>
           </td>
+          <td class="text-end">{{ row.rate }} / {{ row.item.unit|default:"-" }}</td>
           <td class="text-end">{{ row.required }}</td>
-          <td class="text-end">{{ row.sponsored }}</td>
-          <td class="text-end">{{ row.received }}</td>
-          <td class="text-end {% if row.purchase_needed > 0 %}text-danger fw-semibold{% endif %}">{{ row.purchase_needed }}</td>
-          <td class="text-end">{{ row.stock }}</td>
+          <td class="text-end">{{ row.acquired }}</td>
           <td class="text-end">{{ row.distributed }}</td>
-          <td class="text-end {% if row.balance > 0 %}text-warning fw-semibold{% else %}text-success{% endif %}">{{ row.balance }}</td>
+          <td class="text-end {% if row.surplus > 0 %}text-success fw-semibold{% else %}text-body-secondary{% endif %}">{{ row.surplus }}</td>
+          <td class="text-end {% if row.short > 0 %}text-danger fw-semibold{% endif %}">{{ row.short }}</td>
+          <td class="text-end">{{ row.final_stock }}</td>
+          <td class="text-end">{{ row.required_cost }}</td>
+          <td class="text-end">{{ row.actual_purchase_cost }}</td>
+          <td>{{ row.vendor_name|default:"-" }}</td>
+          <td>{{ row.ref_volunteer_name|default:"-" }}</td>
+          <td class="text-end">
+            <div class="d-inline-flex flex-wrap gap-2 justify-content-end">
+              <a class="btn btn-sm btn-outline-secondary" href="{% url 'masters:item-update' row.item.pk %}">Edit</a>
+              <a class="btn btn-sm btn-outline-danger" href="{% url 'masters:item-delete' row.item.pk %}">Delete</a>
+            </div>
+          </td>
         </tr>
       {% empty %}
         <tr>
-          <td colspan="8" class="text-center py-4 text-body-secondary">No items found for this view.</td>
+          <td colspan="14" class="text-center py-4 text-body-secondary">No items found for this view.</td>
         </tr>
       {% endfor %}
     </tbody>

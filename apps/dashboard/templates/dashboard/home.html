@@ -6,7 +6,64 @@
     <h1 class="h3 mb-1">Dashboard</h1>
     <p class="text-body-secondary mb-0">{% if event %}{{ event.name }}{% else %}No active event found{% endif %}</p>
   </div>
-  <a class="btn btn-primary" href="{% url 'dashboard:item_control_center' %}">Open Item Control Center</a>
+  <div class="d-flex flex-wrap gap-2">
+    <a class="btn btn-outline-primary" href="{% url 'masters:event-list' %}">Manage Events</a>
+    <a class="btn btn-primary" href="{% url 'dashboard:item_control_center' %}">Open Item Master</a>
+  </div>
+</div>
+<div class="row g-3 mb-4">
+  <div class="col-12 col-lg-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body d-flex flex-column">
+        <div class="text-uppercase text-primary fw-semibold small mb-2">Quick Start</div>
+        <h2 class="h5">Create Event</h2>
+        <p class="text-body-secondary flex-grow-1">Start a new Chaturmas or season, set the date range, and add the primary contact. Standard item data is already maintained from <code>items_Eng.md</code>.</p>
+        <a class="btn btn-primary mt-auto" href="{% url 'masters:event-create' %}">Create Event</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-lg-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body d-flex flex-column">
+        <div class="text-uppercase text-primary fw-semibold small mb-2">Setup</div>
+        <h2 class="h5">Manage Events</h2>
+        <p class="text-body-secondary flex-grow-1">Open the event list to edit an existing cycle, keep contacts current, or switch the active event.</p>
+        <a class="btn btn-outline-primary mt-auto" href="{% url 'masters:event-list' %}">Open Events</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-lg-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body d-flex flex-column">
+        <div class="text-uppercase text-primary fw-semibold small mb-2">Operations</div>
+        <h2 class="h5">Item Control Center</h2>
+        <p class="text-body-secondary flex-grow-1">Track shortages, coverage, procurement decisions, and item-level cost flow for the active event.</p>
+        <a class="btn btn-outline-primary mt-auto" href="{% url 'dashboard:item_control_center' %}">Open Item Master</a>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row g-3 mb-4">
+  <div class="col-12 col-lg-6">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body d-flex flex-column">
+        <div class="text-uppercase text-primary fw-semibold small mb-2">Volunteer Input</div>
+        <h2 class="h5">Collect Requirements</h2>
+        <p class="text-body-secondary flex-grow-1">Open the prelisted item form for the current event, enter quantities only, and lock it when the order is finalized.</p>
+        <a class="btn btn-primary mt-auto" href="{% url 'requirements:collect' %}">Collect Requirements</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-lg-6">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body d-flex flex-column">
+        <div class="text-uppercase text-primary fw-semibold small mb-2">Order Menu</div>
+        <h2 class="h5">Requirement Orders</h2>
+        <p class="text-body-secondary flex-grow-1">Review, update, and lock saved requirement orders so procurement and distribution stay in sync.</p>
+        <a class="btn btn-outline-primary mt-auto" href="{% url 'requirements:header-list' %}">Open Orders</a>
+      </div>
+    </div>
+  </div>
 </div>
 <div class="row g-3 mb-4">
   <div class="col-6 col-lg-3"><div class="metric-card"><div class="label">Total Upashray</div><div class="value">{{ summary.total_upashray|default:0 }}</div></div></div>
@@ -17,6 +74,9 @@
 <div class="card border-0 shadow-sm">
   <div class="card-body">
     <p class="mb-0">The operational command center is the Item Control Center, which is optimized for shortages, coverage, and procurement decisions.</p>
+    {% if event %}
+      <p class="mb-0 mt-2">Active event contacts: {{ event.primary_contact_name|default:"Not set" }}{% if event.primary_contact_mobile %} ({{ event.primary_contact_mobile }}){% endif %}</p>
+    {% endif %}
   </div>
 </div>
 {% endblock %}

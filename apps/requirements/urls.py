@@ -3,8 +3,11 @@ from django.urls import path
 from apps.requirements.views import (
     RequirementHeaderCreateView,
     RequirementHeaderDeleteView,
+    RequirementCollectionDetailView,
     RequirementHeaderListView,
     RequirementHeaderUpdateView,
+    RequirementCollectByEventView,
+    RequirementCollectionPrintView,
     RequirementLineCreateView,
     RequirementLineDeleteView,
     RequirementLineListView,
@@ -19,6 +22,10 @@ app_name = "requirements"
 
 urlpatterns = [
     path("", RequirementHeaderListView.as_view(), name="header-list"),
+    path("collect/", RequirementCollectByEventView.as_view(), name="collect"),
+    path("collect/<int:pk>/", RequirementCollectByEventView.as_view(), name="collect-edit"),
+    path("collect/<int:pk>/view/", RequirementCollectionDetailView.as_view(), name="header-detail"),
+    path("collect/<int:pk>/print/", RequirementCollectionPrintView.as_view(), name="collect-print"),
     path("add/", RequirementHeaderCreateView.as_view(), name="header-create"),
     path("<int:pk>/edit/", RequirementHeaderUpdateView.as_view(), name="header-update"),
     path("<int:pk>/delete/", RequirementHeaderDeleteView.as_view(), name="header-delete"),

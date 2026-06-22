@@ -15,137 +15,91 @@ I extracted and organized the document into a structured format. The PDF is a **
 * Sangh Upashray / Sthirvas
 
 ---
+No. | Item Name | Details / Contents | Category
 
-# General Items (જનરલ વસ્તુઓ)
+1 | Ahinsak Laundry Soap (for stain removal) | 100 g | General Utility Items
+2 | Soap for Lunaa (Monastic Cloth) Washing | Small | General Utility Items
+3 | Aambla Soap | For Sadhviji Maharaj Saheb | General Utility Items
+4 | Ahinsak Clothes Washing Powder | 500 g | General Utility Items
+5 | Fly-Mosquito Protection Liquid | 100 ml (5 drops per bucket) | General Utility Items
+6 | Fodelo Chuno (Lime Powder) | 250 g | General Utility Items
+7 | Lochni Raakh | 100 g | General Utility Items
+8 | Loch Karvana Tota | As required | General Utility Items
+9 | Dudhi Oil | 100 ml (Cooling after Loch) | General Utility Items
+10 | Narangi Oil | 100 ml (Mosquito protection) | General Utility Items
+11 | Nilgiri Oil | 10 ml (Cold relief) | General Utility Items
+12 | Amrut Bindu | 8 ml (For cold & congestion) | General Utility Items
+13 | Tulsi Drops | 20 ml (For cough & cold) | General Utility Items
+14 | Damar Goli | 100 g | General Utility Items
+15 | Kapur (Camphor) | 50 g | General Utility Items
+16 | Vasakshep | 100 g | General Utility Items
+17 | Clothes Drying Rope | Nylon, 4 meters | General Utility Items
+18 | Clothes Drying Pins | Small Aluminium | General Utility Items
+19 | Copper Water Pots | 3 L / 4 L with Stand | General Utility Items
+20 | Ahmedabadi Clay Pots | - | General Utility Items
+21 | Pot Stand | Plastic | General Utility Items
+22 | Aluminium Vadka for Matru Parathavvu | 9×4 inch with Plastic Dish | General Utility Items
+23 | Brown Jute Bag | Large | General Utility Items
 
-| No. | Item                                                                  | Size/Type                        |
-| --- | --------------------------------------------------------------------- | -------------------------------- |
-| 1   | Ahinsak soap for washing clothes                                      | 100 gm                           |
-| 2   | Soap for washing woollen clothes                                      | Small                            |
-| 3   | Amla soap (for Sadhviji Maharajsaheb)                                 | —                                |
-| 4   | Ahinsak washing powder                                                | 500 gm                           |
-| 5   | Liquid for protection of flies/mosquitoes (5 drops in 1 bucket water) | 100 ml                           |
-| 6   | Fodlelo Chuno                                                         | 250 gm                           |
-| 7   | Lochni Raakh                                                          | 100 gm                           |
-| 8   | Loch karvana Tota                                                     | As required                      |
-| 9   | Dudhi Oil (cooling after loch)                                        | 100 ml                           |
-| 10  | Orange Oil (mosquito protection)                                      | 100 ml                           |
-| 11  | Nilgiri Oil (cold relief)                                             | 10 ml                            |
-| 12  | Amrut Bindu                                                           | 8 ml                             |
-| 13  | Tulsi Drops                                                           | 20 ml                            |
-| 14  | Damar Goli                                                            | 100 gm                           |
-| 15  | Kapur (for insect protection)                                         | 50 gm                            |
-| 16  | Vasakshep                                                             | 100 gm                           |
-| 17  | Nylon clothes drying rope                                             | 4 m                              |
-| 18  | Aluminium clothes pins                                                | Small                            |
-| 19  | Copper water pots with stand                                          | 3L / 4L                          |
-| 20  | Stand for pots                                                        | Plastic                          |
-| 21  | Aluminium bowls (9×4 inch) with plastic dish                          | 4 inch                           |
-| 22  | Brown jute bag                                                        | Large                            |
-| 23  | Vihar Bag (12×18) chain type                                          | Waterproof Blue / Madarpat White |
+24 | Letter Pad | Spiral Type, 7×4 or 9×6 inch | Stationery
+25 | Reusable Ball Pen | Blue, Red | Stationery
+26 | Gel Pen (Natraj Waterproof Ink) | Blue, Green, Black | Stationery
+27 | White Covers (Small) | For Vasakshep | Stationery
+28 | White Covers (Plain) | Large, 9×4 inch | Stationery
+29 | Canvas Cover | A4 Size, Green | Stationery
+30 | Foot Patti (Ruler) | Small | Stationery
+31 | Sancho | - | Stationery
+32 | Pencil | - | Stationery
+33 | Eraser | - | Stationery
+34 | Writing Pad | Transparent | Stationery
+35 | Zip Pouch | 10×4 inch | Stationery
+36 | Button Folder | A4 | Stationery
+37 | Pocket Diary | - | Stationery
+38 | Marker Pen | Black | Stationery
+39 | Highlighter | - | Stationery
+40 | Stapler | - | Stationery
+41 | Stapler Pins | 1 Box | Stationery
+42 | Fevi Stick | - | Stationery
+43 | Fevicol | 20 g | Stationery
 
----
+44 | Whitener | - | Medical
+45 | Scissors | Small (4.5 inch) | Medical
+46 | Cover Tape | Large Brown Packing Tape | Medical
+47 | Khakhi Cardboard Roll | Approx. 10 Books per Roll | Medical
+48 | Araldite | 9 g | Medical
+49 | Feviquick | Plain / 1 g Cap Type | Medical
+50 | M-Seal | For Repairing Pots | Medical
+51 | Radium Strip | Half Foot | Medical
+52 | D-Sona Tooth Powder | 100 g | Medical
+53 | Eno | Green, Orange, Blue | Medical
+54 | Inhaler Balm (Thailand Balm) | Sniffing Balm | Medical
+55 | Vicks Balm | Small Round / Medium | Medical
+56 | Iodex | Medium | Medical
+57 | Closip Powder | 100 g | Medical
+58 | Omnigel | 75 g | Medical
+59 | NEOTICA Tube | 60 g | Medical
+60 | Kaanavali Patti | For Pain Relief | Medical
+61 | Soframycin Tube | For Wounds | Medical
+62 | Cotton | 60 g | Medical
+63 | Dettol | Small | Medical
+64 | Adhesive Tape | 5 Foot Roll | Medical
+65 | Band-Aid | For Blisters/Wounds | Medical
+66 | Digene Tablets | Strip of 15 | Medical
+67 | Crocin Advance | Strip of 20 | Medical
+68 | Metacin | Strip of 15 | Medical
+69 | Okacet | Strip of 10 | Medical
+70 | Dolo 650 mg | Strip of 15 | Medical
+71 | Glucose Powder (Glucon-D) | 200 g | Medical
+72 | Thermometer | Normal / Digital | Medical
 
-# Stationery (સ્ટેશનરી)
+73 | Navkar Vati Tonic | 30 Tablets | Ayurvedic Medicines
+74 | Ghodavaj | 4-5 Pieces | Ayurvedic Medicines
+75 | Kushal Kanthil | Small Box | Ayurvedic Medicines
+76 | Triphala Tablets (Zandu) | 30 Tablets | Ayurvedic Medicines
+77 | Trishun Tablets (Zandu) | 30 Tablets | Ayurvedic Medicines
+78 | Sargava Powder (Drumstick Powder) | 100 g | Ayurvedic Medicines
 
-| No. | Item                            | Type                   |
-| --- | ------------------------------- | ---------------------- |
-| 24  | Letter Pad (side open spiral)   | Small / Large          |
-| 25  | Ball Pen (Reusable)             | Blue / Red             |
-| 26  | Gel Pen (Natraj Waterproof Ink) | Blue / Green / Black   |
-| 27  | White Cover                     | Small (for Vasakshep)  |
-| 28  | White Cover                     | Plain Large (9×4 inch) |
-| 29  | Canvas Cover                    | A4 Green (Courier use) |
-| 30  | Foot Ruler                      | Small                  |
-| 31  | Scissors                        | —                      |
-| 32  | Pencil                          | —                      |
-| 33  | Eraser                          | —                      |
-| 34  | Writing Pad                     | Transparent            |
-| 35  | Zip Pouch                       | 10×4 inch              |
-| 36  | Pocket Diary                    | —                      |
-| 37  | Marker Pen                      | Black                  |
-| 38  | Highlighter                     | —                      |
-| 39  | Stapler                         | —                      |
-| 40  | Stapler Pins                    | 1 Box                  |
-| 41  | Fevi Stick                      | —                      |
-| 42  | Fevicol                         | 20 gm                  |
 
----
 
-# Utility Items
 
-| No. | Item                        | Size          |
-| --- | --------------------------- | ------------- |
-| 43  | Whitener                    | —             |
-| 44  | Scissors                    | 4.5 inch      |
-| 45  | Brown Packing Tape          | Large         |
-| 46  | Khakhi Cardboard Roll       | Roll          |
-| 47  | Araldite                    | 9 gm          |
-| 48  | Feviquick (without cap)     | Plain         |
-| 48A | Feviquick (with cap)        | 1 gm          |
-| 49  | M-Seal (for repairing pots) | Black / White |
-| 50  | Radium Strip                | Half Foot     |
 
----
-
-# Medical Items (મેડિકલ)
-
-| No. | Item                             | Size                  |
-| --- | -------------------------------- | --------------------- |
-| 51  | D-Sona Tooth Powder              | 100 gm                |
-| 52  | Eno (Gas Relief)                 | Small Packet          |
-| 53  | Inhaler Balm (Thailand Balm)     | Green / Orange / Blue |
-| 54  | Vicks Balm                       | Small / Medium        |
-| 55  | Iodex                            | Medium                |
-| 56  | Clocip Powder (heat rash relief) | 100 gm                |
-| 57  | Omnigel                          | 75 gm                 |
-| 58  | NEOTICA Pain Relief Tube         | 60 gm                 |
-| 59  | Pain Relief Patch                | No. 60                |
-| 60  | Soframycin Tube                  | Medium                |
-| 61  | Cotton                           | 60 gm                 |
-| 62  | Dettol                           | Small                 |
-| 63  | Adhesive Tape                    | 5 ft Roll             |
-| 64  | Band-Aid                         | —                     |
-| 65  | Digene Tablets                   | 15 tablets            |
-| 66  | Crocin Advance                   | 20 tablets            |
-| 67  | Metacin                          | 15 tablets            |
-| 68  | Okacet                           | 10 tablets            |
-| 69  | Dolo 650                         | 15 tablets            |
-| 70  | Glucose Powder (Glucon-D)        | 200 gm                |
-| 71  | Thermometer                      | Simple / Digital      |
-
----
-
-# Ayurvedic Medicines (આયુર્વેદિક દવાઓ)
-
-| No. | Item                       | Quantity                  |
-| --- | -------------------------- | ------------------------- |
-| 72  | Javahar Mohra              | Approx. 8 tablets (2 gm)  |
-| 73  | Ambar Kesarvati (Anahari)  | Approx. 18 tablets (2 gm) |
-| 74  | Ghodavaj (Book Protection) | 4–5 pieces                |
-| 75  | Kushal Kunthil             | Small Box                 |
-| 76  | Trifala Tablets            | 30 tablets                |
-| 77  | Trishan Tablets            | 30 tablets                |
-| 78  | Saragva Powder             | 100 gm                    |
-
----
-
-# Utensil Coloring Materials (પાત્રા રંગવાના કલર)
-
-| No. | Item                  | Quantity |
-| --- | --------------------- | -------- |
-| 79  | Signal Red Color      | 200 gm   |
-| 80  | Brilliant White Color | 200 gm   |
-| 81  | Black Color           | 50 gm    |
-| 82  | Clear Varnish         | 200 gm   |
-
-### Surface Preparation
-
-| No. | Item                                       | Specification                                    |
-| --- | ----------------------------------         | ------------------------------------------------ |
-| 83  | Glass-Scratch Paper for removing old color | Hard 60 No., Medium 80 No., Soft 100/150/220 No. |
-| 84  | Water Paper for removing old color         | Soft 220 No.                                     |
-
----
-
-**Total Items: 84** 

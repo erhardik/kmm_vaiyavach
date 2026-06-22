@@ -12,7 +12,12 @@ from apps.masters.models import Event, Item, ItemCategory
 
 SECTION_CATEGORY_MAP = {
     "general items": ItemCategory.GENERAL,
+    "general utility items": ItemCategory.GENERAL,
     "stationery": ItemCategory.STATIONERY,
+    "medical": ItemCategory.MEDICAL,
+    "medical items": ItemCategory.MEDICAL,
+    "ayurvedic medicines": ItemCategory.AYURVEDIC,
+    "utensil coloring materials": ItemCategory.COLOR_MATERIAL,
     "utility items": ItemCategory.GENERAL,
     "other useful items": ItemCategory.GENERAL,
 }
@@ -25,7 +30,7 @@ CATEGORY_PREFIX_MAP = {
     ItemCategory.COLOR_MATERIAL: "COL",
 }
 
-ROW_RE = re.compile(r"^\|\s*(\d+)\s*\|\s*(.*?)\s*\|\s*(.*?)\s*\|$")
+ROW_RE = re.compile(r"^\|?\s*([0-9]+[A-Za-z]?)\s*\|\s*(.*?)\s*\|\s*(.*?)\s*\|\s*(.*?)\s*\|?$")
 
 
 @dataclass
@@ -33,7 +38,7 @@ class ParsedItemRow:
     number: int
     name: str
     size: str
-    section: str
+    category: ItemCategory
 
 
 def _parse_row_number(raw_number: str) -> int:
@@ -46,32 +51,51 @@ def _parse_row_number(raw_number: str) -> int:
     return int("".join(digits))
 
 
+def _infer_category(section: str, category_text: str) -> ItemCategory:
+    inferred = (category_text or section).strip().lower()
+    if inferred in SECTION_CATEGORY_MAP:
+        return SECTION_CATEGORY_MAP[inferred]
+    if "stationery" in inferred:
+        return ItemCategory.STATIONERY
+    if "medical" in inferred:
+        return ItemCategory.MEDICAL
+    if "ayurvedic" in inferred:
+        return ItemCategory.AYURVEDIC
+    if "color" in inferred:
+        return ItemCategory.COLOR_MATERIAL
+    return ItemCategory.GENERAL
+
+
 def parse_markdown_rows(source_path: Path):
     rows = []
     section = ""
     with source_path.open(encoding="utf-8", errors="ignore") as handle:
         for raw_line in handle:
             line = raw_line.strip()
+            if not line or line.startswith("---"):
+                continue
             if line.startswith("#"):
                 section = line.lstrip("#").strip().lower()
+                continue
+            if "|" not in line:
                 continue
             match = ROW_RE.match(line)
             if not match:
                 continue
-            number, item_name, default_size = match.groups()
+            number, item_name, default_size, category_text = match.groups()
+            header_text = item_name.strip().lower()
+            if header_text in {"item", "item name", "no.", "no"}:
+                continue
             try:
                 parsed_number = _parse_row_number(number)
             except ValueError:
                 continue
-            normalized_name = item_name.strip()
-            if normalized_name.lower() in {"item", "વસ્તુનું નામ", "વસ્તુનુ નામ"}:
-                continue
             rows.append(
                 ParsedItemRow(
                     number=parsed_number,
-                    name=normalized_name,
+                    name=item_name.strip(),
                     size=default_size.strip(),
-                    section=section,
+                    category=_infer_category(section, category_text),
                 )
             )
     return rows
@@ -111,17 +135,17 @@ class Command(BaseCommand):
         english_rows = parse_markdown_rows(source_path)
 
         for row in english_rows:
-            category = SECTION_CATEGORY_MAP.get(row.section, ItemCategory.GENERAL)
-            prefix = CATEGORY_PREFIX_MAP[category]
+            prefix = CATEGORY_PREFIX_MAP[row.category]
             counters[prefix] += 1
             item_code = f"{prefix}{counters[prefix]:03d}"
 
             Item.objects.create(
                 event=event,
+                standard_serial=row.number,
                 item_code=item_code,
                 item_name=row.name,
                 item_name_gu=guj_map.get(row.number, ""),
-                category=category,
+                category=row.category,
                 unit="",
                 default_size=row.size,
                 description=f"Imported from {source_path.name}",

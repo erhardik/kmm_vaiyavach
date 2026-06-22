@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h1 class="h3 mb-1">{{ page_title }}</h1>
+    {% if page_subtitle %}<p class="text-body-secondary mb-0">{{ page_subtitle }}</p>{% endif %}
+  </div>
+  {% if can_add and create_url %}
+    <a class="btn btn-primary" href="{{ create_url }}">Add New</a>
+  {% endif %}
+</div>
+<div class="card border-0 shadow-sm">
+  <div class="card-body">
+    <form method="get" class="row g-2 align-items-end mb-3">
+      <div class="col-12 col-md-4">
+        <input type="search" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Search">
+      </div>
+      <div class="col-12 col-md-4">
+        <select name="event" class="form-select">
+          <option value="">Current Event</option>
+          {% for event in event_queryset %}
+            <option value="{{ event.pk }}" {% if request.GET.event == event.pk|stringformat:'s' %}selected{% endif %}>{{ event.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-12 col-md-4">
+        <button class="btn btn-outline-primary" type="submit">Filter</button>
+      </div>
+    </form>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            {% for header in headers %}<th>{{ header }}</th>{% endfor %}
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in table_rows %}
+            <tr>
+              {% for value in row.cells %}
+                <td>{{ value }}</td>
+              {% endfor %}
+              <td class="text-end">
+                <div class="d-inline-flex flex-wrap gap-2 justify-content-end">
+                  {% if row.view_url %}
+                    <a class="btn btn-sm btn-outline-primary js-order-view" href="{{ row.view_url }}" data-detail-url="{{ row.view_url }}" data-order-label="{{ row.object.order_number|default:row.object.upashray }}">View</a>
+                  {% endif %}
+                  {% if row.pdf_url %}
+                    <a class="btn btn-sm btn-outline-secondary" href="{{ row.pdf_url }}" target="_blank" rel="noopener">View PDF</a>
+                  {% endif %}
+                  {% if can_change and row.edit_url %}
+                    <a class="btn btn-sm btn-outline-secondary" href="{{ row.edit_url }}">Edit</a>
+                  {% endif %}
+                  {% if can_delete and row.delete_url %}
+                    <a class="btn btn-sm btn-outline-danger" href="{{ row.delete_url }}">Delete</a>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="{{ headers|length|add:1 }}" class="text-center py-4 text-body-secondary">No records found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="orderDetailModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h5 class="modal-title mb-0">Requirement Details</h5>
+          <div class="small text-body-secondary" id="orderDetailModalLabel"></div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="orderDetailModalBody">
+        <div class="text-center py-5 text-body-secondary">Select View to load the order details.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    const modalEl = document.getElementById('orderDetailModal');
+    const modalBody = document.getElementById('orderDetailModalBody');
+    const modalLabel = document.getElementById('orderDetailModalLabel');
+    if (!modalEl || !modalBody || !modalLabel) return;
+    const modal = window.bootstrap ? new bootstrap.Modal(modalEl) : null;
+
+    document.addEventListener('click', async (event) => {
+      const button = event.target.closest('.js-order-view');
+      if (!button) return;
+      event.preventDefault();
+      const url = button.getAttribute('data-detail-url') || button.getAttribute('href');
+      if (!url) return;
+      if (!modal) {
+        window.location.href = url;
+        return;
+      }
+      modalLabel.textContent = button.getAttribute('data-order-label') || '';
+      modalBody.innerHTML = '<div class="text-center py-5 text-body-secondary">Loading...</div>';
+      modal.show();
+      try {
+        const response = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+        if (!response.ok) throw new Error('Request failed');
+        modalBody.innerHTML = await response.text();
+      } catch (error) {
+        modalBody.innerHTML = '<div class="alert alert-danger mb-0">Unable to load the order details.</div>';
+      }
+    });
+  })();
+</script>
+{% endblock %}

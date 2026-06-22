@@ -1,0 +1,63 @@
+<div class="sidebar-brand">
+  <div class="d-flex align-items-start justify-content-between gap-2">
+    <div class="d-flex align-items-center gap-2">
+      <div>
+        <div class="sidebar-brand-title">{{ sidebar_headline|default:"Chaturmas Vaiyavach" }}</div>
+        <div class="sidebar-brand-subtitle">Season-wise operations</div>
+      </div>
+    </div>
+    <button
+      class="btn btn-sm btn-outline-light sidebar-collapse-btn d-none d-lg-inline-flex align-items-center justify-content-center"
+      type="button"
+      data-sidebar-toggle
+      aria-label="Toggle sidebar"
+      aria-pressed="false"
+    >
+      <i class="bi bi-chevron-left"></i>
+    </button>
+  </div>
+</div>
+
+<div class="sidebar-links">
+  <a class="sidebar-link" href="{% url 'dashboard:home' %}" title="Dashboard">
+    <i class="bi bi-house"></i><span class="sidebar-link-text">Dashboard</span>
+  </a>
+  <a class="sidebar-link" href="{% url 'masters:event-list' %}" title="Events">
+    <i class="bi bi-calendar-event"></i><span class="sidebar-link-text">Events</span>
+  </a>
+</div>
+
+<div class="sidebar-section-label">Events</div>
+<div class="accordion accordion-flush sidebar-accordion" id="eventAccordion">
+  {% for block in sidebar_events %}
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="heading-{{ block.event.pk }}">
+        <button class="accordion-button {% if not block.is_selected %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ block.event.pk }}" aria-expanded="{% if block.is_selected %}true{% else %}false{% endif %}" aria-controls="collapse-{{ block.event.pk }}">
+          <div class="d-flex align-items-center gap-2 w-100">
+            <span class="sidebar-event-icon"><i class="bi bi-calendar3"></i></span>
+            <div class="sidebar-event-text d-flex flex-column align-items-start">
+              <span>{{ block.event.name }}</span>
+              <small class="text-body-secondary">{{ block.event.start_date }} - {{ block.event.end_date }}</small>
+            </div>
+          </div>
+        </button>
+      </h2>
+      <div id="collapse-{{ block.event.pk }}" class="accordion-collapse collapse {% if block.is_selected %}show{% endif %}" aria-labelledby="heading-{{ block.event.pk }}" data-bs-parent="#eventAccordion">
+        <div class="accordion-body p-0">
+          <div class="list-group list-group-flush">
+            {% for item in block.menu_items %}
+              <a class="list-group-item list-group-item-action sidebar-sub-link" href="{{ item.url }}" title="{{ item.label }}">
+                <i class="bi bi-{{ item.icon|default:'dot' }}"></i>
+                <span class="sidebar-sub-link-text">{{ item.label }}</span>
+              </a>
+            {% empty %}
+              <div class="list-group-item text-body-secondary small">No permitted menus.</div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  {% empty %}
+    <div class="px-3 py-2 text-body-secondary small">No active events found.</div>
+  {% endfor %}
+</div>

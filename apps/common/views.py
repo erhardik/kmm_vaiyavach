@@ -42,6 +42,9 @@ class EventScopedListView(LoginRequiredMixin, PermissionRequiredMixin, ListView)
         meta = self.model._meta
         return f"{meta.app_label}.{action}_{meta.model_name}"
 
+    def get_row_url_kwargs(self, obj):
+        return {"pk": obj.pk}
+
     def get_queryset(self):
         qs = super().get_queryset()
         has_event_field = any(field.name == "event" for field in qs.model._meta.get_fields())
@@ -69,8 +72,8 @@ class EventScopedListView(LoginRequiredMixin, PermissionRequiredMixin, ListView)
                 {
                     "object": obj,
                     "cells": [getattr(obj, field)() if callable(getattr(obj, field)) else getattr(obj, field, "") for field in self.row_fields],
-                    "edit_url": reverse(self.edit_url_name, kwargs={"pk": obj.pk}) if self.edit_url_name else "",
-                    "delete_url": reverse(self.delete_url_name, kwargs={"pk": obj.pk}) if self.delete_url_name else "",
+                    "edit_url": reverse(self.edit_url_name, kwargs=self.get_row_url_kwargs(obj)) if self.edit_url_name else "",
+                    "delete_url": reverse(self.delete_url_name, kwargs=self.get_row_url_kwargs(obj)) if self.delete_url_name else "",
                 }
             )
         return rows

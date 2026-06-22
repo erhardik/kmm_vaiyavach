@@ -1,7 +1,8 @@
 from django.contrib import admin
-from .models import Event, Item, Sponsor, Upashray, Vendor, Volunteer
+from .models import Event, EventManagerContact, Item, Sponsor, Upashray, Vendor, Volunteer
 
 admin.site.register(Event)
+admin.site.register(EventManagerContact)
 admin.site.register(Item)
 admin.site.register(Upashray)
 admin.site.register(Volunteer)

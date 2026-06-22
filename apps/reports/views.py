@@ -88,7 +88,25 @@ class ItemControlExportView(LoginRequiredMixin, View):
             fully_covered=form.cleaned_data.get("fully_covered", False),
             shortage=form.cleaned_data.get("shortage", False),
         )
-        headers = ["Item", "Category", "Required", "Sponsored", "Received", "Purchase Needed", "Stock", "Distributed", "Balance"]
+        headers = [
+            "Item",
+            "Category",
+            "Rate",
+            "Required",
+            "Acquired",
+            "Sponsored",
+            "Received",
+            "Purchased Qty",
+            "Purchase Needed",
+            "Remaining",
+            "Shortage",
+            "Stock",
+            "Distributed",
+            "Balance",
+            "Required Cost",
+            "Purchase Cost",
+            "Source",
+        ]
         export_format = request.GET.get("format", "csv").lower()
         if export_format == "xlsx":
             content = export_rows_to_xlsx(rows, headers, sheet_title="Item Control")
