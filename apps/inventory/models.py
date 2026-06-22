@@ -1,0 +1,53 @@
+from django.db import models
+from django.utils import timezone
+
+from config.models import EventScopedModel
+
+
+class InventoryTransactionType(models.TextChoices):
+    PURCHASE = "PURCHASE", "Purchase"
+    DONATION = "DONATION", "Donation"
+    SPONSORSHIP_RECEIPT = "SPONSORSHIP_RECEIPT", "Sponsorship Receipt"
+    DISTRIBUTION = "DISTRIBUTION", "Distribution"
+    RETURN = "RETURN", "Return"
+    ADJUSTMENT = "ADJUSTMENT", "Adjustment"
+    DAMAGE = "DAMAGE", "Damage"
+    RESERVATION = "RESERVATION", "Reservation"
+    RELEASE = "RELEASE", "Release"
+
+
+class InventoryTransaction(EventScopedModel):
+    item = models.ForeignKey("masters.Item", on_delete=models.PROTECT, related_name="inventory_transactions")
+    transaction_type = models.CharField(max_length=40, choices=InventoryTransactionType.choices)
+    qty = models.DecimalField(max_digits=12, decimal_places=3)
+    source_module = models.CharField(max_length=80, blank=True)
+    reference_id = models.CharField(max_length=80, blank=True)
+    reference_label = models.CharField(max_length=120, blank=True)
+    unit_rate = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    remarks = models.TextField(blank=True)
+    reversal_of = models.ForeignKey("self", on_delete=models.SET_NULL, null=True, blank=True, related_name="reversals")
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+        indexes = [
+            models.Index(fields=["event", "item", "transaction_type"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.transaction_type} - {self.item} - {self.qty}"
+
+
+class InventoryBalance(EventScopedModel):
+    item = models.ForeignKey("masters.Item", on_delete=models.CASCADE, related_name="inventory_balances")
+    current_stock = models.DecimalField(max_digits=12, decimal_places=3, default=0)
+    reserved_stock = models.DecimalField(max_digits=12, decimal_places=3, default=0)
+    available_stock = models.DecimalField(max_digits=12, decimal_places=3, default=0)
+    distributed_stock = models.DecimalField(max_digits=12, decimal_places=3, default=0)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["event", "item"], name="unique_inventory_balance_item"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.item} - {self.current_stock}"

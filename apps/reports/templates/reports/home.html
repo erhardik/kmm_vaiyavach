@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Reports | KMM ERP{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <div>
+    <h1 class="h3 mb-1">Reports</h1>
+    <p class="text-body-secondary mb-0">{% if selected_event %}{{ selected_event.name }}{% else %}No active event found{% endif %}</p>
+  </div>
+  <div class="d-flex flex-wrap gap-2">
+    <a class="btn btn-outline-secondary" href="{{ analytics_url }}">Analytics</a>
+    <a class="btn btn-outline-primary" href="{% url 'dashboard:item_control_center' %}">Item Control Center</a>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3"><div class="metric-card"><div class="label">Requirements</div><div class="value">{{ summary.requirement_total|default:0 }}</div></div></div>
+  <div class="col-6 col-lg-3"><div class="metric-card"><div class="label">Sponsorships</div><div class="value">{{ summary.sponsorship_total|default:0 }}</div></div></div>
+  <div class="col-6 col-lg-3"><div class="metric-card"><div class="label">Receipts</div><div class="value">{{ summary.received_total|default:0 }}</div></div></div>
+  <div class="col-6 col-lg-3"><div class="metric-card"><div class="label">Inventory Transactions</div><div class="value">{{ summary.transaction_total|default:0 }}</div></div></div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-12 col-md-4"><div class="metric-card"><div class="label">Donations</div><div class="value">{{ summary.donation_total|default:0 }}</div></div></div>
+  <div class="col-12 col-md-4"><div class="metric-card"><div class="label">Expenses</div><div class="value">{{ summary.expense_total|default:0 }}</div></div></div>
+  <div class="col-12 col-md-4"><div class="metric-card"><div class="label">Net Fund Balance</div><div class="value">{{ summary.net_fund_total|default:0 }}</div></div></div>
+</div>
+
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-body">
+    <form method="get" class="row g-3 align-items-end">
+      <div class="col-12 col-md-6 col-xl-4">
+        <label class="form-label">Event</label>
+        {{ form.event }}
+      </div>
+      <div class="col-12 col-md-6 col-xl-8">
+        <button class="btn btn-primary" type="submit">Refresh</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-12 col-lg-6">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <h2 class="h5">Item Control Center Export</h2>
+        <p class="text-body-secondary mb-3">Download the operational grid for procurement and shortages review.</p>
+        <div class="d-flex flex-wrap gap-2">
+          <a class="btn btn-outline-primary" href="{% url 'reports:item-control-export' %}?format=csv{% if selected_event %}&event={{ selected_event.pk }}{% endif %}">CSV</a>
+          <a class="btn btn-outline-primary" href="{% url 'reports:item-control-export' %}?format=xlsx{% if selected_event %}&event={{ selected_event.pk }}{% endif %}">XLSX</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-lg-6">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <h2 class="h5">Inventory Ledger Export</h2>
+        <p class="text-body-secondary mb-3">Extract the transaction ledger for audit and reconciliation work.</p>
+        <div class="d-flex flex-wrap gap-2">
+          <a class="btn btn-outline-primary" href="{% url 'reports:inventory-export' %}?format=csv{% if selected_event %}&event={{ selected_event.pk }}{% endif %}">CSV</a>
+          <a class="btn btn-outline-primary" href="{% url 'reports:inventory-export' %}?format=xlsx{% if selected_event %}&event={{ selected_event.pk }}{% endif %}">XLSX</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <h2 class="h5 mb-3">Operational Exports</h2>
+        <div class="d-flex flex-wrap gap-2">
+          <a class="btn btn-outline-primary" href="{{ requirement_csv_url }}{% if selected_event %}&event={{ selected_event.pk }}{% endif %}">Requirements CSV</a>
+          <a class="btn btn-outline-primary" href="{{ requirement_xlsx_url }}{% if selected_event %}&event={{ selected_event.pk }}{% endif %}">Requirements XLSX</a>
+          <a class="btn btn-outline-primary" href="{{ sponsorship_csv_url }}{% if selected_event %}&event={{ selected_event.pk }}{% endif %}">Sponsorship CSV</a>
+          <a class="btn btn-outline-primary" href="{{ sponsorship_xlsx_url }}{% if selected_event %}&event={{ selected_event.pk }}{% endif %}">Sponsorship XLSX</a>
+          <a class="btn btn-outline-primary" href="{{ fund_csv_url }}{% if selected_event %}&event={{ selected_event.pk }}{% endif %}">Funds CSV</a>
+          <a class="btn btn-outline-primary" href="{{ fund_xlsx_url }}{% if selected_event %}&event={{ selected_event.pk }}{% endif %}">Funds XLSX</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

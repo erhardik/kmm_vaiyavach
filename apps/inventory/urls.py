@@ -1,0 +1,20 @@
+from django.urls import path
+
+from apps.inventory.views import (
+    InventoryBalanceListView,
+    InventoryTransactionCreateView,
+    InventoryTransactionDeleteView,
+    InventoryTransactionListView,
+    InventoryTransactionUpdateView,
+)
+
+app_name = "inventory"
+
+urlpatterns = [
+    path("transactions/", InventoryTransactionListView.as_view(), name="transaction-list"),
+    path("transactions/add/", InventoryTransactionCreateView.as_view(), name="transaction-create"),
+    path("transactions/<int:pk>/edit/", InventoryTransactionUpdateView.as_view(), name="transaction-update"),
+    path("transactions/<int:pk>/delete/", InventoryTransactionDeleteView.as_view(), name="transaction-delete"),
+    path("balances/", InventoryBalanceListView.as_view(), name="balance-list"),
+]
+

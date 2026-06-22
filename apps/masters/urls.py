@@ -1,0 +1,58 @@
+from django.urls import path
+
+from apps.masters.views import (
+    EventCreateView,
+    EventDeleteView,
+    EventListView,
+    EventUpdateView,
+    ItemCreateView,
+    ItemDeleteView,
+    ItemListView,
+    ItemUpdateView,
+    SponsorCreateView,
+    SponsorDeleteView,
+    SponsorListView,
+    SponsorUpdateView,
+    UpashrayCreateView,
+    UpashrayDeleteView,
+    UpashrayListView,
+    UpashrayUpdateView,
+    VendorCreateView,
+    VendorDeleteView,
+    VendorListView,
+    VendorUpdateView,
+    VolunteerCreateView,
+    VolunteerDeleteView,
+    VolunteerListView,
+    VolunteerUpdateView,
+)
+
+app_name = "masters"
+
+urlpatterns = [
+    path("events/", EventListView.as_view(), name="event-list"),
+    path("events/add/", EventCreateView.as_view(), name="event-create"),
+    path("events/<int:pk>/edit/", EventUpdateView.as_view(), name="event-update"),
+    path("events/<int:pk>/delete/", EventDeleteView.as_view(), name="event-delete"),
+    path("items/", ItemListView.as_view(), name="item-list"),
+    path("items/add/", ItemCreateView.as_view(), name="item-create"),
+    path("items/<int:pk>/edit/", ItemUpdateView.as_view(), name="item-update"),
+    path("items/<int:pk>/delete/", ItemDeleteView.as_view(), name="item-delete"),
+    path("upashrays/", UpashrayListView.as_view(), name="upashray-list"),
+    path("upashrays/add/", UpashrayCreateView.as_view(), name="upashray-create"),
+    path("upashrays/<int:pk>/edit/", UpashrayUpdateView.as_view(), name="upashray-update"),
+    path("upashrays/<int:pk>/delete/", UpashrayDeleteView.as_view(), name="upashray-delete"),
+    path("volunteers/", VolunteerListView.as_view(), name="volunteer-list"),
+    path("volunteers/add/", VolunteerCreateView.as_view(), name="volunteer-create"),
+    path("volunteers/<int:pk>/edit/", VolunteerUpdateView.as_view(), name="volunteer-update"),
+    path("volunteers/<int:pk>/delete/", VolunteerDeleteView.as_view(), name="volunteer-delete"),
+    path("sponsors/", SponsorListView.as_view(), name="sponsor-list"),
+    path("sponsors/add/", SponsorCreateView.as_view(), name="sponsor-create"),
+    path("sponsors/<int:pk>/edit/", SponsorUpdateView.as_view(), name="sponsor-update"),
+    path("sponsors/<int:pk>/delete/", SponsorDeleteView.as_view(), name="sponsor-delete"),
+    path("vendors/", VendorListView.as_view(), name="vendor-list"),
+    path("vendors/add/", VendorCreateView.as_view(), name="vendor-create"),
+    path("vendors/<int:pk>/edit/", VendorUpdateView.as_view(), name="vendor-update"),
+    path("vendors/<int:pk>/delete/", VendorDeleteView.as_view(), name="vendor-delete"),
+]
+

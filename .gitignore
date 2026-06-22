@@ -1,0 +1,17 @@
+*.pyc
+__pycache__/
+*.sqlite3
+.env
+.venv/
+venv/
+env/
+staticfiles/
+media/
+backup/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.log
+token_repo.txt
