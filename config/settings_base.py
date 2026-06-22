@@ -10,7 +10,7 @@ def env(name: str, default: str = "") -> str:
 
 SECRET_KEY = env("SECRET_KEY", "django-insecure-change-me")
 DEBUG = env("DEBUG", "1") in {"1", "true", "True", "yes", "on"}
-ALLOWED_HOSTS = [host.strip() for host in env("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",") if host.strip()]
+ALLOWED_HOSTS = [host.strip() for host in env("ALLOWED_HOSTS", "127.0.0.1,localhost,kmm.pythonanywhere.com").split(",") if host.strip()]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
