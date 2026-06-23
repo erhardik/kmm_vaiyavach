@@ -226,6 +226,19 @@
       statusBox.innerHTML = `<div class="alert alert-danger mb-0">${items.join('')}</div>`;
     }
 
+    function showItemErrors(itemErrors) {
+      if (!itemErrors || !itemErrors.length) return "";
+      const rows = itemErrors
+        .map((row, idx) => {
+          const messages = Object.entries(row || {})
+            .map(([key, value]) => `${key}: ${(value || []).map((entry) => entry.message || entry).join(', ')}`)
+            .join(" | ");
+          return `<div>Row ${idx + 1}: ${messages}</div>`;
+        })
+        .join("");
+      return rows ? `<div class="mt-2 small">${rows}</div>` : "";
+    }
+
     button.addEventListener('click', async function() {
       const originalLabel = button.textContent;
       const formData = new FormData(form);
@@ -247,8 +260,11 @@
         const data = await response.json().catch(() => ({}));
         if (!response.ok || !data.ok) {
           showErrors(data.errors || {});
-          if (!Object.keys(data.errors || {}).length) {
-            statusBox.innerHTML = '<div class="alert alert-danger mb-0">Please review the highlighted fields and try again.</div>';
+          const itemErrorsHtml = showItemErrors(data.item_errors || []);
+          if (itemErrorsHtml) {
+            statusBox.innerHTML = `<div class="alert alert-danger mb-0">${data.message || 'Please review the highlighted fields and try again.'}${itemErrorsHtml}</div>`;
+          } else if (!Object.keys(data.errors || {}).length) {
+            statusBox.innerHTML = `<div class="alert alert-danger mb-0">${data.message || 'Please review the highlighted fields and try again.'}</div>`;
           }
           return;
         }

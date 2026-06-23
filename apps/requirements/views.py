@@ -332,15 +332,13 @@ class RequirementCollectionView(View):
         confirm_now = "confirm" in request.POST
 
         if save_details_now:
-            if not form.is_valid() or not formset.is_valid():
+            if not form.is_valid():
                 if request.headers.get("x-requested-with") == "XMLHttpRequest":
                     payload = {
                         "ok": False,
                         "message": "Please fix the highlighted fields.",
                         "errors": form.errors.get_json_data(),
                     }
-                    if not formset.is_valid():
-                        payload["item_errors"] = formset.errors
                     return JsonResponse(payload, status=400)
                 return render(request, self.template_name, self._build_context(request, event, header, form, formset, items))
 
@@ -358,20 +356,24 @@ class RequirementCollectionView(View):
             header_obj.locked_at = header.locked_at if header else None
             header_obj.save()
 
-            RequirementLine.objects.filter(event=event, requirement=header_obj).delete()
-            for item_form in formset.cleaned_data:
-                item_id = item_form.get("item_id")
-                qty = item_form.get("required_qty") or 0
-                note = item_form.get("remarks") or ""
-                if not item_id or qty <= 0:
-                    continue
-                RequirementLine.objects.create(
-                    event=event,
-                    requirement=header_obj,
-                    item_id=item_id,
-                    required_qty=qty,
-                    remarks=note,
-                )
+            item_errors = []
+            if formset.is_valid():
+                RequirementLine.objects.filter(event=event, requirement=header_obj).delete()
+                for item_form in formset.cleaned_data:
+                    item_id = item_form.get("item_id")
+                    qty = item_form.get("required_qty") or 0
+                    note = item_form.get("remarks") or ""
+                    if not item_id or qty <= 0:
+                        continue
+                    RequirementLine.objects.create(
+                        event=event,
+                        requirement=header_obj,
+                        item_id=item_id,
+                        required_qty=qty,
+                        remarks=note,
+                    )
+            else:
+                item_errors = formset.errors
 
             if request.headers.get("x-requested-with") == "XMLHttpRequest":
                 return JsonResponse(
@@ -381,6 +383,7 @@ class RequirementCollectionView(View):
                         "header_pk": header_obj.pk,
                         "detail": "Basic details saved. You can continue filling items.",
                         "summary_html": self._render_summary_html(request, header_obj),
+                        "item_errors": item_errors,
                     },
                 )
             messages.success(request, "Basic details saved. You can continue filling items.")
