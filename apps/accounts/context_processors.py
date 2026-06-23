@@ -1,6 +1,15 @@
+from decimal import Decimal
+
+from django.db.models import Sum
 from django.urls import reverse
 
-from apps.masters.models import Event
+from apps.distribution.models import DistributionBatch
+from apps.funds.models import Donation, FundTransaction, FundTransactionType
+from apps.inventory.models import InventoryBalance
+from apps.masters.models import Event, Item, Vendor
+from apps.procurement.models import PurchaseOrder
+from apps.requirements.models import RequirementHeader
+from apps.sponsorship.models import SponsorshipCommitment
 
 
 EVENT_MENU_ITEMS = [
@@ -37,18 +46,77 @@ def _visible_links(request, links, event=None):
     return visible
 
 
+def _sum_amount(queryset, field_name="amount"):
+    value = queryset.aggregate(total=Sum(field_name))["total"]
+    return value or Decimal("0")
+
+
+def _format_metric(value, prefix=""):
+    if value is None:
+        value = Decimal("0")
+    try:
+        amount = Decimal(value)
+    except Exception:
+        return f"{prefix}{value}"
+    if amount == amount.to_integral():
+        return f"{prefix}{int(amount):,}"
+    return f"{prefix}{amount:,.2f}"
+
+
+def _event_metrics(event):
+    if event is None:
+        return {}
+    donation_total = _sum_amount(Donation.objects.filter(event=event))
+    fund_income = _sum_amount(FundTransaction.objects.filter(event=event, transaction_type=FundTransactionType.INCOME))
+    fund_expense = _sum_amount(FundTransaction.objects.filter(event=event, transaction_type=FundTransactionType.EXPENSE))
+    fund_transfer = _sum_amount(FundTransaction.objects.filter(event=event, transaction_type=FundTransactionType.TRANSFER))
+    fund_adjustment = _sum_amount(FundTransaction.objects.filter(event=event, transaction_type=FundTransactionType.ADJUSTMENT))
+    fund_balance = donation_total + fund_income + fund_transfer + fund_adjustment - fund_expense
+    stock_total = _sum_amount(InventoryBalance.objects.filter(event=event), "current_stock")
+    return {
+        "requirements": RequirementHeader.objects.filter(event=event, is_active=True).count(),
+        "items": Item.objects.filter(event=event, is_active=True).count(),
+        "sponsorship": SponsorshipCommitment.objects.filter(event=event).count(),
+        "vendors": Vendor.objects.filter(event=event, is_active=True).count(),
+        "procurement": PurchaseOrder.objects.filter(event=event).count(),
+        "distribution": DistributionBatch.objects.filter(event=event).count(),
+        "fund_balance": fund_balance,
+        "stock_total": stock_total,
+    }
+
+
 def portal_navigation(request):
     visible_items = _visible_links(request, UTILITY_LINKS)
     active_events = Event.objects.filter(is_active=True).order_by("-is_current", "-start_date", "name")
     selected_event_id = request.GET.get("event")
     selected_event = active_events.filter(pk=selected_event_id).first() if selected_event_id else active_events.filter(is_current=True).first()
+    metrics = _event_metrics(selected_event)
+    badge_map = {
+        "masters:event-list": f"{Event.objects.filter(is_active=True).count()} Events",
+        "requirements:collect": f"{metrics.get('requirements', 0)} Orders",
+        "requirements:header-list": f"{metrics.get('requirements', 0)} Orders",
+        "masters:item-list": f"{metrics.get('items', 0)} Items",
+        "dashboard:item_control_center": f"{metrics.get('items', 0)} Items",
+        "sponsorship:commitment-list": f"{metrics.get('sponsorship', 0)} Commitments",
+        "vendors:quote-list": f"{metrics.get('vendors', 0)} Vendors",
+        "procurement:po-list": f"{metrics.get('procurement', 0)} POs",
+        "inventory:transaction-list": f"Stock {_format_metric(metrics.get('stock_total', 0))}",
+        "inventory:balance-list": f"Stock {_format_metric(metrics.get('stock_total', 0))}",
+        "distribution:batch-list": f"{metrics.get('distribution', 0)} Batches",
+        "funds:donation-list": f"Rs. {_format_metric(metrics.get('fund_balance', 0))}",
+        "funds:transaction-list": f"Rs. {_format_metric(metrics.get('fund_balance', 0))}",
+        "reports:analytics": f"Rs. {_format_metric(metrics.get('fund_balance', 0))}",
+    }
     sidebar_events = []
     for event in active_events:
         sidebar_events.append(
             {
                 "event": event,
                 "is_selected": selected_event.pk == event.pk if selected_event else event.is_current,
-                "menu_items": _visible_links(request, EVENT_MENU_ITEMS, event=event),
+                "menu_items": [
+                    {**item, "badge": badge_map.get(item["url_name"], "")}
+                    for item in _visible_links(request, EVENT_MENU_ITEMS, event=event)
+                ],
             }
         )
     if request.user.is_authenticated:
@@ -62,10 +130,15 @@ def portal_navigation(request):
             role_label = "user"
     else:
         role_label = "guest"
+    resolver_match = getattr(request, "resolver_match", None)
+    current_view_name = getattr(resolver_match, "view_name", "") or ""
+    current_badge = badge_map.get(current_view_name, "")
     return {
         "portal_nav_items": visible_items,
         "sidebar_events": sidebar_events,
         "sidebar_selected_event": selected_event,
         "sidebar_headline": "Chaturmas Vaiyavach",
         "current_role_label": role_label,
+        "menu_badges": badge_map,
+        "page_live_badge": current_badge,
     }

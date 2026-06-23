@@ -45,6 +45,17 @@ class EventScopedListView(LoginRequiredMixin, PermissionRequiredMixin, ListView)
     def get_row_url_kwargs(self, obj):
         return {"pk": obj.pk}
 
+    def get_table_headers(self):
+        headers = list(getattr(self, "headers", []) or [])
+        if headers:
+            return headers
+        fallback = []
+        for field_name in self.row_fields:
+            if field_name.startswith("get_") and field_name.endswith("_display"):
+                field_name = field_name[4:-8]
+            fallback.append(field_name.replace("_", " ").title())
+        return fallback
+
     def get_queryset(self):
         qs = super().get_queryset()
         has_event_field = any(field.name == "event" for field in qs.model._meta.get_fields())
@@ -81,6 +92,7 @@ class EventScopedListView(LoginRequiredMixin, PermissionRequiredMixin, ListView)
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["table_rows"] = self.get_table_rows()
+        context["table_headers"] = self.get_table_headers()
         context["event_queryset"] = Event.objects.filter(is_active=True).order_by("-is_current", "-start_date", "name")
         context["can_add"] = self.request.user.has_perm(self._perm("add"))
         context["can_change"] = self.request.user.has_perm(self._perm("change"))

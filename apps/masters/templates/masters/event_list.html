@@ -2,7 +2,12 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
   <div>
-    <h1 class="h3 mb-1">{{ page_title }}</h1>
+    <div class="d-flex flex-wrap align-items-center gap-2">
+      <h1 class="h3 mb-0">{{ page_title }}</h1>
+      {% if page_live_badge %}
+        <span class="badge rounded-pill text-bg-warning-subtle text-warning-emphasis border border-warning-subtle">{{ page_live_badge }}</span>
+      {% endif %}
+    </div>
     {% if page_subtitle %}<p class="text-body-secondary mb-0">{{ page_subtitle }}</p>{% endif %}
   </div>
   {% if can_add and create_url %}

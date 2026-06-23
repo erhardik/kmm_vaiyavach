@@ -49,6 +49,9 @@
               <a class="list-group-item list-group-item-action sidebar-sub-link" href="{{ item.url }}" title="{{ item.label }}">
                 <i class="bi bi-{{ item.icon|default:'dot' }}"></i>
                 <span class="sidebar-sub-link-text">{{ item.label }}</span>
+                {% if item.badge %}
+                  <span class="badge rounded-pill text-bg-light text-dark ms-auto">{{ item.badge }}</span>
+                {% endif %}
               </a>
             {% empty %}
               <div class="list-group-item text-body-secondary small">No permitted menus.</div>

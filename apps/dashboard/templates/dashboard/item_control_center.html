@@ -3,7 +3,12 @@
 {% block content %}
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
   <div>
-    <h1 class="h3 mb-1">Item Master</h1>
+    <div class="d-flex flex-wrap align-items-center gap-2">
+      <h1 class="h3 mb-0">Item Master</h1>
+      {% if page_live_badge %}
+        <span class="badge rounded-pill text-bg-warning-subtle text-warning-emphasis border border-warning-subtle">{{ page_live_badge }}</span>
+      {% endif %}
+    </div>
     <p class="text-body-secondary mb-0">{% if selected_event %}{{ selected_event.name }}{% else %}No active event found{% endif %}</p>
   </div>
   <div class="d-flex flex-wrap gap-2">
@@ -60,6 +65,19 @@
 </div>
 
 <div class="section-band mb-3">Item Master Table</div>
+<div class="card border-0 shadow-sm mb-3">
+  <div class="card-body py-3">
+    <div class="row g-2 align-items-center">
+      <div class="col-12 col-lg-6">
+        <label class="form-label mb-1" for="itemMasterSearch">Live search</label>
+        <input id="itemMasterSearch" type="search" class="form-control" placeholder="Search by item name, code, serial, category, vendor, or volunteer">
+      </div>
+      <div class="col-12 col-lg-6 text-lg-end">
+        <div class="small text-body-secondary">Type to filter the table instantly.</div>
+      </div>
+    </div>
+  </div>
+</div>
 <div class="table-responsive shadow-sm rounded-3 bg-white">
   <table class="table table-hover align-middle mb-0">
     <thead class="table-light sticky-top">
@@ -82,7 +100,7 @@
     </thead>
     <tbody>
       {% for row in rows %}
-        <tr>
+        <tr data-item-row data-search="{{ row.item.item_code }} {{ row.serial }} {{ row.item.item_name }} {{ row.item.item_name_gu }} {{ row.item.get_category_display }} {{ row.vendor_name }} {{ row.ref_volunteer_name }}">
           <td>
             <div class="fw-semibold">{{ row.item.item_code }}</div>
             <div class="small text-body-secondary">#{{ row.serial|stringformat:"02d" }}</div>
@@ -114,7 +132,37 @@
           <td colspan="14" class="text-center py-4 text-body-secondary">No items found for this view.</td>
         </tr>
       {% endfor %}
+      <tr data-item-empty-row class="d-none">
+        <td colspan="14" class="text-center py-4 text-body-secondary">No items match your search.</td>
+      </tr>
     </tbody>
   </table>
 </div>
+<script>
+  (function() {
+    const input = document.getElementById("itemMasterSearch");
+    const rows = Array.from(document.querySelectorAll("[data-item-row]"));
+    const emptyRow = document.querySelector("[data-item-empty-row]");
+    if (!input || !rows.length) {
+      return;
+    }
+    function applyFilter() {
+      const query = input.value.trim().toLowerCase();
+      let visible = 0;
+      rows.forEach(function(row) {
+        const haystack = (row.getAttribute("data-search") || row.textContent || "").toLowerCase();
+        const match = !query || haystack.indexOf(query) !== -1;
+        row.classList.toggle("d-none", !match);
+        if (match) {
+          visible += 1;
+        }
+      });
+      if (emptyRow) {
+        emptyRow.classList.toggle("d-none", visible !== 0);
+      }
+    }
+    input.addEventListener("input", applyFilter);
+    applyFilter();
+  })();
+</script>
 {% endblock %}
