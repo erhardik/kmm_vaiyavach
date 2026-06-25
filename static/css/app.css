@@ -209,6 +209,14 @@ body.bg-soft {
   overflow: hidden;
 }
 
+.requirement-hero .card-body {
+  min-height: 0;
+}
+
+.requirement-hero h1 {
+  line-height: 1.15;
+}
+
 .requirement-hero .text-body-secondary {
   color: rgba(255, 255, 255, 0.78) !important;
 }
@@ -243,6 +251,7 @@ body.bg-soft {
 .requirement-kicker {
   color: #b9d5f0;
   letter-spacing: 0.16em;
+  font-size: 0.68rem;
 }
 
 .section-band {
@@ -304,59 +313,74 @@ body.bg-soft {
 }
 
 .collect-form-shell .table > :not(caption) > * > * {
-  padding: 0.55rem 0.65rem;
+  padding: 0.38rem 0.48rem;
 }
 
 .collect-form-shell .table td,
 .collect-form-shell .table th {
-  vertical-align: top;
+  vertical-align: middle;
 }
 
 .collect-form-shell .col-sr {
-  width: 7%;
+  width: 4.5rem;
+  white-space: nowrap;
 }
 
 .collect-form-shell .col-name {
-  width: auto;
-  max-width: 52%;
+  width: 36%;
+  max-width: 36%;
 }
 
 .collect-form-shell .col-qty {
-  width: 12%;
+  width: 26rem;
 }
 
 .collect-form-shell .col-remark {
-  width: 12%;
+  width: 8.5rem;
 }
 
 .collect-form-shell .col-name .fw-semibold {
   white-space: normal;
-  line-height: 1.25;
+  line-height: 1.18;
+  font-size: 0.92rem;
+}
+
+.collect-form-shell .col-name .small {
+  line-height: 1.15;
 }
 
 .collect-form-shell .col-remark .form-control {
-  min-height: 2.2rem;
+  min-height: 1.9rem;
 }
 
 .collect-form-shell .qty-cell select {
-  width: 74px;
-  min-width: 74px;
+  width: 62px;
+  min-width: 62px;
 }
 
 .item-remark-field {
-  min-height: 2.1rem !important;
-  height: 2.1rem;
+  min-height: 1.9rem !important;
+  height: 1.9rem;
   resize: none;
 }
 
 .qty-cell select {
-  width: 84px;
-  min-width: 84px;
+  width: 62px;
+  min-width: 62px;
+  padding-block: 0.18rem;
+}
+
+.qty-preset-group .btn,
+.qty-preset-btn {
+  min-width: 1.9rem;
+  padding: 0.16rem 0.34rem;
+  font-size: 0.72rem;
+  line-height: 1.05;
 }
 
 .nr-btn {
-  min-width: 2.4rem;
-  padding: 0.2rem 0.45rem;
+  min-width: 2rem;
+  padding: 0.16rem 0.34rem;
   font-size: 0.72rem;
   font-weight: 700;
   line-height: 1;
@@ -431,47 +455,63 @@ body.bg-soft {
   .requirement-table tr,
   .requirement-table td {
     display: block;
-    width: 100%;
   }
 
   .requirement-table tr {
+    display: grid;
+    grid-template-columns: 2.65rem minmax(0, 1fr);
+    gap: 0.28rem 0.55rem;
     border-bottom: 1px solid rgba(20, 50, 79, 0.08);
-    padding: 0.25rem 0;
+    padding: 0.55rem 0.65rem;
     background: #fff;
   }
 
   .requirement-table td {
     border: 0;
-    padding: 0.55rem 0.75rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 0.75rem;
+    padding: 0;
   }
 
   .requirement-table td::before {
-    content: attr(data-label);
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    color: #6c757d;
-    flex: 0 0 42%;
-    max-width: 42%;
+    content: none;
   }
 
-  .requirement-table td > * {
-    flex: 1 1 auto;
-    min-width: 0;
+  .requirement-table .col-sr {
+    grid-column: 1;
+    grid-row: 1;
+    width: auto;
+    font-size: 0.8rem;
+    line-height: 1.25;
+  }
+
+  .requirement-table .col-name {
+    grid-column: 2;
+    grid-row: 1;
+    width: auto;
+    max-width: none;
+  }
+
+  .requirement-table .col-qty {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: auto;
+    text-align: left !important;
+  }
+
+  .requirement-table .col-remark {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    width: auto;
+    max-width: none;
   }
 
   .qty-cell {
     width: 100%;
+    justify-content: flex-start !important;
   }
 
   .qty-cell select {
-    width: 100%;
-    min-width: 100%;
+    width: 58px;
+    min-width: 58px;
   }
 
   .collect-form-shell .col-name,
@@ -483,16 +523,16 @@ body.bg-soft {
   }
 
   .qty-cell .d-flex {
-    width: 100%;
+    width: auto;
   }
 
   .qty-cell .btn {
-    flex: 1 1 30%;
+    flex: 0 0 auto;
   }
 
   .item-remark-field {
-    min-height: 3rem !important;
-    height: auto;
+    min-height: 1.95rem !important;
+    height: 1.95rem;
   }
 
   .saved-order-summary-card .row.g-2 > div {
