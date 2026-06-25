@@ -5,7 +5,12 @@
     <h1 class="h3 mb-1">Order Details</h1>
     <p class="text-body-secondary mb-0">Order No. {{ header.order_number|default:"-" }}</p>
   </div>
-  <a class="btn btn-outline-secondary" href="{% url 'requirements:header-list' %}">Back</a>
+  <div class="d-flex gap-2">
+    {% if public_pdf_url %}
+      <a class="btn btn-outline-primary" href="{{ public_pdf_url }}" target="_blank" rel="noopener">Public PDF Link</a>
+    {% endif %}
+    <a class="btn btn-outline-secondary" href="{% url 'requirements:header-list' %}">Back</a>
+  </div>
 </div>
 {% include "requirements/header_detail.html" %}
 {% endblock %}

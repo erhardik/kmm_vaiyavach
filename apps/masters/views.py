@@ -96,6 +96,8 @@ class EventUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
         context["manager_contacts"] = self.object.masters_eventmanagercontact_records.filter(is_active=True).order_by("-is_primary", "contact_name")
         context["manager_contacts_create_url"] = reverse("masters:event-contact-create", kwargs={"event_pk": self.object.pk})
         context["manager_contacts_list_url"] = reverse("masters:event-contact-list", kwargs={"event_pk": self.object.pk})
+        context["public_share_url"] = reverse("requirements:public-collect", kwargs={"event_token": self.object.public_form_token})
+        context["public_share_label"] = "Public Requirement Form Link"
         return context
 
     def form_valid(self, form):

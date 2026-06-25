@@ -193,12 +193,18 @@ class RequirementCollectionView(View):
     )
 
     def _get_event(self):
+        event_token = self.kwargs.get("event_token") or self.request.GET.get("event_token") or self.request.POST.get("event_token")
+        if event_token:
+            return Event.objects.filter(public_form_token=event_token, is_active=True).first()
         event_id = self.request.GET.get("event") or self.request.POST.get("event") or self.kwargs.get("event_pk")
         if event_id:
             return Event.objects.filter(pk=event_id, is_active=True).first()
         return Event.objects.filter(is_current=True, is_active=True).first()
 
     def _get_header(self, event):
+        token = self.kwargs.get("token") or self.request.POST.get("token") or self.request.GET.get("token")
+        if token:
+            return RequirementHeader.objects.filter(public_view_token=token, event=event).first()
         pk = self.kwargs.get("pk") or self.request.POST.get("header_pk") or self.request.GET.get("header_pk")
         if not pk or event is None:
             return None
@@ -282,6 +288,8 @@ class RequirementCollectionView(View):
             "list_url": reverse_lazy("requirements:header-list"),
             "can_save": bool(event),
             "order_number": header.order_number if header else None,
+            "public_collect_url": reverse("requirements:public-collect", kwargs={"event_token": event.public_form_token}) if event else None,
+            "public_pdf_url": reverse("requirements:public-print", kwargs={"token": header.public_view_token}) if header and header.order_number else None,
         }
 
     def _render_summary_html(self, request, header):
@@ -448,8 +456,12 @@ class RequirementCollectionView(View):
 
 
 class RequirementCollectionPrintView(View):
-    def get(self, request, pk):
-        header = RequirementHeader.objects.select_related("event", "upashray").filter(pk=pk).first()
+    def get(self, request, pk=None, token=None):
+        query = RequirementHeader.objects.select_related("event", "upashray")
+        if token is not None:
+            header = query.filter(public_view_token=token).first()
+        else:
+            header = query.filter(pk=pk).first()
         if header is None:
             messages.error(request, "Requirement order not found.")
             return redirect(reverse_lazy("requirements:header-list"))
@@ -725,8 +737,12 @@ class RequirementCollectionPrintView(View):
 
 
 class RequirementCollectionDetailView(View):
-    def get(self, request, pk):
-        header = RequirementHeader.objects.select_related("event", "upashray").filter(pk=pk).first()
+    def get(self, request, pk=None, token=None):
+        query = RequirementHeader.objects.select_related("event", "upashray")
+        if token is not None:
+            header = query.filter(public_view_token=token).first()
+        else:
+            header = query.filter(pk=pk).first()
         if header is None:
             return HttpResponse("Requirement order not found.", status=404)
         lines = list(
@@ -741,6 +757,7 @@ class RequirementCollectionDetailView(View):
                 "header": header,
                 "lines": lines,
                 "lang": _lang_code(request),
+                "public_pdf_url": reverse("requirements:public-print", kwargs={"token": header.public_view_token}) if header.order_number else None,
             },
         )
 

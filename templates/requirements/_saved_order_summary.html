@@ -22,6 +22,15 @@
         <button class="btn btn-success btn-lg" type="submit" name="confirm" value="1">{% if lang_code == "gu" %}કન્ફર્મ{% else %}Confirm{% endif %}</button>
       </div>
     </div>
+    {% if public_pdf_url %}
+      <div class="alert alert-info d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+          <div class="fw-semibold">{% if lang_code == "gu" %}Public PDF Link{% else %}Public PDF Link{% endif %}</div>
+          <div class="small text-body-secondary text-break">{{ public_pdf_url }}</div>
+        </div>
+        <a class="btn btn-outline-primary btn-sm" href="{{ public_pdf_url }}" target="_blank" rel="noopener">{% if lang_code == "gu" %}Open{% else %}Open{% endif %}</a>
+      </div>
+    {% endif %}
     <div class="row g-2">
       <div class="col-12 col-md-4"><strong>{% if lang_code == "gu" %}પૂજ્ય શ્રી{% else %}Pujya Shri{% endif %}:</strong> {{ header.pujya_shri_name|default:"-" }}</div>
       <div class="col-12 col-md-4"><strong>{% if lang_code == "gu" %}વર્તમાન સરનામું{% else %}Current Address{% endif %}:</strong> {{ header.current_address|default:"-" }}</div>

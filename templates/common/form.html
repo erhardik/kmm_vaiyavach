@@ -31,6 +31,16 @@
             <a href="{{ list_url }}" class="btn btn-outline-secondary">Cancel</a>
           </div>
         </form>
+        {% if public_share_url %}
+          <hr class="my-4">
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+              <h2 class="h6 mb-1">{{ public_share_label|default:"Public Link" }}</h2>
+              <div class="small text-body-secondary">{{ public_share_url }}</div>
+            </div>
+            <a class="btn btn-outline-primary btn-sm" href="{{ public_share_url }}" target="_blank" rel="noopener">Open Link</a>
+          </div>
+        {% endif %}
         {% if manager_contacts %}
           <hr class="my-4">
           <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">

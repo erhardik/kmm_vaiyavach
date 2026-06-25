@@ -28,6 +28,7 @@ class RequirementHeader(EventScopedModel):
         STHIRVAS = "STHIRVAS", "Sthirvas"
 
     order_number = models.CharField(max_length=24, unique=True, editable=False, null=True, blank=True)
+    public_view_token = models.UUIDField(default=None, null=True, blank=True, unique=True, editable=False)
     upashray = models.ForeignKey("masters.Upashray", on_delete=models.PROTECT, related_name="requirements")
     requirement_date = models.DateField(default=timezone.now)
     remarks = models.TextField(blank=True)
@@ -58,6 +59,8 @@ class RequirementHeader(EventScopedModel):
         return f"{self.upashray} - {self.requirement_date}"
 
     def save(self, *args, **kwargs):
+        if not self.public_view_token:
+            self.public_view_token = uuid.uuid4()
         if not self.order_number and self.status == RequirementStatus.SUBMITTED:
             token = uuid.uuid4().hex[:8].upper()
             date_token = timezone.localdate().strftime("%Y%m%d")

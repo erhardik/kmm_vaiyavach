@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import models
 
 from config.models import EventScopedModel, TimeStampedModel
@@ -34,6 +36,7 @@ class Event(TimeStampedModel):
     slug = models.SlugField(max_length=120, unique=True)
     start_date = models.DateField()
     end_date = models.DateField()
+    public_form_token = models.UUIDField(default=None, null=True, blank=True, unique=True, editable=False)
     location = models.CharField(max_length=200, blank=True)
     primary_contact_name = models.CharField(max_length=120, blank=True, default="")
     primary_contact_mobile = models.CharField(max_length=20, blank=True, default="")
@@ -46,6 +49,11 @@ class Event(TimeStampedModel):
 
     def __str__(self) -> str:
         return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.public_form_token:
+            self.public_form_token = uuid.uuid4()
+        super().save(*args, **kwargs)
 
 
 class EventManagerContact(EventScopedModel):
