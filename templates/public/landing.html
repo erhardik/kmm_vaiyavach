@@ -11,348 +11,316 @@
 </head>
 <body class="bg-soft">
   <div class="public-landing">
-    <nav class="navbar navbar-expand-lg navbar-dark public-topbar">
+    <nav class="navbar navbar-expand-lg navbar-light public-site-nav">
       <div class="container py-2">
-        <a class="navbar-brand d-flex align-items-center gap-2" href="#top">
-          <img src="{% static 'images/kmm.png' %}" alt="KMM" class="public-nav-logo">
-          <span class="fw-semibold">કલ્યાણ મિત્ર મંડળ</span>
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#publicNav" aria-controls="publicNav" aria-expanded="false" aria-label="Toggle navigation">
+        <button class="navbar-toggler me-2" type="button" data-bs-toggle="collapse" data-bs-target="#publicNav" aria-controls="publicNav" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse" id="publicNav">
-          <div class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
+        <div class="collapse navbar-collapse order-3 order-lg-1" id="publicNav">
+          <div class="navbar-nav align-items-lg-center gap-lg-3">
             <a class="nav-link" href="#about">અમારા વિશે</a>
-            <a class="nav-link" href="#requests">વિનંતીઓ</a>
-            <a class="nav-link" href="#stock">સ્ટોક</a>
+            <a class="nav-link" href="#current-event">ચાતુર્માસ વૈયાવચ્ચ</a>
+            <a class="nav-link" href="#past-events">સેવા કાર્યો</a>
             <a class="nav-link" href="#contact">સંપર્ક</a>
-            <a class="btn btn-light btn-sm ms-lg-2" href="{{ login_url }}">સભ્ય લોગિન</a>
+            <a class="btn btn-outline-primary btn-sm" href="{{ login_url }}">સભ્ય લોગિન</a>
           </div>
         </div>
+        <a class="navbar-brand d-flex align-items-center gap-2 ms-auto order-2" href="#top">
+          <span class="fw-semibold d-none d-sm-inline">કલ્યાણ મિત્ર મંડળ</span>
+          <img src="{% static 'images/kmm.png' %}" alt="KMM" class="public-nav-logo">
+        </a>
       </div>
     </nav>
 
-    <header class="public-hero" id="top">
-      <div class="container py-4 py-lg-5">
-        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
-          <div class="d-flex align-items-center gap-3">
-            <img src="{% static 'images/kmm.png' %}" alt="KMM" class="public-brand-logo">
-            <div>
-              <div class="text-uppercase small tracking-wide text-white-50">Kalyan Mitra Mandal</div>
-              <h1 class="display-6 fw-bold mb-0">કલ્યાણ મિત્ર મંડળ</h1>
-              <div class="text-white-75">ચાતુર્માસ વૈયાવચ્ચ જાહેર પ્રવેશદ્વાર</div>
-            </div>
-          </div>
+    <header id="top" class="public-carousel-wrap">
+      <div id="kmmHeroCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel" data-bs-interval="4800">
+        <div class="carousel-indicators">
+          <button type="button" data-bs-target="#kmmHeroCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+          <button type="button" data-bs-target="#kmmHeroCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+          <button type="button" data-bs-target="#kmmHeroCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
         </div>
-
-        <div class="row g-4 align-items-stretch">
-          <div class="col-12 col-lg-7">
-            <div class="hero-copy h-100 d-flex flex-column justify-content-center">
-              <div class="badge rounded-pill text-bg-light text-primary-emphasis mb-3 align-self-start">સેવા · પારદર્શિતા · ગોઠવણી</div>
-              <h2 class="display-5 fw-bold mb-3">એક જ જગ્યાએ વિનંતી, ઓર્ડર લિસ્ટ, સ્ટોક અને પ્રગતિ જુઓ.</h2>
-              <p class="lead text-white-75 mb-4">
-                {% if event %}
-                  હાલનું ઇવેન્ટ: <strong>{{ event.name }}</strong>{% if event.start_date %} · {{ event.start_date }} થી {{ event.end_date }}{% endif %}
-                {% else %}
-                  હાલમાં સક્રિય ઇવેન્ટ ઉપલબ્ધ નથી.
-                {% endif %}
-              </p>
+        <div class="carousel-inner">
+          <div class="carousel-item active">
+            <img src="{% static 'images/kmm.png' %}" class="d-block w-100 public-carousel-image public-carousel-logo-image" alt="Chaturmas Vaiyavachch 2026">
+            <div class="public-carousel-overlay"></div>
+            <div class="carousel-caption public-carousel-caption text-start">
+              <div class="public-kicker">Kalyan Mitra Mandal</div>
+              <h1>ચાતુર્માસ વૈયાવચ્ચ 2026</h1>
+              <p>વિનંતી, પેકિંગ, સ્ટોક અને વિતરણની પારદર્શક વ્યવસ્થા.</p>
               <div class="d-flex flex-wrap gap-2">
                 <a class="btn btn-warning btn-lg" href="{{ request_form_url }}">વૈયાવચ્ચ વિનંતી ફોર્મ ભરો</a>
                 <a class="btn btn-outline-light btn-lg" href="{{ requests_url }}">બધી વિનંતીઓ જુઓ</a>
               </div>
-              <div class="d-flex flex-wrap gap-2 mt-4">
-                <a class="btn btn-outline-light btn-sm" href="#about">About KMM</a>
-                <a class="btn btn-outline-light btn-sm" href="#requests">Live Orders</a>
-                <a class="btn btn-outline-light btn-sm" href="#stock">Current Stock</a>
-                <a class="btn btn-outline-light btn-sm" href="#contact">Social & Contact</a>
-              </div>
-              <div class="hero-trust row g-3 mt-4">
-                <div class="col-12 col-md-4">
-                  <div class="hero-trust-card">
-                    <div class="small text-uppercase text-white-50 mb-1">2008 થી</div>
-                    <div class="fw-semibold">મિત્રોના સેવા પ્રયાસથી શરૂ</div>
-                  </div>
-                </div>
-                <div class="col-12 col-md-4">
-                  <div class="hero-trust-card">
-                    <div class="small text-uppercase text-white-50 mb-1">Transparent</div>
-                    <div class="fw-semibold">સંપૂર્ણ પારદર્શક વ્યવસ્થા</div>
-                  </div>
-                </div>
-                <div class="col-12 col-md-4">
-                  <div class="hero-trust-card">
-                    <div class="small text-uppercase text-white-50 mb-1">Community</div>
-                    <div class="fw-semibold">મિત્રોનું સમય, કુશળતા અને પ્રેમ</div>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
-
-          <div class="col-12 col-lg-5">
-            <div class="glass-card p-4 h-100">
-              <div class="small text-uppercase text-white-50 mb-2">આજનું સંક્ષિપ્ત દૃશ્ય</div>
-              <img src="{% static 'pdf_header.png' %}" alt="Chaturmas Vaiyavachch 2026 banner" class="img-fluid rounded-4 shadow-sm mb-3 public-banner-image">
-              <div class="row g-3">
-                <div class="col-6">
-                  <div class="metric-card metric-card-light">
-                    <div class="label">કુલ વિનંતી</div>
-                    <div class="value">{{ status_summary.total_requests|default:0 }}</div>
-                  </div>
-                </div>
-                <div class="col-6">
-                  <div class="metric-card metric-card-light">
-                    <div class="label">ઓપન</div>
-                    <div class="value">{{ status_summary.open_requests|default:0 }}</div>
-                  </div>
-                </div>
-                <div class="col-6">
-                  <div class="metric-card metric-card-light">
-                    <div class="label">પેકિંગ પૂર્ણ</div>
-                    <div class="value">{{ status_summary.packing_requests|default:0 }}</div>
-                  </div>
-                </div>
-                <div class="col-6">
-                  <div class="metric-card metric-card-light">
-                    <div class="label">માર્ગમાં</div>
-                    <div class="value">{{ status_summary.on_route_requests|default:0 }}</div>
-                  </div>
-                </div>
-              </div>
-              <div class="border-top border-white border-opacity-25 mt-4 pt-4">
-                <div class="small text-uppercase text-white-50 mb-2">તાત્કાલિક પ્રવેશ</div>
-                <div class="d-grid gap-2">
-                  <a class="btn btn-warning" href="{{ request_form_url }}">વૈયાવચ્ચ વિનંતી ફોર્મ ભરો</a>
-                  <a class="btn btn-outline-light" href="{{ requests_url }}">બધી વિનંતીઓ જુઓ</a>
-                </div>
-              </div>
+          <div class="carousel-item">
+            <img src="{% static 'images/kmm.png' %}" class="d-block w-100 public-carousel-image public-carousel-logo-image" alt="Kalyan Mitra Mandal logo">
+            <div class="public-carousel-overlay"></div>
+            <div class="carousel-caption public-carousel-caption text-start">
+              <div class="public-kicker">Since 2008</div>
+              <h1>સેવા, સંવેદના અને પારદર્શિતા</h1>
+              <p>મિત્રોના સમય, કુશળતા, ઉર્જા અને પ્રેમથી ચાલતું સમાજસેવાનું કાર્ય.</p>
+              <a class="btn btn-outline-light btn-lg" href="#about">અમારી વાર્તા વાંચો</a>
+            </div>
+          </div>
+          <div class="carousel-item">
+            <img src="{% static 'images/kmm.png' %}" class="d-block w-100 public-carousel-image public-carousel-logo-image" alt="Vaiyavachch management">
+            <div class="public-carousel-overlay"></div>
+            <div class="carousel-caption public-carousel-caption text-start">
+              <div class="public-kicker">Live Public Board</div>
+              <h1>દરેક ઓર્ડરનો સ્ટેટસ એક જ જગ્યાએ</h1>
+              <p>Open, Pending, Packing done, On route, Recieved by M.S. અને Return status સુધી.</p>
+              <a class="btn btn-warning btn-lg" href="#current-event">Current Event જુઓ</a>
             </div>
           </div>
         </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#kmmHeroCarousel" data-bs-slide="prev">
+          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+          <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#kmmHeroCarousel" data-bs-slide="next">
+          <span class="carousel-control-next-icon" aria-hidden="true"></span>
+          <span class="visually-hidden">Next</span>
+        </button>
       </div>
     </header>
 
-    <main class="container py-4 py-lg-5">
+    <main>
       {% if messages %}
-        <div class="mb-4">
+        <div class="container pt-4">
           {% for message in messages %}
             <div class="alert alert-{{ message.tags }} mb-2">{{ message }}</div>
           {% endfor %}
         </div>
       {% endif %}
 
-      <section class="mb-4" id="about">
-        <div class="row g-4 align-items-stretch">
-          <div class="col-12 col-lg-7">
-            <div class="card border-0 shadow-sm h-100">
-              <div class="card-body p-4 p-lg-5">
-                <div class="section-band mb-3">અમારી વાર્તા</div>
-                <h2 class="h3 mb-3">2008થી સમાજસેવા માટે શરૂ થયેલું એક મિત્રમંડળ.</h2>
-                <p class="text-body-secondary mb-3">
-                  કલ્યાણ મિત્ર મંડળની શરૂઆત 2008માં એવા મિત્રોના સમૂહથી થઈ જેમણે અર્થપૂર્ણ જીવન અને સમાજને પાછું આપવાની ભાવનાથી સેવા શરૂ કરી.
-                  અમારો વિશ્વાસ છે કે માત્ર “દરેકે પોતાનું જ જોવું” એવી માનસિકતા સાથે કોઈ સમાજ ખરેખર સફળ બની શકતો નથી.
+      <section class="public-band" id="about">
+        <div class="container">
+          <div class="row g-4 align-items-center">
+            <div class="col-12 col-lg-7">
+              <div class="section-band mb-3">અમારા વિશે</div>
+              <h2 class="public-section-title">2008થી સમાજસેવા માટે શરૂ થયેલું એક મિત્રમંડળ.</h2>
+              <p class="public-lead">
+                કલ્યાણ મિત્ર મંડળની શરૂઆત 2008માં એવા મિત્રોના સમૂહથી થઈ જેમણે અર્થપૂર્ણ જીવન અને સમાજને પાછું આપવાની ભાવનાથી સેવા શરૂ કરી.
+                અમારો વિશ્વાસ છે કે માત્ર “દરેકે પોતાનું જ જોવું” એવી માનસિકતા સાથે કોઈ સમાજ ખરેખર સફળ બની શકતો નથી.
+              </p>
+              <p class="text-body-secondary">
+                અહીં એવા ઘણા લોકો છે જેમને ખોરાક, પ્રેમ, શિક્ષણ કે માન-સન્માન જેવું આવશ્યક સહારો મળવો મુશ્કેલ હોય છે.
+                તેમના પરનો બોજ થોડો પણ ઓછો કરવો અને કંઈક સારું બનાવવું એ જ અમારે માટે સાચી સિદ્ધિ અને આશા છે.
+              </p>
+            </div>
+            <div class="col-12 col-lg-5">
+              <div class="public-story-panel">
+                <div class="public-story-number">2008</div>
+                <div class="fw-semibold mb-2">સંપૂર્ણ પારદર્શિતા પર વિશ્વાસ.</div>
+                <p class="mb-0 text-body-secondary">
+                  મંડળ મોટાભાગે મિત્રોના સમય, કુશળતા, ઉર્જા અને પ્રેમથી ચાલે છે.
                 </p>
-                <p class="text-body-secondary mb-3">
-                  અહીં એવા ઘણા લોકો છે જેમને ખોરાક, પ્રેમ, શિક્ષણ કે માન-સન્માન જેવું આવશ્યક સહારો મળવો મુશ્કેલ હોય છે.
-                  તેમના પરના બોજને થોડું પણ ઓછું કરવું અને કંઈક સારું બનાવવું એ જ અમારે માટે સાચી સિદ્ધિ અને આશા છે.
-                </p>
-                <p class="text-body-secondary mb-0">
-                  અમે સંપૂર્ણ પારદર્શિતા પર વિશ્વાસ રાખીએ છીએ અને મોટાભાગે મિત્રોના સમય, કુશળતા, ઉર્જા અને પ્રેમથી ચાલીએ છીએ.
-                </p>
-              </div>
-            </div>
-          </div>
-          <div class="col-12 col-lg-5">
-            <div class="card border-0 shadow-sm h-100">
-              <div class="card-body p-4 p-lg-5">
-                <div class="section-band mb-3">સંપર્ક અને મીડિયા</div>
-                <h2 class="h4 mb-3">જોડાયેલા રહો</h2>
-                <div class="d-grid gap-2">
-                  <a class="btn btn-outline-primary text-start" href="https://instagram.com/jainkmm" target="_blank" rel="noopener">
-                    <i class="bi bi-instagram me-2"></i>Instagram · @jainkmm
-                  </a>
-                  <a class="btn btn-outline-primary text-start" href="https://facebook.com/jainkalyanmitramandal" target="_blank" rel="noopener">
-                    <i class="bi bi-facebook me-2"></i>Facebook · jainkalyanmitramandal
-                  </a>
-                  <a class="btn btn-outline-primary text-start" href="https://twitter.com/jainkmm" target="_blank" rel="noopener">
-                    <i class="bi bi-twitter-x me-2"></i>Twitter · @jainkmm
-                  </a>
-                  <a class="btn btn-outline-primary text-start" href="mailto:jainkalyanmitramandal@gmail.com">
-                    <i class="bi bi-envelope me-2"></i>jainkalyanmitramandal@gmail.com
-                  </a>
-                  <a class="btn btn-outline-primary text-start" href="http://www.youtube.com/@KalyanMitraMandalAhmedabad" target="_blank" rel="noopener">
-                    <i class="bi bi-youtube me-2"></i>YouTube · KalyanMitraMandalAhmedabad
-                  </a>
-                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section class="mb-4">
-        <div class="row g-3">
-          <div class="col-12 col-md-4">
-            <div class="card border-0 shadow-sm h-100">
-              <div class="card-body">
-                <div class="dashboard-card-kicker">Value</div>
-                <div class="dashboard-card-title">Absolute Transparency</div>
-                <div class="dashboard-card-meta">Every step is tracked so members can trust the flow.</div>
-              </div>
-            </div>
-          </div>
-          <div class="col-12 col-md-4">
-            <div class="card border-0 shadow-sm h-100">
-              <div class="card-body">
-                <div class="dashboard-card-kicker">Value</div>
-                <div class="dashboard-card-title">Service with Heart</div>
-                <div class="dashboard-card-meta">Friends give their time, skill, energy, and love.</div>
-              </div>
-            </div>
-          </div>
-          <div class="col-12 col-md-4">
-            <div class="card border-0 shadow-sm h-100">
-              <div class="card-body">
-                <div class="dashboard-card-kicker">Value</div>
-                <div class="dashboard-card-title">Meaningful Living</div>
-                <div class="dashboard-card-meta">The mission is to help reduce burden and create hope.</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="mb-4" id="requests">
-        <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
-          <div>
-            <h2 class="h3 mb-1">ચાલુ વિનંતીઓ</h2>
-            <p class="text-body-secondary mb-0">લોગિન વગર પેકિંગ અને રવાનગીના સ્ટેટસ અપડેટ કરી શકાય છે.</p>
-          </div>
-          <div class="d-flex flex-wrap gap-2">
-            <span class="badge text-bg-primary-subtle text-primary-emphasis">ઓપન: {{ status_summary.open_requests|default:0 }}</span>
-            <span class="badge text-bg-warning-subtle text-warning-emphasis">પેન્ડિંગ: {{ status_summary.status_SUBMITTED|default:0 }}</span>
-            <span class="badge text-bg-warning-subtle text-warning-emphasis">પેકિંગ: {{ status_summary.packing_requests|default:0 }}</span>
-            <span class="badge text-bg-info-subtle text-info-emphasis">પ્રાપ્ત: {{ status_summary.received_requests|default:0 }}</span>
-            <span class="badge text-bg-danger-subtle text-danger-emphasis">નકારેલ: {{ status_summary.rejected_requests|default:0 }}</span>
-          </div>
-        </div>
-
-        <div class="table-responsive shadow-sm rounded-4 bg-white">
-          <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
-              <tr>
-                <th>ઓર્ડર</th>
-                <th>ઉપાશ્રય</th>
-                <th>તારીખ</th>
-                <th>સ્ટેટસ</th>
-                <th>વસ્તુઓ</th>
-                <th>કારવાઈ</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for header in headers %}
-                <tr>
-                  <td>
-                    <div class="fw-semibold">{{ header.order_number|default:"Draft" }}</div>
-                    <div class="small text-body-secondary">{{ header.public_view_token }}</div>
-                  </td>
-                  <td>{{ header.upashray }}</td>
-                  <td>{{ header.requirement_date }}</td>
-                  <td><span class="badge text-bg-light border">{{ header.get_status_display }}</span></td>
-                  <td>{{ header.lines.count }}</td>
-                  <td>
-                    <div class="d-flex flex-wrap gap-2">
-                      <a class="btn btn-sm btn-outline-primary" href="{% url 'requirements:public-detail' token=header.public_view_token %}">જુઓ</a>
-                      <form method="post" class="d-flex flex-wrap gap-2 align-items-center">
-                        {% csrf_token %}
-                        <input type="hidden" name="order_token" value="{{ header.public_view_token }}">
-                        <select name="status" class="form-select form-select-sm public-status-select">
-                          {% for value,label in status_choices %}
-                            <option value="{{ value }}" {% if header.status == value %}selected{% endif %}>{{ label }}</option>
-                          {% endfor %}
-                        </select>
-                        <button class="btn btn-sm btn-warning js-pack-now" type="button" data-status="IN_PROGRESS">Pack</button>
-                        <button class="btn btn-sm btn-success" type="submit">સ્ટેટસ સેવ કરો</button>
-                      </form>
-                    </div>
-                  </td>
-                </tr>
-              {% empty %}
-                <tr>
-                  <td colspan="6" class="text-center py-4 text-body-secondary">આ ઇવેન્ટ માટે હજી કોઈ વિનંતી નથી.</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section class="mb-4" id="stock">
-        <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
-          <div>
-            <h2 class="h3 mb-1">વસ્તુ સ્ટોક</h2>
-            <p class="text-body-secondary mb-0">માત્ર વસ્તુ, પ્રકાર અને વર્તમાન સ્ટોક. કોઈ કિંમત અથવા નાણાકીય ડેટા નથી.</p>
-          </div>
-        </div>
-        <div class="card border-0 shadow-sm">
-          <div class="card-body">
-            <div class="row g-2 align-items-center mb-3">
-              <div class="col-12 col-lg-6">
-                <input type="search" id="publicItemSearch" class="form-control" placeholder="વસ્તુ શોધો">
-              </div>
-              <div class="col-12 col-lg-6 text-lg-end small text-body-secondary">લાઇવ ફિલ્ટર થયેલ સ્ટોક યાદી</div>
-            </div>
-            <div class="table-responsive">
-              <table class="table table-sm table-hover align-middle mb-0">
-                <thead class="table-light">
-                  <tr>
-                    <th>કોડ</th>
-                    <th>વસ્તુ</th>
-                    <th>પ્રકાર</th>
-                    <th class="text-end">વર્તમાન સ્ટોક</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for row in public_item_preview %}
-                    <tr data-item-row data-search="{{ row.item.item_code }} {{ row.item.item_name }} {{ row.item.item_name_gu }} {{ row.category }}">
-                      <td>
-                        <div class="fw-semibold">{{ row.item.item_code }}</div>
-                        <div class="small text-body-secondary">#{{ row.serial|stringformat:"02d" }}</div>
-                      </td>
-                      <td>
-                        <div class="fw-semibold">{{ row.item.item_name }}</div>
-                        <div class="small text-body-secondary">{{ row.item.item_name_gu|default:row.item.default_size }}</div>
-                      </td>
-                      <td>{{ row.category }}</td>
-                      <td class="text-end">{{ row.stock }}</td>
-                    </tr>
-                  {% empty %}
-                    <tr><td colspan="4" class="text-center py-4 text-body-secondary">વસ્તુઓ મળી નથી.</td></tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="mb-2" id="contact">
-        <div class="card border-0 shadow-sm">
-          <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-3">
+      <section class="public-band public-band-soft" id="current-event">
+        <div class="container">
+          <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
             <div>
-              <div class="fw-semibold">માનવ સેવા અને ઇવેન્ટ્સની પારદર્શક વ્યવસ્થા માટે બનાવેલ જાહેર પોર્ટલ.</div>
-              <div class="text-body-secondary small">વસ્તુઓ, ઓર્ડર, પેકિંગ અને રવાના જર્ની એક જ જગ્યાએ.</div>
+              <div class="section-band mb-3">Current Event</div>
+              <h2 class="public-section-title mb-1">ચાતુર્માસ વૈયાવચ્ચ</h2>
+              <p class="text-body-secondary mb-0">
+                {% if event %}
+                  {{ event.name }}{% if event.start_date %} · {{ event.start_date }} થી {{ event.end_date }}{% endif %}
+                {% else %}
+                  હાલમાં સક્રિય ઇવેન્ટ ઉપલબ્ધ નથી.
+                {% endif %}
+              </p>
             </div>
             <div class="d-flex flex-wrap gap-2">
               <a class="btn btn-primary" href="{{ request_form_url }}">ફોર્મ ભરો</a>
               <a class="btn btn-outline-primary" href="{{ requests_url }}">વિનંતીઓ જુઓ</a>
-              <a class="btn btn-outline-secondary" href="{{ login_url }}">સભ્ય લોગિન</a>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-4">
+            <div class="col-6 col-lg-3"><div class="metric-card"><div class="label">કુલ વિનંતી</div><div class="value">{{ status_summary.total_requests|default:0 }}</div></div></div>
+            <div class="col-6 col-lg-3"><div class="metric-card"><div class="label">ઓપન</div><div class="value">{{ status_summary.open_requests|default:0 }}</div></div></div>
+            <div class="col-6 col-lg-3"><div class="metric-card"><div class="label">પેકિંગ પૂર્ણ</div><div class="value">{{ status_summary.packing_requests|default:0 }}</div></div></div>
+            <div class="col-6 col-lg-3"><div class="metric-card"><div class="label">માર્ગમાં</div><div class="value">{{ status_summary.on_route_requests|default:0 }}</div></div></div>
+          </div>
+
+          <div class="table-responsive shadow-sm rounded-3 bg-white" id="requests">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>ઓર્ડર</th>
+                  <th>ઉપાશ્રય</th>
+                  <th>તારીખ</th>
+                  <th>સ્ટેટસ</th>
+                  <th>વસ્તુઓ</th>
+                  <th>કારવાઈ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for header in headers %}
+                  <tr>
+                    <td>
+                      <div class="fw-semibold">{{ header.order_number|default:"Draft" }}</div>
+                      <div class="small text-body-secondary">{{ header.public_view_token }}</div>
+                    </td>
+                    <td>{{ header.upashray }}</td>
+                    <td>{{ header.requirement_date }}</td>
+                    <td><span class="badge text-bg-light border">{{ header.get_status_display }}</span></td>
+                    <td>{{ header.lines.count }}</td>
+                    <td>
+                      <div class="d-flex flex-wrap gap-2">
+                        <a class="btn btn-sm btn-outline-primary" href="{% url 'requirements:public-detail' token=header.public_view_token %}">જુઓ</a>
+                        <form method="post" class="d-flex flex-wrap gap-2 align-items-center">
+                          {% csrf_token %}
+                          <input type="hidden" name="order_token" value="{{ header.public_view_token }}">
+                          <select name="status" class="form-select form-select-sm public-status-select">
+                            {% for value,label in status_choices %}
+                              <option value="{{ value }}" {% if header.status == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                          </select>
+                          <button class="btn btn-sm btn-warning js-pack-now" type="button" data-status="IN_PROGRESS">Pack</button>
+                          <button class="btn btn-sm btn-success" type="submit">સ્ટેટસ સેવ કરો</button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                {% empty %}
+                  <tr>
+                    <td colspan="6" class="text-center py-4 text-body-secondary">આ ઇવેન્ટ માટે હજી કોઈ વિનંતી નથી.</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="public-band" id="stock">
+        <div class="container">
+          <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+            <div>
+              <div class="section-band mb-3">Public Stock</div>
+              <h2 class="public-section-title mb-1">વસ્તુ સ્ટોક</h2>
+              <p class="text-body-secondary mb-0">માત્ર વસ્તુ, પ્રકાર અને વર્તમાન સ્ટોક. કોઈ કિંમત અથવા નાણાકીય ડેટા નથી.</p>
+            </div>
+          </div>
+          <div class="row g-2 align-items-center mb-3">
+            <div class="col-12 col-lg-6">
+              <input type="search" id="publicItemSearch" class="form-control" placeholder="વસ્તુ શોધો">
+            </div>
+            <div class="col-12 col-lg-6 text-lg-end small text-body-secondary">લાઇવ ફિલ્ટર થયેલ સ્ટોક યાદી</div>
+          </div>
+          <div class="table-responsive shadow-sm rounded-3 bg-white">
+            <table class="table table-sm table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>કોડ</th>
+                  <th>વસ્તુ</th>
+                  <th>પ્રકાર</th>
+                  <th class="text-end">વર્તમાન સ્ટોક</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in public_item_preview %}
+                  <tr data-item-row data-search="{{ row.item.item_code }} {{ row.item.item_name }} {{ row.item.item_name_gu }} {{ row.category }}">
+                    <td>
+                      <div class="fw-semibold">{{ row.item.item_code }}</div>
+                      <div class="small text-body-secondary">#{{ row.serial|stringformat:"02d" }}</div>
+                    </td>
+                    <td>
+                      <div class="fw-semibold">{{ row.item.item_name }}</div>
+                      <div class="small text-body-secondary">{{ row.item.item_name_gu|default:row.item.default_size }}</div>
+                    </td>
+                    <td>{{ row.category }}</td>
+                    <td class="text-end">{{ row.stock }}</td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="4" class="text-center py-4 text-body-secondary">વસ્તુઓ મળી નથી.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="public-band public-band-soft" id="past-events">
+        <div class="container">
+          <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+            <div>
+              <div class="section-band mb-3">સેવા કાર્યો</div>
+              <h2 class="public-section-title mb-1">અન્ય મહત્વપૂર્ણ કાર્યો</h2>
+              <p class="text-body-secondary mb-0">સમાજમાં બોજ ઓછો કરવાના નાના અને મોટા પ્રયાસો.</p>
+            </div>
+          </div>
+          <div class="row g-3">
+            <div class="col-12 col-md-6 col-xl-3">
+              <div class="past-event-card">
+                <div class="past-event-icon"><i class="bi bi-heart-pulse"></i></div>
+                <h3>Medical Support</h3>
+                <p>જ્યાં જરૂર પડે ત્યાં સારવાર અને આરોગ્ય સંબંધિત સહાય.</p>
+              </div>
+            </div>
+            <div class="col-12 col-md-6 col-xl-3">
+              <div class="past-event-card">
+                <div class="past-event-icon"><i class="bi bi-book"></i></div>
+                <h3>Education Help</h3>
+                <p>શિક્ષણ અને માર્ગદર્શનથી જીવનમાં આશાનો દીવો પ્રગટાવવાનો પ્રયાસ.</p>
+              </div>
+            </div>
+            <div class="col-12 col-md-6 col-xl-3">
+              <div class="past-event-card">
+                <div class="past-event-icon"><i class="bi bi-basket"></i></div>
+                <h3>Food Seva</h3>
+                <p>જરૂરિયાતમંદ સુધી ખોરાક અને જરૂરી વસ્તુઓ પહોંચાડવાનું કાર્ય.</p>
+              </div>
+            </div>
+            <div class="col-12 col-md-6 col-xl-3">
+              <div class="past-event-card">
+                <div class="past-event-icon"><i class="bi bi-people"></i></div>
+                <h3>Respect & Care</h3>
+                <p>પ્રેમ, સન્માન અને સાથ દ્વારા સમાજમાં માનવતા જીવંત રાખવી.</p>
+              </div>
             </div>
           </div>
         </div>
       </section>
     </main>
+
+    <footer class="public-footer" id="contact">
+      <div class="container py-4 py-lg-5">
+        <div class="row g-4">
+          <div class="col-12 col-lg-5">
+            <div class="d-flex align-items-center gap-3 mb-3">
+              <img src="{% static 'images/kmm.png' %}" alt="KMM" class="public-footer-logo">
+              <div>
+                <div class="fw-bold">કલ્યાણ મિત્ર મંડળ</div>
+                <div class="small text-white-50">Absolute transparency, friendship and service.</div>
+              </div>
+            </div>
+            <p class="text-white-50 mb-0">માનવ સેવા અને ઇવેન્ટ્સની પારદર્શક વ્યવસ્થા માટે બનાવેલ જાહેર પોર્ટલ.</p>
+          </div>
+          <div class="col-12 col-lg-7">
+            <div class="d-flex flex-wrap gap-2 justify-content-lg-end">
+              <a class="btn btn-outline-light btn-sm" href="https://instagram.com/jainkmm" target="_blank" rel="noopener"><i class="bi bi-instagram me-1"></i>Instagram</a>
+              <a class="btn btn-outline-light btn-sm" href="https://facebook.com/jainkalyanmitramandal" target="_blank" rel="noopener"><i class="bi bi-facebook me-1"></i>Facebook</a>
+              <a class="btn btn-outline-light btn-sm" href="https://twitter.com/jainkmm" target="_blank" rel="noopener"><i class="bi bi-twitter-x me-1"></i>Twitter</a>
+              <a class="btn btn-outline-light btn-sm" href="mailto:jainkalyanmitramandal@gmail.com"><i class="bi bi-envelope me-1"></i>Email</a>
+              <a class="btn btn-outline-light btn-sm" href="http://www.youtube.com/@KalyanMitraMandalAhmedabad" target="_blank" rel="noopener"><i class="bi bi-youtube me-1"></i>YouTube</a>
+            </div>
+            <div class="d-flex flex-wrap gap-2 justify-content-lg-end mt-3">
+              <a class="btn btn-warning btn-sm" href="{{ request_form_url }}">ફોર્મ ભરો</a>
+              <a class="btn btn-outline-light btn-sm" href="{{ requests_url }}">વિનંતીઓ જુઓ</a>
+              <a class="btn btn-light btn-sm" href="{{ login_url }}">સભ્ય લોગિન</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
