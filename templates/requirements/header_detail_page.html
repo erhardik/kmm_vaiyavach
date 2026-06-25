@@ -8,7 +8,10 @@
   <div class="d-flex gap-2">
     {% if public_pdf_url %}
       <button type="button" class="btn btn-outline-secondary" data-copy-text="{{ public_pdf_url }}">Copy PDF Link</button>
-      <a class="btn btn-outline-primary" href="{{ public_pdf_url }}" target="_blank" rel="noopener">Public PDF Link</a>
+      <a class="btn btn-outline-primary" href="{{ public_pdf_url }}" target="_blank" rel="noopener">English PDF</a>
+      {% if public_pdf_gu_url %}
+        <a class="btn btn-warning" href="{{ public_pdf_gu_url }}" target="_blank" rel="noopener">ગુજરાતી PDF</a>
+      {% endif %}
     {% endif %}
     <a class="btn btn-outline-secondary" href="{% url 'requirements:header-list' %}">Back</a>
   </div>

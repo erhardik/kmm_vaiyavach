@@ -81,6 +81,9 @@ PDF_FONT_NAME = "Helvetica"
 _pdf_font_candidates = [
     Path("C:/Windows/Fonts/shruti.ttf"),
     Path("C:/Windows/Fonts/Nirmala.ttc"),
+    Path("/usr/share/fonts/truetype/noto/NotoSansGujarati-Regular.ttf"),
+    Path("/usr/share/fonts/opentype/noto/NotoSansGujarati-Regular.ttf"),
+    Path("/usr/share/fonts/truetype/lohit-gujarati/Lohit-Gujarati.ttf"),
 ]
 for candidate in _pdf_font_candidates:
     if candidate.exists():
@@ -92,7 +95,13 @@ for candidate in _pdf_font_candidates:
             pass
 
 PDF_GUJARATI_FONT_NAME = PDF_FONT_NAME
-for candidate in [Path("C:/Windows/Fonts/shruti.ttf"), Path("C:/Windows/Fonts/shrutib.ttf")]:
+for candidate in [
+    Path("C:/Windows/Fonts/shruti.ttf"),
+    Path("C:/Windows/Fonts/shrutib.ttf"),
+    Path("/usr/share/fonts/truetype/noto/NotoSansGujarati-Regular.ttf"),
+    Path("/usr/share/fonts/opentype/noto/NotoSansGujarati-Regular.ttf"),
+    Path("/usr/share/fonts/truetype/lohit-gujarati/Lohit-Gujarati.ttf"),
+]:
     if candidate.exists():
         try:
             pdfmetrics.registerFont(TTFont("KMMGujarati", str(candidate)))
@@ -103,7 +112,17 @@ for candidate in [Path("C:/Windows/Fonts/shruti.ttf"), Path("C:/Windows/Fonts/sh
 
 
 def _lang_code(request):
+    requested = (request.GET.get("lang") or request.POST.get("lang") or "").lower()
+    if requested.startswith("gu"):
+        return "gu"
+    if requested.startswith("en"):
+        return "en"
     return (getattr(request, "LANGUAGE_CODE", None) or "en")[:2]
+
+
+def _with_lang(url, language_code):
+    separator = "&" if "?" in url else "?"
+    return f"{url}{separator}lang={language_code}"
 
 
 def _format_qty(value):
@@ -318,6 +337,7 @@ class RequirementCollectionView(View):
             "order_number": header.order_number if header else None,
             "public_collect_url": reverse("requirements:public-collect", kwargs={"event_token": event.public_form_token}) if event else None,
             "public_pdf_url": reverse("requirements:public-print", kwargs={"token": header.public_view_token}) if header and header.order_number else None,
+            "public_pdf_gu_url": _with_lang(reverse("requirements:public-print", kwargs={"token": header.public_view_token}), "gu") if header and header.order_number else None,
             "editing_allowed": self._editing_allowed(event, header, request.user),
             "event_requires_lock": bool(event and not event.allow_requirement_edit_after_confirm),
             "draft_storage_key": draft_key,
@@ -331,6 +351,7 @@ class RequirementCollectionView(View):
                 "header": header,
                 "lang": _lang_code(request),
                 "public_pdf_url": reverse("requirements:public-print", kwargs={"token": header.public_view_token}) if header and header.order_number else None,
+                "public_pdf_gu_url": _with_lang(reverse("requirements:public-print", kwargs={"token": header.public_view_token}), "gu") if header and header.order_number else None,
             },
         )
 
@@ -515,6 +536,7 @@ class RequirementCollectionPrintView(View):
 
     def _render_pdf(self, header, lines, language_code):
         buffer = BytesIO()
+        pdf_font_name = PDF_GUJARATI_FONT_NAME if language_code == "gu" else PDF_FONT_NAME
         document = SimpleDocTemplate(
             buffer,
             pagesize=A4,
@@ -528,7 +550,7 @@ class RequirementCollectionPrintView(View):
         title_style = ParagraphStyle(
             "KMMTitle",
             parent=styles["Title"],
-            fontName=PDF_FONT_NAME,
+            fontName=pdf_font_name,
             fontSize=18,
             leading=22,
             textColor=colors.HexColor("#14324f"),
@@ -538,7 +560,7 @@ class RequirementCollectionPrintView(View):
         heading_style = ParagraphStyle(
             "KMMHeading",
             parent=styles["Heading2"],
-            fontName=PDF_FONT_NAME,
+            fontName=pdf_font_name,
             fontSize=11,
             leading=14,
             textColor=colors.HexColor("#14324f"),
@@ -547,7 +569,7 @@ class RequirementCollectionPrintView(View):
         body_style = ParagraphStyle(
             "KMMBody",
             parent=styles["BodyText"],
-            fontName=PDF_FONT_NAME,
+            fontName=pdf_font_name,
             fontSize=9,
             leading=12,
             alignment=TA_LEFT,
@@ -555,7 +577,7 @@ class RequirementCollectionPrintView(View):
         small_style = ParagraphStyle(
             "KMMSmall",
             parent=styles["BodyText"],
-            fontName=PDF_FONT_NAME,
+            fontName=pdf_font_name,
             fontSize=8,
             leading=10,
             alignment=TA_LEFT,
@@ -566,7 +588,7 @@ class RequirementCollectionPrintView(View):
             return Paragraph("<br/>".join(parts), style)
 
         story = [
-            Paragraph("Requirement Order" if language_code != "gu" else "જરૂરિયાત ઓર્ડર", title_style),
+            Paragraph("Requirement Order" if language_code != "gu" else "વૈયાવચ્ચ લાભ પત્રક", title_style),
             Paragraph(f"Order No.: {header.order_number}", heading_style),
             Spacer(1, 4),
         ]
@@ -606,7 +628,8 @@ class RequirementCollectionPrintView(View):
             fontName=PDF_GUJARATI_FONT_NAME,
         )
         brand_title = Paragraph("કલ્યાણ મિત્ર મંડળ", gujarati_title_style)
-        order_label = Paragraph(f"Vaiyavachch laabh number: {header.order_number}", heading_style)
+        order_label_text = f"Vaiyavachch laabh number: {header.order_number}" if language_code != "gu" else f"વૈયાવચ્ચ લાભ નંબર: {header.order_number}"
+        order_label = Paragraph(order_label_text, heading_style)
         if logo_image:
             brand_row = Table([[logo_image, qr_drawing]], colWidths=[150 * mm, 26 * mm])
         else:
@@ -628,9 +651,9 @@ class RequirementCollectionPrintView(View):
         status_table = Table(
             [
                 [
-                    p("[ ] All Items Packed" if language_code != "gu" else "[ ] àª¸àª°à«‡àª² àª†àª‡àªŸàª® àªªà«àª¯àª¾àª• àª¹àª¥àª¾", small_style),
-                    p("[ ] Ready for Distribution" if language_code != "gu" else "[ ] àªµàª¿àª¤àª°àª£ àª®àª¾àªŸà«‡ àª¤à«ˆàª¯àª¾àª°", small_style),
-                    p("Checked by: ____________________", small_style),
+                    p("[ ] All Items Packed" if language_code != "gu" else "[ ] બધી વસ્તુઓ પેક થઈ", small_style),
+                    p("[ ] Ready for Distribution" if language_code != "gu" else "[ ] વિતરણ માટે તૈયાર", small_style),
+                    p("Checked by: ____________________" if language_code != "gu" else "ચેક કરનાર: ____________________", small_style),
                 ]
             ],
             colWidths=[55 * mm, 55 * mm, 74 * mm],
@@ -641,7 +664,7 @@ class RequirementCollectionPrintView(View):
                     ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#14324f")),
                     ("INNERGRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#9bb4c9")),
                     ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                    ("FONTNAME", (0, 0), (-1, -1), PDF_FONT_NAME),
+                    ("FONTNAME", (0, 0), (-1, -1), pdf_font_name),
                     ("LEADING", (0, 0), (-1, -1), 10),
                 ]
             )
@@ -649,37 +672,37 @@ class RequirementCollectionPrintView(View):
 
         basic_rows = [
             [
-                p("Pujya Shri" if language_code != "gu" else "????? ????", small_style),
+                p("Pujya Shri" if language_code != "gu" else "પૂજ્ય શ્રી", small_style),
                 p(header.pujya_shri_name, body_style),
-                p("Current Address" if language_code != "gu" else "??????? ???????", small_style),
+                p("Current Address" if language_code != "gu" else "વર્તમાન સરનામું", small_style),
                 p(header.current_address, body_style),
             ],
             [
-                p("Thana" if language_code != "gu" else "????", small_style),
+                p("Thana" if language_code != "gu" else "થાણા", small_style),
                 p(header.thana_count, body_style),
-                p("Area" if language_code != "gu" else "???????", small_style),
+                p("Area" if language_code != "gu" else "વિસ્તાર", small_style),
                 p(header.area, body_style),
             ],
             [
-                p("Chaturmas Place Address" if language_code != "gu" else "????????? ???? ???????", small_style),
+                p("Chaturmas Place Address" if language_code != "gu" else "ચાતુર્માસ સ્થળ સરનામું", small_style),
                 p(header.chaturmas_place_address, body_style),
-                p("Chaturmas Entry Date" if language_code != "gu" else "????????? ?????? ?????", small_style),
+                p("Chaturmas Entry Date" if language_code != "gu" else "ચાતુર્માસ પ્રવેશ તારીખ", small_style),
                 p(_format_pdf_date(header.chaturmas_entry_date), body_style),
             ],
             [
-                p("Volunteer Name" if language_code != "gu" else "???????????????????????????????????? ?????????", small_style),
+                p("Volunteer Name" if language_code != "gu" else "વોલન્ટિયર નામ", small_style),
                 p(header.volunteer_name, body_style),
-                p("Stay Type" if language_code != "gu" else "?????? ??????", small_style),
+                p("Stay Type" if language_code != "gu" else "રહેઠાણ પ્રકાર", small_style),
                 p(header.stay_type, body_style),
             ],
             [
-                p("Care Taker Name" if language_code != "gu" else "??????????? ???", small_style),
+                p("Care Taker Name" if language_code != "gu" else "સંભાળનાર નામ", small_style),
                 p(header.caretaker_name, body_style),
-                p("Care Taker Contact" if language_code != "gu" else "??????????? ?????? ????", small_style),
+                p("Care Taker Contact" if language_code != "gu" else "સંભાળનાર સંપર્ક", small_style),
                 p(header.caretaker_mobile, body_style),
             ],
             [
-                p("Special Request / Note" if language_code != "gu" else "??? ?????? / ????", small_style),
+                p("Special Request / Note" if language_code != "gu" else "ખાસ વિનંતી / નોંધ", small_style),
                 p(header.remarks, body_style),
                 p("", small_style),
                 p("", body_style),
@@ -694,7 +717,7 @@ class RequirementCollectionPrintView(View):
                     ("INNERGRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#9bb4c9")),
                     ("VALIGN", (0, 0), (-1, -1), "TOP"),
                     ("LEADING", (0, 0), (-1, -1), 12),
-                    ("FONTNAME", (0, 0), (-1, -1), PDF_FONT_NAME),
+                    ("FONTNAME", (0, 0), (-1, -1), pdf_font_name),
                 ]
             )
         )
@@ -728,7 +751,7 @@ class RequirementCollectionPrintView(View):
                     ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#14324f")),
                     ("INNERGRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#9bb4c9")),
                     ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                    ("FONTNAME", (0, 0), (-1, -1), PDF_FONT_NAME),
+                    ("FONTNAME", (0, 0), (-1, -1), pdf_font_name),
                     ("LEADING", (0, 0), (-1, -1), 12),
                 ]
             )
@@ -759,7 +782,7 @@ class RequirementCollectionPrintView(View):
                 self.setStrokeColor(colors.HexColor("#9bb4c9"))
                 self.setLineWidth(0.5)
                 self.line(12 * mm, 14 * mm, A4[0] - 12 * mm, 14 * mm)
-                self.setFont(PDF_FONT_NAME, 8)
+                self.setFont(pdf_font_name, 8)
                 self.setFillColor(colors.HexColor("#14324f"))
                 self.drawString(12 * mm, 8 * mm, footer_contact)
                 self.drawRightString(A4[0] - 12 * mm, 8 * mm, f"Page {self._pageNumber} of {page_count}")
@@ -770,7 +793,8 @@ class RequirementCollectionPrintView(View):
         buffer.close()
 
         response = HttpResponse(content_type="application/pdf")
-        response["Content-Disposition"] = f'attachment; filename="{header.order_number or "requirement-order"}.pdf"'
+        suffix = "-gujarati" if language_code == "gu" else ""
+        response["Content-Disposition"] = f'attachment; filename="{header.order_number or "requirement-order"}{suffix}.pdf"'
         response.write(pdf_data)
         return response
 
@@ -797,6 +821,7 @@ class RequirementCollectionDetailView(View):
                 "lines": lines,
                 "lang": _lang_code(request),
                 "public_pdf_url": reverse("requirements:public-print", kwargs={"token": header.public_view_token}) if header.order_number else None,
+                "public_pdf_gu_url": _with_lang(reverse("requirements:public-print", kwargs={"token": header.public_view_token}), "gu") if header.order_number else None,
             },
         )
 

@@ -53,6 +53,7 @@
                   {% endif %}
                   {% if row.pdf_url %}
                     <a class="btn btn-sm btn-outline-secondary" href="{{ row.pdf_url }}" target="_blank" rel="noopener">View PDF</a>
+                    <a class="btn btn-sm btn-warning" href="{{ row.pdf_url }}?lang=gu" target="_blank" rel="noopener">Gujarati PDF</a>
                   {% endif %}
                   {% if can_change and row.edit_url %}
                     <a class="btn btn-sm btn-outline-secondary" href="{{ row.edit_url }}">Edit</a>
