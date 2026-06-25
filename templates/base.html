@@ -56,12 +56,15 @@
           {% if user.is_authenticated %}
             <span class="badge text-bg-light align-self-center text-uppercase">{{ current_role_label }}</span>
             <span class="navbar-text small text-body-secondary d-none d-md-inline">{{ user.get_username }}</span>
-            <a href="{% url 'logout' %}" class="btn btn-outline-secondary btn-sm">
-              {% if LANGUAGE_CODE|slice:":2" == "gu" %}લોગઆઉટ{% else %}Logout{% endif %}
-            </a>
+            <form action="{% url 'logout' %}" method="post" class="d-inline">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-outline-secondary btn-sm">
+                {% if LANGUAGE_CODE|slice:":2" == "gu" %}લોગઆઉટ{% else %}Logout{% endif %}
+              </button>
+            </form>
           {% else %}
             <a href="{% url 'login' %}" class="btn btn-outline-secondary btn-sm">
-              {% if LANGUAGE_CODE|slice:":2" == "gu" %}લૉગિન{% else %}Login{% endif %}
+              {% if LANGUAGE_CODE|slice:":2" == "gu" %}લોગિન{% else %}Login{% endif %}
             </a>
           {% endif %}
         </div>
