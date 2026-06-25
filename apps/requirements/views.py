@@ -187,6 +187,12 @@ class RequirementHeaderListView(EventScopedListView):
         context["page_title"] = "Requirements"
         context["page_subtitle"] = "Collect new orders, review saved orders, and edit them when needed."
         context["create_url"] = reverse_lazy(self.create_url_name)
+        headers = list(self.object_list)
+        context["summary"] = {
+            "orders": len(headers),
+            "items": sum(header.lines.count() for header in headers),
+            "qty_total": sum((line.required_qty for header in headers for line in header.lines.all()), start=0),
+        }
         return context
 
     def get_queryset(self):
