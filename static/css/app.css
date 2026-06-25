@@ -127,6 +127,34 @@ body.bg-soft {
   box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.12);
 }
 
+.hero-trust-card {
+  height: 100%;
+  padding: 0.9rem 1rem;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.hero-trust-card .fw-semibold {
+  line-height: 1.25;
+}
+
+.public-landing .card {
+  border-radius: 1.3rem;
+}
+
+.public-landing .section-band {
+  background: rgba(20, 50, 79, 0.1);
+}
+
+.public-landing .card .text-body-secondary {
+  line-height: 1.7;
+}
+
+.public-landing .btn-outline-primary {
+  border-color: rgba(20, 50, 79, 0.18);
+}
+
 .metric-card-light {
   background: rgba(255, 255, 255, 0.95);
 }

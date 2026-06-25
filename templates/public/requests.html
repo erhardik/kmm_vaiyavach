@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Requests | KMM Vaiyavach</title>
+  <title>વિનંતીઓ | કલ્યાણ મિત્ર મંડળ</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
@@ -16,28 +16,28 @@
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
           <div>
             <div class="small text-uppercase text-white-50">Kalyan Mitra Mandal</div>
-            <h1 class="display-6 fw-bold mb-1">View All Requests</h1>
+            <h1 class="display-6 fw-bold mb-1">બધી વિનંતીઓ</h1>
             <div class="text-white-75">
               {% if event %}
-                {{ event.name }} · Public order board
+                {{ event.name }} · જાહેર ઓર્ડર બોર્ડ
               {% else %}
-                No active event found
+                હાલમાં સક્રિય ઇવેન્ટ ઉપલબ્ધ નથી
               {% endif %}
             </div>
           </div>
           <div class="d-flex gap-2">
-            <a class="btn btn-light" href="{{ public_landing_url }}">Landing Page</a>
+            <a class="btn btn-light" href="{{ public_landing_url }}">લાંડિંગ પેજ</a>
             {% if public_collect_url %}
-              <a class="btn btn-warning" href="{{ public_collect_url }}">Fill Request Form</a>
+              <a class="btn btn-warning" href="{{ public_collect_url }}">ફોર્મ ભરો</a>
             {% endif %}
           </div>
         </div>
 
         <div class="row g-3">
-          <div class="col-6 col-md-3"><div class="metric-card metric-card-light"><div class="label">Total</div><div class="value">{{ status_summary.total_requests|default:0 }}</div></div></div>
-          <div class="col-6 col-md-3"><div class="metric-card metric-card-light"><div class="label">Open</div><div class="value">{{ status_summary.open_requests|default:0 }}</div></div></div>
-          <div class="col-6 col-md-3"><div class="metric-card metric-card-light"><div class="label">Pending</div><div class="value">{{ status_summary.status_SUBMITTED|default:0 }}</div></div></div>
-          <div class="col-6 col-md-3"><div class="metric-card metric-card-light"><div class="label">Packing</div><div class="value">{{ status_summary.status_IN_PROGRESS|default:0 }}</div></div></div>
+          <div class="col-6 col-md-3"><div class="metric-card metric-card-light"><div class="label">કુલ</div><div class="value">{{ status_summary.total_requests|default:0 }}</div></div></div>
+          <div class="col-6 col-md-3"><div class="metric-card metric-card-light"><div class="label">ઓપન</div><div class="value">{{ status_summary.open_requests|default:0 }}</div></div></div>
+          <div class="col-6 col-md-3"><div class="metric-card metric-card-light"><div class="label">પેન્ડિંગ</div><div class="value">{{ status_summary.status_SUBMITTED|default:0 }}</div></div></div>
+          <div class="col-6 col-md-3"><div class="metric-card metric-card-light"><div class="label">પેકિંગ</div><div class="value">{{ status_summary.packing_requests|default:0 }}</div></div></div>
         </div>
       </div>
     </header>
@@ -50,12 +50,13 @@
           {% endfor %}
         </div>
       {% endif %}
+
       <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
           <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
             <div>
-              <h2 class="h5 mb-1">Status board</h2>
-              <div class="small text-body-secondary">Change status without login, then save it instantly.</div>
+              <h2 class="h5 mb-1">સ્ટેટસ બોર્ડ</h2>
+              <div class="small text-body-secondary">લોગિન વગર સ્ટેટસ બદલો અને તરત સેવ કરો.</div>
             </div>
             <div class="d-flex flex-wrap gap-2">
               {% for value,label in status_choices %}
@@ -68,11 +69,11 @@
             <table class="table table-hover align-middle mb-0">
               <thead class="table-light">
                 <tr>
-                  <th>Order</th>
-                  <th>Upashray</th>
-                  <th>Items</th>
-                  <th>Status</th>
-                  <th class="text-end">Actions</th>
+                  <th>ઓર્ડર</th>
+                  <th>ઉપાશ્રય</th>
+                  <th>વસ્તુઓ</th>
+                  <th>સ્ટેટસ</th>
+                  <th class="text-end">કારવાઈ</th>
                 </tr>
               </thead>
               <tbody>
@@ -84,12 +85,10 @@
                     </td>
                     <td>{{ header.upashray }}</td>
                     <td>{{ header.lines.count }}</td>
-                    <td>
-                      <span class="badge text-bg-primary-subtle text-primary-emphasis">{{ header.get_status_display }}</span>
-                    </td>
+                    <td><span class="badge text-bg-primary-subtle text-primary-emphasis">{{ header.get_status_display }}</span></td>
                     <td class="text-end">
                       <div class="d-inline-flex flex-wrap gap-2 justify-content-end">
-                        <a class="btn btn-sm btn-outline-primary" href="{% url 'requirements:public-detail' token=header.public_view_token %}">View</a>
+                        <a class="btn btn-sm btn-outline-primary" href="{% url 'requirements:public-detail' token=header.public_view_token %}">જુઓ</a>
                         <form method="post" class="d-inline-flex flex-wrap gap-2 align-items-center">
                           {% csrf_token %}
                           <input type="hidden" name="order_token" value="{{ header.public_view_token }}">
@@ -99,14 +98,14 @@
                             {% endfor %}
                           </select>
                           <button type="button" class="btn btn-sm btn-outline-warning js-pack-now" data-status="IN_PROGRESS">Pack</button>
-                          <button type="submit" class="btn btn-sm btn-success">Save Status</button>
+                          <button type="submit" class="btn btn-sm btn-success">સ્ટેટસ સેવ કરો</button>
                         </form>
                       </div>
                     </td>
                   </tr>
                 {% empty %}
                   <tr>
-                    <td colspan="5" class="text-center py-4 text-body-secondary">No requests found for this event.</td>
+                    <td colspan="5" class="text-center py-4 text-body-secondary">આ ઇવેન્ટ માટે હજી કોઈ વિનંતી નથી.</td>
                   </tr>
                 {% endfor %}
               </tbody>
@@ -119,18 +118,18 @@
         <div class="card-body">
           <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
             <div>
-              <h2 class="h5 mb-1">Item stock preview</h2>
-              <div class="small text-body-secondary">Category and current stock only, without money or pricing.</div>
+              <h2 class="h5 mb-1">વસ્તુ સ્ટોક પૂર્વદર્શન</h2>
+              <div class="small text-body-secondary">અહીં માત્ર વસ્તુ, પ્રકાર અને વર્તમાન સ્ટોક બતાવાયું છે.</div>
             </div>
           </div>
           <div class="table-responsive">
             <table class="table table-sm table-hover align-middle mb-0">
               <thead class="table-light">
                 <tr>
-                  <th>Code</th>
-                  <th>Item</th>
-                  <th>Type</th>
-                  <th class="text-end">Current Stock</th>
+                  <th>કોડ</th>
+                  <th>વસ્તુ</th>
+                  <th>પ્રકાર</th>
+                  <th class="text-end">વર્તમાન સ્ટોક</th>
                 </tr>
               </thead>
               <tbody>
@@ -148,7 +147,7 @@
                     <td class="text-end">{{ row.stock }}</td>
                   </tr>
                 {% empty %}
-                  <tr><td colspan="4" class="text-center py-4 text-body-secondary">No items found.</td></tr>
+                  <tr><td colspan="4" class="text-center py-4 text-body-secondary">વસ્તુઓ મળી નથી.</td></tr>
                 {% endfor %}
               </tbody>
             </table>
@@ -157,20 +156,21 @@
       </div>
     </main>
   </div>
+
   <script>
-  (function() {
-    document.addEventListener("click", function(event) {
-      const button = event.target.closest(".js-pack-now");
-      if (!button) return;
-      const form = button.closest("form");
-      if (!form) return;
-      const select = form.querySelector("select[name='status']");
-      if (select) {
-        select.value = button.getAttribute("data-status") || "IN_PROGRESS";
-      }
-      form.submit();
-    });
-  })();
-</script>
+    (function() {
+      document.addEventListener("click", function(event) {
+        const button = event.target.closest(".js-pack-now");
+        if (!button) return;
+        const form = button.closest("form");
+        if (!form) return;
+        const select = form.querySelector("select[name='status']");
+        if (select) {
+          select.value = button.getAttribute("data-status") || "IN_PROGRESS";
+        }
+        form.submit();
+      });
+    })();
+  </script>
 </body>
 </html>
