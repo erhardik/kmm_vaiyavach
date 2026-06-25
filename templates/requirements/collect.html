@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends collect_base_template|default:"base.html" %}
 {% block title %}{% if LANGUAGE_CODE|slice:":2" == "gu" %}જરૂરિયાતો એકત્ર કરો{% else %}Collect Requirements{% endif %} | KMM ERP{% endblock %}
 {% block content %}
 {% with LANGUAGE_CODE|slice:":2" as lang %}
@@ -19,8 +19,13 @@
         </p>
       </div>
       <div class="d-flex flex-wrap gap-2">
-        <a class="btn btn-outline-primary" href="{% url 'requirements:header-list' %}">{% if lang == "gu" %}ઓર્ડર સૂચિ{% else %}Order List{% endif %}</a>
-        <a class="btn btn-outline-secondary" href="{% url 'dashboard:home' %}">{% if lang == "gu" %}ડેશબોર્ડ{% else %}Dashboard{% endif %}</a>
+        {% if is_public_flow %}
+          <a class="btn btn-outline-light" href="{% url 'public-landing' %}">{% if lang == "gu" %}હોમ{% else %}Home{% endif %}</a>
+          <a class="btn btn-warning" href="{{ public_requests_url }}">{% if lang == "gu" %}ઓર્ડર સૂચિ{% else %}Order List{% endif %}</a>
+        {% else %}
+          <a class="btn btn-outline-primary" href="{% url 'requirements:header-list' %}">{% if lang == "gu" %}ઓર્ડર સૂચિ{% else %}Order List{% endif %}</a>
+          <a class="btn btn-outline-secondary" href="{% url 'dashboard:home' %}">{% if lang == "gu" %}ડેશબોર્ડ{% else %}Dashboard{% endif %}</a>
+        {% endif %}
       </div>
     </div>
     <div class="d-flex flex-wrap gap-2 mt-3">

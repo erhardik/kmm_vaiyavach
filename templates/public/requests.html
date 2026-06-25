@@ -28,7 +28,7 @@
           <div class="d-flex gap-2">
             <a class="btn btn-light" href="{{ public_landing_url }}">લાંડિંગ પેજ</a>
             {% if public_collect_url %}
-              <a class="btn btn-warning" href="{{ public_collect_url }}">ફોર્મ ભરો</a>
+              <a class="btn btn-warning" href="{{ public_collect_url }}">નવું ફોર્મ ભરો / Fill New Form</a>
             {% endif %}
           </div>
         </div>
@@ -89,6 +89,9 @@
                     <td class="text-end">
                       <div class="d-inline-flex flex-wrap gap-2 justify-content-end">
                         <a class="btn btn-sm btn-outline-primary" href="{% url 'requirements:public-detail' token=header.public_view_token %}">જુઓ</a>
+                        {% if public_collect_url %}
+                          <a class="btn btn-sm btn-outline-secondary" href="{{ public_collect_url }}?token={{ header.public_view_token }}">Edit</a>
+                        {% endif %}
                         <form method="post" class="d-inline-flex flex-wrap gap-2 align-items-center">
                           {% csrf_token %}
                           <input type="hidden" name="order_token" value="{{ header.public_view_token }}">

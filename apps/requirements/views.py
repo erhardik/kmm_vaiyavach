@@ -215,6 +215,9 @@ class RequirementCollectionView(View):
             return Event.objects.filter(pk=event_id, is_active=True).first()
         return Event.objects.filter(is_current=True, is_active=True).first()
 
+    def _is_public_flow(self):
+        return bool(self.kwargs.get("event_token"))
+
     def _get_header(self, event):
         token = self.kwargs.get("token") or self.request.POST.get("token") or self.request.GET.get("token")
         if token:
@@ -295,7 +298,10 @@ class RequirementCollectionView(View):
     def _build_context(self, request, event, header, form, formset, items):
         language_code = _lang_code(request)
         draft_key = f"kmm.requirements.collect.{event.pk if event else 'noevent'}.{header.pk if header else 'new'}"
+        is_public_flow = self._is_public_flow()
         return {
+            "collect_base_template": "public/form_base.html" if is_public_flow else "base.html",
+            "is_public_flow": is_public_flow,
             "event": event,
             "header": header,
             "form": form,
@@ -307,6 +313,7 @@ class RequirementCollectionView(View):
             if language_code == "gu"
             else "Fill quantities, save once, and edit the same order later.",
             "list_url": reverse_lazy("requirements:header-list"),
+            "public_requests_url": reverse_lazy("public-requests"),
             "can_save": bool(event),
             "order_number": header.order_number if header else None,
             "public_collect_url": reverse("requirements:public-collect", kwargs={"event_token": event.public_form_token}) if event else None,
@@ -480,6 +487,8 @@ class RequirementCollectionView(View):
 
         if confirm_now:
             messages.success(request, f"Requirement sent to team. Order No: {header_obj.order_number}")
+            if self._is_public_flow():
+                return redirect(reverse("public-requests"))
             return redirect(reverse("requirements:header-list"))
         messages.success(request, "Data saved. Press Confirm to send Requirement to team.")
         return render(request, self.template_name, self._build_context(request, event, header_obj, form, formset, items))

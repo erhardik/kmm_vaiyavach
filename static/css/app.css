@@ -983,6 +983,20 @@ body.sidebar-collapsed .sidebar-accordion .list-group-item {
   padding: 0.35rem;
 }
 
+.public-form-page {
+  background:
+    radial-gradient(circle at top left, rgba(245, 152, 51, 0.2), transparent 28rem),
+    linear-gradient(180deg, #fff8ef 0%, #f4f7fb 45%, #ffffff 100%);
+}
+
+.public-form-shell {
+  min-height: 100vh;
+}
+
+.public-form-shell > .container {
+  max-width: 1180px;
+}
+
 @media (max-width: 991.98px) {
   .public-site-nav .navbar-collapse {
     margin-top: 0.9rem;
