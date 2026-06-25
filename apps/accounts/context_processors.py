@@ -30,12 +30,17 @@ EVENT_MENU_ITEMS = [
 UTILITY_LINKS = [
     {"label": "Dashboard", "url_name": "dashboard:home", "permission": None, "icon": "house"},
     {"label": "Events", "url_name": "masters:event-list", "permission": "masters.view_event", "icon": "calendar-event"},
+    {"label": "User Management", "url_name": "accounts:user-list", "permission": None, "icon": "people-gear", "superadmin_only": True},
 ]
 
 
 def _visible_links(request, links, event=None):
     visible = []
     for item in links:
+        if item.get("superadmin_only") and not request.user.is_authenticated:
+            continue
+        if item.get("superadmin_only") and not request.user.is_superuser:
+            continue
         if item["permission"] is not None and not request.user.has_perm(item["permission"]):
             continue
         url = reverse(item["url_name"])

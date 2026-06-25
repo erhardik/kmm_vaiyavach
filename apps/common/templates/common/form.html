@@ -38,7 +38,10 @@
               <h2 class="h6 mb-1">{{ public_share_label|default:"Public Link" }}</h2>
               <div class="small text-body-secondary">{{ public_share_url }}</div>
             </div>
-            <a class="btn btn-outline-primary btn-sm" href="{{ public_share_url }}" target="_blank" rel="noopener">Open Link</a>
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-outline-secondary btn-sm" data-copy-text="{{ public_share_url }}">Copy Link</button>
+              <a class="btn btn-outline-primary btn-sm" href="{{ public_share_url }}" target="_blank" rel="noopener">Open Link</a>
+            </div>
           </div>
         {% endif %}
         {% if manager_contacts %}

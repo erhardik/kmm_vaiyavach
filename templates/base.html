@@ -86,6 +86,7 @@
       const storageKey = "kmm.sidebarCollapsed";
       const body = document.body;
       const buttons = document.querySelectorAll("[data-sidebar-toggle]");
+      const copyButtons = document.querySelectorAll("[data-copy-text]");
 
       function applyState(collapsed) {
         body.classList.toggle("sidebar-collapsed", collapsed);
@@ -106,6 +107,23 @@
           const next = !body.classList.contains("sidebar-collapsed");
           localStorage.setItem(storageKey, next ? "1" : "0");
           applyState(next);
+        });
+      });
+
+      copyButtons.forEach(function(button) {
+        button.addEventListener("click", async function() {
+          const value = button.getAttribute("data-copy-text") || "";
+          if (!value) return;
+          try {
+            await navigator.clipboard.writeText(value);
+            const original = button.textContent;
+            button.textContent = "Copied";
+            window.setTimeout(function() {
+              button.textContent = original;
+            }, 1200);
+          } catch (error) {
+            window.prompt("Copy link", value);
+          }
         });
       });
     })();

@@ -28,7 +28,10 @@
           <div class="fw-semibold">{% if lang_code == "gu" %}Public PDF Link{% else %}Public PDF Link{% endif %}</div>
           <div class="small text-body-secondary text-break">{{ public_pdf_url }}</div>
         </div>
-        <a class="btn btn-outline-primary btn-sm" href="{{ public_pdf_url }}" target="_blank" rel="noopener">{% if lang_code == "gu" %}Open{% else %}Open{% endif %}</a>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-copy-text="{{ public_pdf_url }}">{% if lang_code == "gu" %}Copy{% else %}Copy{% endif %}</button>
+          <a class="btn btn-outline-primary btn-sm" href="{{ public_pdf_url }}" target="_blank" rel="noopener">{% if lang_code == "gu" %}Open{% else %}Open{% endif %}</a>
+        </div>
       </div>
     {% endif %}
     <div class="row g-2">

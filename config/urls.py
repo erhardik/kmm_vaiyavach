@@ -21,6 +21,7 @@ urlpatterns = [
     path("i18n/setlang/", set_language, name="set_language"),
     path("", include("apps.dashboard.urls")),
     path("masters/", include("apps.masters.urls")),
+    path("accounts/", include("apps.accounts.urls")),
     path("requirements/", include("apps.requirements.urls")),
     path("sponsorship/", include("apps.sponsorship.urls")),
     path("vendors/", include("apps.vendors.urls")),

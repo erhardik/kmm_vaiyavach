@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-xl-10">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+      <div>
+        <h1 class="h4 mb-1">{{ page_title }}</h1>
+        {% if page_subtitle %}<p class="text-body-secondary mb-0">{{ page_subtitle }}</p>{% endif %}
+      </div>
+      <div class="d-flex gap-2">
+        {% if not is_create and user_delete_url %}
+          <a class="btn btn-outline-danger" href="{{ user_delete_url }}">Delete User</a>
+        {% endif %}
+        <a class="btn btn-outline-secondary" href="{{ list_url }}">Back</a>
+      </div>
+    </div>
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="row g-3">
+        <div class="col-12 col-lg-6">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+              <h2 class="h5 mb-3">Login Account</h2>
+              <div class="row g-3">
+                {% for field in user_form %}
+                  <div class="col-12 {% if field.name in 'is_active,is_staff,is_superuser' %}col-md-4{% endif %}">
+                    <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-lg-6">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+              <h2 class="h5 mb-3">Profile</h2>
+              <div class="row g-3">
+                {% for field in profile_form %}
+                  <div class="col-12">
+                    <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4 d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a href="{{ list_url }}" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+    </form>
+
+    {% if memberships is not None %}
+      <div class="card border-0 shadow-sm mt-4">
+        <div class="card-body">
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <div>
+              <h2 class="h5 mb-1">Event Roles</h2>
+              <p class="text-body-secondary mb-0">Assign event access for this user.</p>
+            </div>
+            {% if membership_create_url %}
+              <a class="btn btn-outline-primary btn-sm" href="{{ membership_create_url }}">Add Role</a>
+            {% endif %}
+          </div>
+          <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Event</th>
+                  <th>Role</th>
+                  <th>Primary</th>
+                  <th>Status</th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for membership in memberships %}
+                  <tr>
+                    <td>{{ membership.event.name }}</td>
+                    <td>{{ membership.get_role_display }}</td>
+                    <td>{% if membership.is_primary %}Yes{% else %}No{% endif %}</td>
+                    <td>{% if membership.is_active %}Active{% else %}Inactive{% endif %}</td>
+                    <td class="text-end">
+                      <a class="btn btn-sm btn-outline-secondary" href="{% url 'accounts:membership-update' user_pk=user.pk pk=membership.pk %}">Edit</a>
+                      <a class="btn btn-sm btn-outline-danger" href="{% url 'accounts:membership-delete' user_pk=user.pk pk=membership.pk %}">Delete</a>
+                    </td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="5" class="text-center py-3 text-body-secondary">No event roles added yet.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
