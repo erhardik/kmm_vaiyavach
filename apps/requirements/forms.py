@@ -127,7 +127,7 @@ class RequirementCollectionItemForm(forms.Form):
         choices=quantity_choices,
         coerce=Decimal,
         required=False,
-        initial=Decimal("3"),
+        initial=Decimal("0"),
         widget=forms.Select(),
     )
     remarks = forms.CharField(

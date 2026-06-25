@@ -228,7 +228,7 @@ class RequirementCollectionView(View):
             initial.append(
                 {
                     "item_id": item.pk,
-                    "required_qty": initial_quantities.get(item.pk, 3),
+                    "required_qty": initial_quantities.get(item.pk, 0),
                     "remarks": initial_remarks.get(item.pk, ""),
                 }
             )

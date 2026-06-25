@@ -131,7 +131,7 @@
             </p>
           </div>
           <div class="small text-body-secondary">
-            {% if lang == "gu" %}ડિફૉલ્ટ જથ્થો 3 છે.{% else %}Default quantity is 3.{% endif %}
+            {% if lang == "gu" %}ડિફૉલ્ટ જથ્થો 0 છે.{% else %}Default quantity is 0.{% endif %}
           </div>
         </div>
       </div>
@@ -162,13 +162,17 @@
                         <div class="small text-body-secondary">{{ row.item.default_size|default:"" }}</div>
                       </td>
                       <td class="text-end">
-                        <div class="d-inline-flex align-items-center gap-2 qty-cell">
+                        <div class="d-flex flex-column align-items-end gap-2 qty-cell">
                           {{ row.form.required_qty }}
-                          <button
-                            class="btn btn-sm btn-danger nr-btn"
-                            type="button"
-                            onclick="(function(btn){const sel=btn.parentElement.querySelector('select'); if(sel){sel.value='0'; sel.dispatchEvent(new Event('change', {bubbles:true}));}})(this);"
-                          >NR</button>
+                          <div class="d-flex flex-wrap justify-content-end gap-1">
+                            <button class="btn btn-sm btn-outline-secondary qty-preset-btn" type="button" data-qty="1">1</button>
+                            <button class="btn btn-sm btn-outline-secondary qty-preset-btn" type="button" data-qty="2">2</button>
+                            <button class="btn btn-sm btn-outline-secondary qty-preset-btn" type="button" data-qty="3">3</button>
+                            <button class="btn btn-sm btn-outline-secondary qty-preset-btn" type="button" data-qty="5">5</button>
+                            <button class="btn btn-sm btn-outline-secondary qty-preset-btn" type="button" data-qty="10">10</button>
+                            <button class="btn btn-sm btn-outline-secondary qty-preset-btn" type="button" data-qty="15">15</button>
+                            <button class="btn btn-sm btn-danger nr-btn" type="button">NR</button>
+                          </div>
                         </div>
                       </td>
                       <td>
@@ -198,6 +202,8 @@
     const button = document.getElementById('save-details-btn');
     const statusBox = document.getElementById('save-details-status');
     const summaryWrap = document.getElementById('saved-order-summary-wrap');
+    const presetButtons = document.querySelectorAll('.qty-preset-btn');
+    const nrButtons = document.querySelectorAll('.nr-btn');
     if (!form || !button || !statusBox || !summaryWrap) return;
 
     function clearInvalidState() {
@@ -242,6 +248,28 @@
         .join("");
       return rows ? `<div class="mt-2 small">${rows}</div>` : "";
     }
+
+    function applyQty(btn, value) {
+      const row = btn.closest('tr');
+      if (!row) return;
+      const select = row.querySelector('select[name$="-required_qty"]');
+      if (select) {
+        select.value = String(value);
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    }
+
+    presetButtons.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        applyQty(btn, btn.getAttribute('data-qty') || '0');
+      });
+    });
+
+    nrButtons.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        applyQty(btn, 0);
+      });
+    });
 
     button.addEventListener('click', async function() {
       const originalLabel = button.textContent;
