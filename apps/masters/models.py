@@ -37,6 +37,7 @@ class Event(TimeStampedModel):
     start_date = models.DateField()
     end_date = models.DateField()
     public_form_token = models.UUIDField(default=None, null=True, blank=True, unique=True, editable=False)
+    allow_requirement_edit_after_confirm = models.BooleanField(default=True)
     location = models.CharField(max_length=200, blank=True)
     primary_contact_name = models.CharField(max_length=120, blank=True, default="")
     primary_contact_mobile = models.CharField(max_length=20, blank=True, default="")

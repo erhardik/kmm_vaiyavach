@@ -210,6 +210,12 @@ class RequirementCollectionView(View):
             return None
         return RequirementHeader.objects.filter(pk=pk, event=event).first()
 
+    def _editing_allowed(self, event, header, user):
+        if header and header.status == RequirementStatus.SUBMITTED:
+            if event and not event.allow_requirement_edit_after_confirm and not user.is_superuser:
+                return False
+        return True
+
     def _get_items(self, event):
         return list(Item.objects.filter(event=event, is_active=True).order_by("standard_serial", "pk"))
 
@@ -274,6 +280,7 @@ class RequirementCollectionView(View):
 
     def _build_context(self, request, event, header, form, formset, items):
         language_code = _lang_code(request)
+        draft_key = f"kmm.requirements.collect.{event.pk if event else 'noevent'}.{header.pk if header else 'new'}"
         return {
             "event": event,
             "header": header,
@@ -290,6 +297,9 @@ class RequirementCollectionView(View):
             "order_number": header.order_number if header else None,
             "public_collect_url": reverse("requirements:public-collect", kwargs={"event_token": event.public_form_token}) if event else None,
             "public_pdf_url": reverse("requirements:public-print", kwargs={"token": header.public_view_token}) if header and header.order_number else None,
+            "editing_allowed": self._editing_allowed(event, header, request.user),
+            "event_requires_lock": bool(event and not event.allow_requirement_edit_after_confirm),
+            "draft_storage_key": draft_key,
         }
 
     def _render_summary_html(self, request, header):
@@ -299,6 +309,7 @@ class RequirementCollectionView(View):
                 "request": request,
                 "header": header,
                 "lang": _lang_code(request),
+                "public_pdf_url": reverse("requirements:public-print", kwargs={"token": header.public_view_token}) if header and header.order_number else None,
             },
         )
 
@@ -321,10 +332,6 @@ class RequirementCollectionView(View):
             return redirect(reverse_lazy("dashboard:home"))
 
         header = self._get_header(event)
-        if header and header.is_locked and not request.user.is_superuser:
-            messages.error(request, "This requirement order is locked.")
-            return redirect(reverse("requirements:collect-edit", kwargs={"pk": header.pk}))
-
         items = self._get_items(event)
         form = RequirementCollectionHeaderForm(request.POST, instance=header, current_event=event)
         existing_quantities = {line.item_id: line.required_qty for line in header.lines.all()} if header else {}
@@ -338,6 +345,15 @@ class RequirementCollectionView(View):
 
         save_details_now = "save_details" in request.POST
         confirm_now = "confirm" in request.POST
+        editing_allowed = self._editing_allowed(event, header, request.user)
+
+        if not editing_allowed:
+            messages.error(request, "This confirmed order is locked by admin.")
+            return render(request, self.template_name, self._build_context(request, event, header, form, formset, items))
+
+        if header and header.is_locked and not request.user.is_superuser:
+            messages.error(request, "This requirement order is locked.")
+            return render(request, self.template_name, self._build_context(request, event, header, form, formset, items))
 
         if save_details_now:
             if not form.is_valid():

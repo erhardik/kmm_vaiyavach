@@ -128,11 +128,11 @@ class RequirementCollectionItemForm(forms.Form):
         coerce=Decimal,
         required=False,
         initial=Decimal("0"),
-        widget=forms.Select(),
+        widget=forms.Select(attrs={"class": "form-select form-select-sm item-qty-select"}),
     )
     remarks = forms.CharField(
         required=False,
-        widget=forms.Textarea(attrs={"rows": 1, "placeholder": "Note", "class": "form-control item-remark-field"}),
+        widget=forms.Textarea(attrs={"rows": 1, "placeholder": "Note", "class": "form-control form-control-sm item-remark-field"}),
     )
 
 

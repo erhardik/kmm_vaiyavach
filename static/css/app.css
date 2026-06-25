@@ -49,6 +49,51 @@ body.bg-soft {
   color: #1d2b39;
 }
 
+.dashboard-quick-card {
+  border: 1px solid rgba(20, 50, 79, 0.08);
+  border-radius: 1.1rem;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcfd 100%);
+  color: var(--kmm-navy);
+  box-shadow: 0 0.25rem 0.8rem rgba(20, 50, 79, 0.06);
+  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+}
+
+.dashboard-quick-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0.55rem 1.25rem rgba(20, 50, 79, 0.1);
+  border-color: rgba(20, 50, 79, 0.18);
+  color: var(--kmm-navy);
+}
+
+.dashboard-quick-card .card-body {
+  padding: 1rem 1.05rem;
+}
+
+.dashboard-card-kicker {
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #7a8da4;
+  margin-bottom: 0.35rem;
+}
+
+.dashboard-card-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 0.35rem;
+}
+
+.dashboard-card-meta {
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.dashboard-nav-buttons .btn {
+  min-width: 10rem;
+}
+
 .lang-select {
   min-width: 9rem;
 }
@@ -131,6 +176,72 @@ body.bg-soft {
   min-height: 3.6rem;
 }
 
+.collect-form-shell {
+  font-size: 0.93rem;
+}
+
+.collect-form-shell .card-header,
+.collect-form-shell .card-body,
+.collect-form-shell .btn,
+.collect-form-shell .form-select,
+.collect-form-shell .form-control {
+  font-size: 0.93rem;
+}
+
+.collect-form-shell .card-header h2 {
+  font-size: 1.05rem;
+}
+
+.collect-form-shell .card-header p,
+.collect-form-shell .small,
+.collect-form-shell .text-body-secondary {
+  font-size: 0.82rem;
+}
+
+.collect-form-shell .category-card-header {
+  padding: 0.6rem 0.9rem;
+}
+
+.collect-form-shell .table > :not(caption) > * > * {
+  padding: 0.55rem 0.65rem;
+}
+
+.collect-form-shell .table td,
+.collect-form-shell .table th {
+  vertical-align: top;
+}
+
+.collect-form-shell .col-sr {
+  width: 7%;
+}
+
+.collect-form-shell .col-name {
+  width: auto;
+  max-width: 52%;
+}
+
+.collect-form-shell .col-qty {
+  width: 12%;
+}
+
+.collect-form-shell .col-remark {
+  width: 12%;
+}
+
+.collect-form-shell .col-name .fw-semibold {
+  white-space: normal;
+  line-height: 1.25;
+}
+
+.collect-form-shell .col-remark .form-control {
+  min-height: 2.2rem;
+}
+
+.collect-form-shell .qty-cell select {
+  width: 74px;
+  min-width: 74px;
+}
+
 .item-remark-field {
   min-height: 2.1rem !important;
   height: 2.1rem;
@@ -188,6 +299,105 @@ body.bg-soft {
 
 .category-card .table {
   margin-bottom: 0;
+}
+
+.requirement-table tr.row-active > td {
+  background: rgba(20, 50, 79, 0.08) !important;
+}
+
+.requirement-table tr.row-active {
+  outline: 2px solid rgba(20, 50, 79, 0.18);
+  outline-offset: -2px;
+}
+
+@media (max-width: 767.98px) {
+  .requirement-action-bar {
+    position: sticky;
+    bottom: 0.5rem;
+    z-index: 5;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(8px);
+    border-radius: 1rem;
+    box-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.08);
+  }
+
+  .requirement-table thead {
+    display: none;
+  }
+
+  .requirement-table tbody,
+  .requirement-table tr,
+  .requirement-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .requirement-table tr {
+    border-bottom: 1px solid rgba(20, 50, 79, 0.08);
+    padding: 0.25rem 0;
+    background: #fff;
+  }
+
+  .requirement-table td {
+    border: 0;
+    padding: 0.55rem 0.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .requirement-table td::before {
+    content: attr(data-label);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #6c757d;
+    flex: 0 0 42%;
+    max-width: 42%;
+  }
+
+  .requirement-table td > * {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .qty-cell {
+    width: 100%;
+  }
+
+  .qty-cell select {
+    width: 100%;
+    min-width: 100%;
+  }
+
+  .collect-form-shell .col-name,
+  .collect-form-shell .col-qty,
+  .collect-form-shell .col-remark,
+  .collect-form-shell .col-sr {
+    width: auto;
+    max-width: none;
+  }
+
+  .qty-cell .d-flex {
+    width: 100%;
+  }
+
+  .qty-cell .btn {
+    flex: 1 1 30%;
+  }
+
+  .item-remark-field {
+    min-height: 3rem !important;
+    height: auto;
+  }
+
+  .saved-order-summary-card .row.g-2 > div {
+    border-bottom: 1px dashed rgba(20, 50, 79, 0.08);
+    padding-bottom: 0.5rem;
+  }
 }
 
 .app-shell {

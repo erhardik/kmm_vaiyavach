@@ -11,6 +11,13 @@ The application must eliminate dependency on WhatsApp groups, Excel files, phone
 The system must support multiple simultaneous users with role-based permissions and real-time visibility of event progress.
 
 ---
+/*
+cd ~/kmm_vaiyavach
+git pull origin main
+python manage.py migrate
+python manage.py collectstatic --noinput
+*/
+---
 
 # Technology Stack
 

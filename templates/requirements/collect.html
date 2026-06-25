@@ -38,7 +38,7 @@
   </div>
 </div>
 
-<form method="post" class="row g-4">
+<form method="post" class="row g-4 collect-form-shell" data-collect-form data-draft-key="{{ draft_storage_key }}" data-editing-allowed="{% if editing_allowed %}1{% else %}0{% endif %}">
   {% csrf_token %}
   <div class="col-12" id="saved-order-summary-wrap">
     {% if header %}
@@ -47,6 +47,17 @@
       <div id="saved-order-summary" class="d-none"></div>
     {% endif %}
   </div>
+  {% if not editing_allowed %}
+    <div class="col-12">
+      <div class="alert alert-warning border-0 shadow-sm mb-0">
+        {% if lang == "gu" %}
+          આ સીલ થયેલ ઓર્ડર છે. એડમિન દ્વારા સંપાદન બંધ કરવામાં આવ્યું છે.
+        {% else %}
+          This confirmed order is view-only because the admin has locked editing.
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
 
   <div class="col-12">
     <div class="card border-0 shadow-sm requirement-panel basic-details-panel">
@@ -109,8 +120,9 @@
           </div>
         </div>
         <div class="d-flex flex-wrap gap-2 justify-content-end mt-4">
-          <button class="btn btn-outline-warning" type="button" id="save-details-btn">{% if lang == "gu" %}વિગતો સાચવો{% else %}Save Details{% endif %}</button>
+          <button class="btn btn-outline-warning" type="button" id="save-details-btn" {% if not editing_allowed %}disabled{% endif %}>{% if lang == "gu" %}વિગતો સાચવો{% else %}Save Details{% endif %}</button>
         </div>
+        <div id="draft-save-indicator" class="small text-body-secondary mt-2"></div>
         <div id="save-details-status" class="mt-3"></div>
       </div>
     </div>
@@ -146,22 +158,22 @@
               <table class="table table-hover align-middle mb-0 requirement-table">
                 <thead>
                   <tr>
-                    <th style="width: 7%">{% if lang == "gu" %}ક્રમ નં.{% else %}Sr. No.{% endif %}</th>
-                    <th>{% if lang == "gu" %}વસ્તુનું નામ{% else %}Name of Item{% endif %}</th>
-                    <th style="width: 12%" class="text-end">{% if lang == "gu" %}જથ્થો{% else %}QTY Req{% endif %}</th>
-                    <th style="width: 22%">{% if lang == "gu" %}નોંધ{% else %}Remark{% endif %}</th>
+                    <th class="col-sr">{% if lang == "gu" %}ક્રમ નં.{% else %}Sr. No.{% endif %}</th>
+                    <th class="col-name">{% if lang == "gu" %}વસ્તુનું નામ{% else %}Name of Item{% endif %}</th>
+                    <th class="col-qty text-end">{% if lang == "gu" %}જથ્થો{% else %}QTY Req{% endif %}</th>
+                    <th class="col-remark">{% if lang == "gu" %}નોંધ{% else %}Remark{% endif %}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {% for row in group.rows %}
                     <tr class="{{ row.category_class }}">
                       {{ row.form.item_id }}
-                      <td class="fw-semibold text-body-secondary">{{ row.serial }}</td>
-                      <td>
+                      <td class="fw-semibold text-body-secondary col-sr" data-label="{% if lang == 'gu' %}ક્રમ નં.{% else %}Sr. No.{% endif %}">{{ row.serial }}</td>
+                      <td class="col-name" data-label="{% if lang == 'gu' %}વસ્તુનું નામ{% else %}Name of Item{% endif %}">
                         <div class="fw-semibold">{{ row.display_name }}</div>
                         <div class="small text-body-secondary">{{ row.item.default_size|default:"" }}</div>
                       </td>
-                      <td class="text-end">
+                      <td class="text-end col-qty" data-label="{% if lang == 'gu' %}જથ્થો{% else %}QTY Req{% endif %}">
                         <div class="d-flex flex-column align-items-end gap-2 qty-cell">
                           {{ row.form.required_qty }}
                           <div class="d-flex flex-wrap justify-content-end gap-1">
@@ -175,7 +187,7 @@
                           </div>
                         </div>
                       </td>
-                      <td>
+                      <td class="col-remark" data-label="{% if lang == 'gu' %}નોંધ{% else %}Remark{% endif %}">
                         {{ row.form.remarks }}
                       </td>
                     </tr>
@@ -187,10 +199,12 @@
         {% empty %}
           <div class="alert alert-info mt-3 mb-0">{% if lang == "gu" %}આ ઇવેન્ટ માટે હજી કોઈ વસ્તુ ઉપલબ્ધ નથી.{% else %}No items are available for this event yet.{% endif %}</div>
         {% endfor %}
-        <div class="d-flex flex-wrap gap-2 justify-content-end mt-4">
-          <button class="btn btn-primary btn-lg" type="submit" name="save" value="1">{% if lang == "gu" %}સેવ{% else %}Save{% endif %}</button>
-          <button class="btn btn-success btn-lg" type="submit" name="confirm" value="1">{% if lang == "gu" %}કન્ફર્મ{% else %}Confirm{% endif %}</button>
-        </div>
+        {% if editing_allowed %}
+          <div class="d-flex flex-wrap gap-2 justify-content-end mt-4 requirement-action-bar">
+            <button class="btn btn-primary btn-lg" type="submit" name="save" value="1">{% if lang == "gu" %}સેવ{% else %}Save{% endif %}</button>
+            <button class="btn btn-success btn-lg" type="submit" name="confirm" value="1">{% if lang == "gu" %}કન્ફર્મ{% else %}Confirm{% endif %}</button>
+          </div>
+        {% endif %}
       </div>
     </div>
   </div>
@@ -198,13 +212,130 @@
 
 <script>
   (function() {
-    const form = document.querySelector('form');
+    const form = document.querySelector('[data-collect-form]');
     const button = document.getElementById('save-details-btn');
     const statusBox = document.getElementById('save-details-status');
+    const draftIndicator = document.getElementById('draft-save-indicator');
     const summaryWrap = document.getElementById('saved-order-summary-wrap');
     const presetButtons = document.querySelectorAll('.qty-preset-btn');
     const nrButtons = document.querySelectorAll('.nr-btn');
+    const editingAllowed = form && form.getAttribute('data-editing-allowed') !== '0';
+    let currentDraftKey = form ? form.getAttribute('data-draft-key') || '' : '';
     if (!form || !button || !statusBox || !summaryWrap) return;
+    if (!editingAllowed) {
+      form.querySelectorAll('input, select, textarea, button').forEach(function(field) {
+        if (field.id === 'save-details-btn') return;
+        field.disabled = true;
+      });
+      return;
+    }
+
+    let draftTimer = null;
+
+    function draftStorageKey() {
+      return currentDraftKey || 'kmm.requirements.collect';
+    }
+
+    function setDraftKey(nextKey) {
+      if (!nextKey || nextKey === currentDraftKey) return;
+      const previousKey = draftStorageKey();
+      currentDraftKey = nextKey;
+      try {
+        const existing = localStorage.getItem(previousKey);
+        if (existing) {
+          localStorage.setItem(draftStorageKey(), existing);
+          localStorage.removeItem(previousKey);
+        }
+      } catch (error) {}
+    }
+
+    function readDraft() {
+      try {
+        const raw = localStorage.getItem(draftStorageKey());
+        return raw ? JSON.parse(raw) : null;
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function writeDraft(payload) {
+      try {
+        localStorage.setItem(draftStorageKey(), JSON.stringify(payload));
+        if (draftIndicator) {
+          draftIndicator.textContent = 'Draft saved on this device.';
+        }
+      } catch (error) {
+        if (draftIndicator) {
+          draftIndicator.textContent = '';
+        }
+      }
+    }
+
+    function clearDraft() {
+      try {
+        localStorage.removeItem(draftStorageKey());
+      } catch (error) {}
+      if (draftIndicator) {
+        draftIndicator.textContent = '';
+      }
+    }
+
+    function collectDraftState() {
+      const state = {};
+      form.querySelectorAll('input[name], select[name], textarea[name]').forEach((field) => {
+        if (field.name === 'csrfmiddlewaretoken') return;
+        if (field.type === 'checkbox') {
+          state[field.name] = field.checked ? '1' : '';
+        } else {
+          state[field.name] = field.value;
+        }
+      });
+      return state;
+    }
+
+    function applyDraftState(state) {
+      if (!state) return;
+      Object.entries(state).forEach(([name, value]) => {
+        const field = form.querySelector(`[name="${name}"]`);
+        if (!field) return;
+        if (field.type === 'checkbox') {
+          field.checked = value === '1' || value === 'true';
+        } else {
+          field.value = value;
+        }
+      });
+    }
+
+    function touchRow(field) {
+      const row = field.closest('tr');
+      if (!row) return;
+      const qty = row.querySelector('select[name$="-required_qty"]');
+      const note = row.querySelector('textarea[name$="-remarks"]');
+      const active = (qty && qty.value && qty.value !== '0') || (note && note.value.trim());
+      row.classList.toggle('row-active', Boolean(active));
+    }
+
+    function refreshTouchedRows() {
+      form.querySelectorAll('tr[data-item-row]').forEach((row) => {
+        const qty = row.querySelector('select[name$="-required_qty"]');
+        const note = row.querySelector('textarea[name$="-remarks"]');
+        const active = (qty && qty.value && qty.value !== '0') || (note && note.value.trim());
+        row.classList.toggle('row-active', Boolean(active));
+      });
+    }
+
+    function scheduleDraftSave() {
+      window.clearTimeout(draftTimer);
+      draftTimer = window.setTimeout(function() {
+        writeDraft(collectDraftState());
+      }, 250);
+    }
+
+    applyDraftState(readDraft());
+    refreshTouchedRows();
+    if (draftIndicator) {
+      draftIndicator.textContent = readDraft() ? 'Draft restored from this device.' : '';
+    }
 
     function clearInvalidState() {
       form.querySelectorAll('.is-invalid').forEach((el) => el.classList.remove('is-invalid'));
@@ -271,6 +402,21 @@
       });
     });
 
+    form.querySelectorAll('input[name], select[name], textarea[name]').forEach(function(field) {
+      if (field.name === 'csrfmiddlewaretoken') return;
+      field.addEventListener('input', function() {
+        touchRow(field);
+        scheduleDraftSave();
+      });
+      field.addEventListener('change', function() {
+        touchRow(field);
+        scheduleDraftSave();
+      });
+    });
+
+    refreshTouchedRows();
+    scheduleDraftSave();
+
     button.addEventListener('click', async function() {
       const originalLabel = button.textContent;
       const formData = new FormData(form);
@@ -305,6 +451,17 @@
         if (data.summary_html) {
           summaryWrap.innerHTML = data.summary_html;
         }
+        if (data.header_pk) {
+          const hiddenHeader = form.querySelector('input[name="header_pk"]');
+          if (hiddenHeader) {
+            hiddenHeader.value = String(data.header_pk);
+          }
+          const draftPrefix = currentDraftKey.split('.').slice(0, 4).join('.');
+          setDraftKey(`${draftPrefix}.${data.header_pk}`);
+          form.setAttribute('data-draft-key', `${draftPrefix}.${data.header_pk}`);
+        }
+        clearDraft();
+        scheduleDraftSave();
       } catch (error) {
         statusBox.innerHTML = '<div class="alert alert-danger mb-0">Save failed. Please try again.</div>';
       } finally {

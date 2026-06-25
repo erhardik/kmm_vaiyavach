@@ -54,7 +54,7 @@ class EventScopedListView(LoginRequiredMixin, PermissionRequiredMixin, ListView)
             if field_name.startswith("get_") and field_name.endswith("_display"):
                 field_name = field_name[4:-8]
             fallback.append(field_name.replace("_", " ").title())
-        return fallback
+        return fallback or ["Record"]
 
     def get_queryset(self):
         qs = super().get_queryset()

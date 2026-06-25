@@ -63,6 +63,7 @@ class EventUpdateForm(BootstrapModelForm):
             "slug",
             "start_date",
             "end_date",
+            "allow_requirement_edit_after_confirm",
             "location",
             "primary_contact_name",
             "primary_contact_mobile",
