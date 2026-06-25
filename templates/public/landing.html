@@ -11,7 +11,28 @@
 </head>
 <body class="bg-soft">
   <div class="public-landing">
-    <header class="public-hero">
+    <nav class="navbar navbar-expand-lg navbar-dark public-topbar">
+      <div class="container py-2">
+        <a class="navbar-brand d-flex align-items-center gap-2" href="#top">
+          <img src="{% static 'images/kmm.png' %}" alt="KMM" class="public-nav-logo">
+          <span class="fw-semibold">કલ્યાણ મિત્ર મંડળ</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#publicNav" aria-controls="publicNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="publicNav">
+          <div class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
+            <a class="nav-link" href="#about">અમારા વિશે</a>
+            <a class="nav-link" href="#requests">વિનંતીઓ</a>
+            <a class="nav-link" href="#stock">સ્ટોક</a>
+            <a class="nav-link" href="#contact">સંપર્ક</a>
+            <a class="btn btn-light btn-sm ms-lg-2" href="{{ login_url }}">સભ્ય લોગિન</a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <header class="public-hero" id="top">
       <div class="container py-4 py-lg-5">
         <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
           <div class="d-flex align-items-center gap-3">
@@ -21,9 +42,6 @@
               <h1 class="display-6 fw-bold mb-0">કલ્યાણ મિત્ર મંડળ</h1>
               <div class="text-white-75">ચાતુર્માસ વૈયાવચ્ચ જાહેર પ્રવેશદ્વાર</div>
             </div>
-          </div>
-          <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
-            <a class="btn btn-light btn-lg" href="{{ login_url }}">સભ્ય લોગિન</a>
           </div>
         </div>
 
@@ -43,6 +61,12 @@
                 <a class="btn btn-warning btn-lg" href="{{ request_form_url }}">વૈયાવચ્ચ વિનંતી ફોર્મ ભરો</a>
                 <a class="btn btn-outline-light btn-lg" href="{{ requests_url }}">બધી વિનંતીઓ જુઓ</a>
               </div>
+              <div class="d-flex flex-wrap gap-2 mt-4">
+                <a class="btn btn-outline-light btn-sm" href="#about">About KMM</a>
+                <a class="btn btn-outline-light btn-sm" href="#requests">Live Orders</a>
+                <a class="btn btn-outline-light btn-sm" href="#stock">Current Stock</a>
+                <a class="btn btn-outline-light btn-sm" href="#contact">Social & Contact</a>
+              </div>
               <div class="hero-trust row g-3 mt-4">
                 <div class="col-12 col-md-4">
                   <div class="hero-trust-card">
@@ -53,7 +77,7 @@
                 <div class="col-12 col-md-4">
                   <div class="hero-trust-card">
                     <div class="small text-uppercase text-white-50 mb-1">Transparent</div>
-                    <div class="fw-semibold">અપારદર્શિતા વગર સંપૂર્ણ વ્યવસ્થા</div>
+                    <div class="fw-semibold">સંપૂર્ણ પારદર્શક વ્યવસ્થા</div>
                   </div>
                 </div>
                 <div class="col-12 col-md-4">
@@ -69,6 +93,7 @@
           <div class="col-12 col-lg-5">
             <div class="glass-card p-4 h-100">
               <div class="small text-uppercase text-white-50 mb-2">આજનું સંક્ષિપ્ત દૃશ્ય</div>
+              <img src="{% static 'pdf_header.png' %}" alt="Chaturmas Vaiyavachch 2026 banner" class="img-fluid rounded-4 shadow-sm mb-3 public-banner-image">
               <div class="row g-3">
                 <div class="col-6">
                   <div class="metric-card metric-card-light">
@@ -117,7 +142,7 @@
         </div>
       {% endif %}
 
-      <section class="mb-4">
+      <section class="mb-4" id="about">
         <div class="row g-4 align-items-stretch">
           <div class="col-12 col-lg-7">
             <div class="card border-0 shadow-sm h-100">
@@ -198,7 +223,7 @@
         </div>
       </section>
 
-      <section class="mb-4">
+      <section class="mb-4" id="requests">
         <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
           <div>
             <h2 class="h3 mb-1">ચાલુ વિનંતીઓ</h2>
@@ -263,7 +288,7 @@
         </div>
       </section>
 
-      <section class="mb-4">
+      <section class="mb-4" id="stock">
         <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
           <div>
             <h2 class="h3 mb-1">વસ્તુ સ્ટોક</h2>
@@ -312,11 +337,11 @@
         </div>
       </section>
 
-      <section class="mb-2">
+      <section class="mb-2" id="contact">
         <div class="card border-0 shadow-sm">
           <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-3">
             <div>
-              <div class="fw-semibold">માનવ સેવા અને ઈવેન્ટ્સની પારદર્શક વ્યવસ્થા માટે બનાવેલ જાહેર પોર્ટલ.</div>
+              <div class="fw-semibold">માનવ સેવા અને ઇવેન્ટ્સની પારદર્શક વ્યવસ્થા માટે બનાવેલ જાહેર પોર્ટલ.</div>
               <div class="text-body-secondary small">વસ્તુઓ, ઓર્ડર, પેકિંગ અને રવાના જર્ની એક જ જગ્યાએ.</div>
             </div>
             <div class="d-flex flex-wrap gap-2">
@@ -344,6 +369,18 @@
           });
         });
       }
+
+      document.addEventListener("click", function(event) {
+        const button = event.target.closest(".js-pack-now");
+        if (!button) return;
+        const form = button.closest("form");
+        if (!form) return;
+        const select = form.querySelector("select[name='status']");
+        if (select) {
+          select.value = button.getAttribute("data-status") || "IN_PROGRESS";
+        }
+        form.submit();
+      });
     })();
   </script>
 </body>

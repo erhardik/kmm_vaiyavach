@@ -99,6 +99,24 @@ body.bg-soft {
   min-height: 100vh;
 }
 
+.public-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+  background: rgba(16, 40, 63, 0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.public-nav-logo {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  border-radius: 0.6rem;
+  background: #fff;
+  padding: 0.15rem;
+}
+
 .public-hero,
 .public-requests-hero {
   background: linear-gradient(135deg, #10283f 0%, #14324f 50%, #1f466d 100%);
@@ -112,6 +130,12 @@ body.bg-soft {
   border-radius: 1rem;
   background: rgba(255, 255, 255, 0.95);
   padding: 0.35rem;
+}
+
+.public-banner-image {
+  width: 100%;
+  max-height: 240px;
+  object-fit: cover;
 }
 
 .public-hero .text-white-75,
