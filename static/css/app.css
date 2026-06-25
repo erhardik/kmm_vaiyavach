@@ -378,12 +378,43 @@ body.bg-soft {
   line-height: 1.05;
 }
 
+.qty-preset-btn {
+  color: #6b4b00;
+  background: #fff3bf;
+  border: 1px solid #ffd36a;
+}
+
+.qty-preset-btn:hover,
+.qty-preset-btn:focus {
+  color: #3f2c00;
+  background: #ffe69c;
+  border-color: #ffc947;
+}
+
+.qty-preset-btn.qty-active,
+.nr-btn.qty-active {
+  color: #fff;
+  background: #198754;
+  border-color: #198754;
+  box-shadow: 0 0 0 0.12rem rgba(25, 135, 84, 0.18);
+}
+
 .nr-btn {
   min-width: 2rem;
   padding: 0.16rem 0.34rem;
   font-size: 0.72rem;
   font-weight: 700;
   line-height: 1;
+  color: #fff;
+  background: #dc3545;
+  border: 1px solid #dc3545;
+}
+
+.nr-btn:hover,
+.nr-btn:focus {
+  color: #fff;
+  background: #bb2d3b;
+  border-color: #b02a37;
 }
 
 .category-card {

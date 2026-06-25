@@ -182,13 +182,13 @@
                         <div class="d-flex flex-wrap align-items-center justify-content-end gap-1 qty-cell">
                           {{ row.form.required_qty }}
                           <div class="d-flex flex-wrap justify-content-end gap-1 qty-preset-group">
-                            <button class="btn btn-sm btn-outline-secondary qty-preset-btn" type="button" data-qty="1">1</button>
-                            <button class="btn btn-sm btn-outline-secondary qty-preset-btn" type="button" data-qty="2">2</button>
-                            <button class="btn btn-sm btn-outline-secondary qty-preset-btn" type="button" data-qty="3">3</button>
-                            <button class="btn btn-sm btn-outline-secondary qty-preset-btn" type="button" data-qty="5">5</button>
-                            <button class="btn btn-sm btn-outline-secondary qty-preset-btn" type="button" data-qty="10">10</button>
-                            <button class="btn btn-sm btn-outline-secondary qty-preset-btn" type="button" data-qty="15">15</button>
-                            <button class="btn btn-sm btn-danger nr-btn" type="button">NR</button>
+                            <button class="btn btn-sm qty-preset-btn" type="button" data-qty="1">1</button>
+                            <button class="btn btn-sm qty-preset-btn" type="button" data-qty="2">2</button>
+                            <button class="btn btn-sm qty-preset-btn" type="button" data-qty="3">3</button>
+                            <button class="btn btn-sm qty-preset-btn" type="button" data-qty="5">5</button>
+                            <button class="btn btn-sm qty-preset-btn" type="button" data-qty="10">10</button>
+                            <button class="btn btn-sm qty-preset-btn" type="button" data-qty="15">15</button>
+                            <button class="btn btn-sm nr-btn" type="button">NR</button>
                           </div>
                         </div>
                       </td>
@@ -318,6 +318,7 @@
       const note = row.querySelector('textarea[name$="-remarks"]');
       const active = (qty && qty.value && qty.value !== '0') || (note && note.value.trim());
       row.classList.toggle('row-active', Boolean(active));
+      updateQtyButtons(row);
     }
 
     function refreshTouchedRows() {
@@ -326,6 +327,7 @@
         const note = row.querySelector('textarea[name$="-remarks"]');
         const active = (qty && qty.value && qty.value !== '0') || (note && note.value.trim());
         row.classList.toggle('row-active', Boolean(active));
+        updateQtyButtons(row);
       });
     }
 
@@ -385,6 +387,18 @@
       return rows ? `<div class="mt-2 small">${rows}</div>` : "";
     }
 
+    function updateQtyButtons(row) {
+      if (!row) return;
+      const select = row.querySelector('select[name$="-required_qty"]');
+      const selectedQty = select ? String(select.value || '0') : '0';
+      row.querySelectorAll('.qty-preset-btn').forEach((preset) => {
+        preset.classList.toggle('qty-active', preset.getAttribute('data-qty') === selectedQty);
+      });
+      row.querySelectorAll('.nr-btn').forEach((nrButton) => {
+        nrButton.classList.toggle('qty-active', selectedQty === '0' && row.getAttribute('data-nr-selected') === '1');
+      });
+    }
+
     function applyQty(btn, value) {
       const row = btn.closest('tr');
       if (!row) return;
@@ -393,6 +407,8 @@
         select.value = String(value);
         select.dispatchEvent(new Event('change', { bubbles: true }));
       }
+      row.setAttribute('data-nr-selected', btn.classList.contains('nr-btn') ? '1' : '0');
+      updateQtyButtons(row);
     }
 
     presetButtons.forEach(function(btn) {
@@ -414,6 +430,10 @@
         scheduleDraftSave();
       });
       field.addEventListener('change', function() {
+        if (field.matches('select[name$="-required_qty"]')) {
+          const row = field.closest('tr');
+          if (row) row.setAttribute('data-nr-selected', '0');
+        }
         touchRow(field);
         scheduleDraftSave();
       });
