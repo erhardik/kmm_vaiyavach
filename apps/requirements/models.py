@@ -8,11 +8,14 @@ from config.models import EventScopedModel
 
 
 class RequirementStatus(models.TextChoices):
-    DRAFT = "DRAFT", "Draft"
-    SUBMITTED = "SUBMITTED", "Submitted"
-    IN_PROGRESS = "IN_PROGRESS", "In Progress"
-    CLOSED = "CLOSED", "Closed"
-    CANCELLED = "CANCELLED", "Cancelled"
+    DRAFT = "DRAFT", "Open"
+    SUBMITTED = "SUBMITTED", "Pending"
+    IN_PROGRESS = "IN_PROGRESS", "Packing done"
+    CLOSED = "CLOSED", "On route"
+    CANCELLED = "CANCELLED", "Rejected by M.S."
+    RETURN_REQUESTED = "RETURN_REQUESTED", "Return Requested"
+    RETURN_DONE = "RETURN_DONE", "Return Done"
+    RECEIVED_BY_MS = "RECEIVED_BY_MS", "Recieved by M.S."
 
 
 class PriorityLevel(models.TextChoices):
@@ -46,6 +49,7 @@ class RequirementHeader(EventScopedModel):
     status = models.CharField(max_length=30, choices=RequirementStatus.choices, default=RequirementStatus.DRAFT)
     is_locked = models.BooleanField(default=False)
     locked_at = models.DateTimeField(null=True, blank=True)
+    packing_stock_applied_at = models.DateTimeField(null=True, blank=True)
     packed_by_name = models.CharField(max_length=120, blank=True, default="")
     checked_by_name = models.CharField(max_length=120, blank=True, default="")
     distributed_to_ms_by_name = models.CharField(max_length=120, blank=True, default="")

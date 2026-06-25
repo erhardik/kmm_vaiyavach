@@ -3,8 +3,29 @@ from django.urls import reverse_lazy
 from django.views.generic import TemplateView
 
 from apps.dashboard.forms import ItemControlFilterForm
-from apps.dashboard.services import build_home_summary, build_item_control_center, get_dashboard_event_queryset
+from apps.dashboard.services import (
+    build_home_summary,
+    build_item_control_center,
+    build_public_item_preview,
+    build_public_status_summary,
+    get_dashboard_event_queryset,
+)
 from apps.masters.models import Event
+
+
+class PublicLandingView(TemplateView):
+    template_name = "public/landing.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        event = Event.objects.filter(is_active=True).order_by("-is_current", "-start_date", "name").first()
+        context["event"] = event
+        context["status_summary"] = build_public_status_summary(event) if event else {}
+        context["public_items"] = build_public_item_preview(event) if event else []
+        context["request_form_url"] = reverse_lazy("requirements:public-collect", kwargs={"event_token": event.public_form_token}) if event else reverse_lazy("dashboard:home")
+        context["requests_url"] = reverse_lazy("public-requests")
+        context["login_url"] = reverse_lazy("login")
+        return context
 
 
 class DashboardHomeView(LoginRequiredMixin, TemplateView):

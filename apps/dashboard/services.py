@@ -6,7 +6,7 @@ from apps.distribution.models import DistributionLine
 from apps.inventory.models import InventoryBalance, InventoryTransaction, InventoryTransactionType
 from apps.masters.models import Event, Item, Upashray
 from apps.procurement.models import PurchaseOrderLine
-from apps.requirements.models import RequirementLine
+from apps.requirements.models import RequirementHeader, RequirementLine, RequirementStatus
 from apps.sponsorship.models import SponsorMaterialReceipt, SponsorshipCommitment
 
 
@@ -197,3 +197,46 @@ def build_home_summary(event):
         "pending_distribution": pending_distribution,
         "pending_alerts": int((pending_procurement > 0) + (pending_distribution > 0)),
     }
+
+
+def build_public_status_summary(event):
+    statuses = [
+        RequirementStatus.DRAFT,
+        RequirementStatus.SUBMITTED,
+        RequirementStatus.IN_PROGRESS,
+        RequirementStatus.CLOSED,
+        RequirementStatus.CANCELLED,
+        RequirementStatus.RETURN_REQUESTED,
+        RequirementStatus.RETURN_DONE,
+        RequirementStatus.RECEIVED_BY_MS,
+    ]
+    qs = RequirementHeader.objects.filter(event=event)
+    summary = {
+        "total_requests": qs.count(),
+    }
+    for status in statuses:
+        summary[f"status_{status}"] = qs.filter(status=status).count()
+    summary["open_requests"] = qs.filter(status__in=[RequirementStatus.DRAFT, RequirementStatus.SUBMITTED]).count()
+    summary["packing_requests"] = qs.filter(status=RequirementStatus.IN_PROGRESS).count()
+    summary["on_route_requests"] = qs.filter(status=RequirementStatus.CLOSED).count()
+    summary["received_requests"] = qs.filter(status=RequirementStatus.RECEIVED_BY_MS).count()
+    summary["return_requests"] = qs.filter(status=RequirementStatus.RETURN_REQUESTED).count()
+    summary["return_done_requests"] = qs.filter(status=RequirementStatus.RETURN_DONE).count()
+    summary["rejected_requests"] = qs.filter(status=RequirementStatus.CANCELLED).count()
+    return summary
+
+
+def build_public_item_preview(event):
+    rows = []
+    balances = {balance.item_id: balance for balance in InventoryBalance.objects.filter(event=event).select_related("item")}
+    for item in Item.objects.filter(event=event, is_active=True).order_by("standard_serial", "pk"):
+        balance = balances.get(item.pk)
+        rows.append(
+            {
+                "item": item,
+                "serial": item.standard_serial or item.pk,
+                "stock": balance.current_stock if balance else Decimal("0"),
+                "category": item.get_category_display(),
+            }
+        )
+    return rows

@@ -1,0 +1,222 @@
+{% load static %}
+<!doctype html>
+<html lang="{{ LANGUAGE_CODE|default:'en' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KMM Vaiyavach | Public</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body class="bg-soft">
+  <div class="public-landing">
+    <header class="public-hero">
+      <div class="container py-4 py-lg-5">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+          <div class="d-flex align-items-center gap-3">
+            <img src="{% static 'images/kmm.png' %}" alt="KMM" class="public-brand-logo">
+            <div>
+              <div class="text-uppercase small tracking-wide text-white-50">Kalyan Mitra Mandal</div>
+              <h1 class="display-6 fw-bold mb-0">કલ્યાણ મિત્ર મંડળ</h1>
+              <div class="text-white-75">Chaturmas Vaiyavachch public portal</div>
+            </div>
+          </div>
+          <a class="btn btn-light btn-lg" href="{{ login_url }}">Member Login</a>
+        </div>
+
+        <div class="row g-4 align-items-center">
+          <div class="col-12 col-lg-7">
+            <div class="hero-copy">
+              <div class="badge rounded-pill text-bg-light text-primary-emphasis mb-3">Public access for volunteers and managers</div>
+              <h2 class="display-5 fw-bold mb-3">One place to fill requests, view live order flow, and keep packing status moving.</h2>
+              <p class="lead text-white-75 mb-4">
+                {% if event %}
+                  Active event: <strong>{{ event.name }}</strong>{% if event.start_date %} · {{ event.start_date }} to {{ event.end_date }}{% endif %}
+                {% else %}
+                  No active event is available right now.
+                {% endif %}
+              </p>
+              <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-warning btn-lg" href="{{ request_form_url }}">Fill Vaiyavachch Request Form</a>
+                <a class="btn btn-outline-light btn-lg" href="{{ requests_url }}">View All Requests</a>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 col-lg-5">
+            <div class="glass-card p-4">
+              <div class="small text-uppercase text-white-50 mb-2">Today at a glance</div>
+              <div class="row g-3">
+                <div class="col-6">
+                  <div class="metric-card metric-card-light">
+                    <div class="label">Total Requests</div>
+                    <div class="value">{{ status_summary.total_requests|default:0 }}</div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="metric-card metric-card-light">
+                    <div class="label">Open</div>
+                    <div class="value">{{ status_summary.open_requests|default:0 }}</div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="metric-card metric-card-light">
+                    <div class="label">Packing Done</div>
+                    <div class="value">{{ status_summary.packing_requests|default:0 }}</div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="metric-card metric-card-light">
+                    <div class="label">On Route</div>
+                    <div class="value">{{ status_summary.on_route_requests|default:0 }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="container py-4 py-lg-5">
+      {% if messages %}
+        <div class="mb-4">
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} mb-2">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+      <section class="mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
+          <div>
+            <h2 class="h3 mb-1">Current Requests</h2>
+            <p class="text-body-secondary mb-0">Anonymous status updates are available for packing and routing.</p>
+          </div>
+          <div class="d-flex flex-wrap gap-2">
+            <span class="badge text-bg-primary-subtle text-primary-emphasis">Open: {{ status_summary.open_requests|default:0 }}</span>
+            <span class="badge text-bg-warning-subtle text-warning-emphasis">Packing: {{ status_summary.packing_requests|default:0 }}</span>
+            <span class="badge text-bg-info-subtle text-info-emphasis">Received: {{ status_summary.received_requests|default:0 }}</span>
+            <span class="badge text-bg-danger-subtle text-danger-emphasis">Rejected: {{ status_summary.rejected_requests|default:0 }}</span>
+          </div>
+        </div>
+
+        <div class="table-responsive shadow-sm rounded-4 bg-white">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Order</th>
+                <th>Upashray</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Items</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for header in headers %}
+                <tr>
+                  <td>
+                    <div class="fw-semibold">{{ header.order_number|default:"Draft" }}</div>
+                    <div class="small text-body-secondary">{{ header.public_view_token }}</div>
+                  </td>
+                  <td>{{ header.upashray }}</td>
+                  <td>{{ header.requirement_date }}</td>
+                  <td>
+                    <span class="badge text-bg-light border">{{ header.get_status_display }}</span>
+                  </td>
+                  <td>{{ header.lines.count }}</td>
+                  <td>
+                    <div class="d-flex flex-wrap gap-2">
+                      <a class="btn btn-sm btn-outline-primary" href="{% url 'requirements:public-detail' token=header.public_view_token %}">View</a>
+                      <form method="post" class="d-flex flex-wrap gap-2 align-items-center">
+                        {% csrf_token %}
+                        <input type="hidden" name="order_token" value="{{ header.public_view_token }}">
+                        <select name="status" class="form-select form-select-sm public-status-select">
+                          {% for value,label in status_choices %}
+                            <option value="{{ value }}" {% if header.status == value %}selected{% endif %}>{{ label }}</option>
+                          {% endfor %}
+                        </select>
+                        <button class="btn btn-sm btn-success" type="submit">Save Status</button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="6" class="text-center py-4 text-body-secondary">No confirmed requests yet.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+          <div>
+            <h2 class="h3 mb-1">Item Stock</h2>
+            <p class="text-body-secondary mb-0">Current stock by item and category only. No price or money data is shown here.</p>
+          </div>
+        </div>
+        <div class="card border-0 shadow-sm">
+          <div class="card-body">
+            <div class="row g-2 align-items-center mb-3">
+              <div class="col-12 col-lg-6">
+                <input type="search" id="publicItemSearch" class="form-control" placeholder="Search items">
+              </div>
+              <div class="col-12 col-lg-6 text-lg-end small text-body-secondary">Live filtered stock list</div>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-sm table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>Code</th>
+                    <th>Item</th>
+                    <th>Type</th>
+                    <th class="text-end">Current Stock</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in public_item_preview %}
+                    <tr data-item-row data-search="{{ row.item.item_code }} {{ row.item.item_name }} {{ row.item.item_name_gu }} {{ row.category }}">
+                      <td>
+                        <div class="fw-semibold">{{ row.item.item_code }}</div>
+                        <div class="small text-body-secondary">#{{ row.serial|stringformat:"02d" }}</div>
+                      </td>
+                      <td>
+                        <div class="fw-semibold">{{ row.item.item_name }}</div>
+                        <div class="small text-body-secondary">{{ row.item.item_name_gu|default:row.item.default_size }}</div>
+                      </td>
+                      <td>{{ row.category }}</td>
+                      <td class="text-end">{{ row.stock }}</td>
+                    </tr>
+                  {% empty %}
+                    <tr><td colspan="4" class="text-center py-4 text-body-secondary">No item data found.</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    (function() {
+      const input = document.getElementById("publicItemSearch");
+      const rows = Array.from(document.querySelectorAll("[data-item-row]"));
+      if (input && rows.length) {
+        input.addEventListener("input", function() {
+          const query = input.value.trim().toLowerCase();
+          rows.forEach(function(row) {
+            const haystack = (row.getAttribute("data-search") || row.textContent || "").toLowerCase();
+            row.classList.toggle("d-none", query && haystack.indexOf(query) === -1);
+          });
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

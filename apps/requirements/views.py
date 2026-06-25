@@ -26,6 +26,8 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import Image, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from apps.common.views import EventScopedCreateView, EventScopedDeleteView, EventScopedListView, EventScopedUpdateView
+from apps.dashboard.services import build_public_item_preview
+from apps.inventory.services import apply_requirement_packing
 from apps.masters.models import Event, EventManagerContact, Item, ItemCategory
 from apps.requirements.forms import (
     RequirementCollectionHeaderForm,
@@ -36,6 +38,18 @@ from apps.requirements.forms import (
 )
 from apps.requirements.models import RequirementHeader, RequirementLine, RequirementStatus, SpecialRequirement
 from apps.masters.models import Upashray
+
+
+PUBLIC_STATUS_CHOICES = [
+    (RequirementStatus.DRAFT, "Open"),
+    (RequirementStatus.SUBMITTED, "Pending"),
+    (RequirementStatus.IN_PROGRESS, "Packing done"),
+    (RequirementStatus.CLOSED, "On route"),
+    (RequirementStatus.RECEIVED_BY_MS, "Recieved by M.S."),
+    (RequirementStatus.CANCELLED, "Rejected by M.S."),
+    (RequirementStatus.RETURN_REQUESTED, "Return Requested"),
+    (RequirementStatus.RETURN_DONE, "Return Done"),
+]
 
 
 CATEGORY_LABELS = {
@@ -925,3 +939,73 @@ class SpecialRequirementDeleteView(EventScopedDeleteView):
         context = super().get_context_data(**kwargs)
         context["list_url"] = self.success_url
         return context
+
+
+class PublicRequirementListView(View):
+    template_name = "public/requests.html"
+
+    def _get_event(self, token=None):
+        if token:
+            return Event.objects.filter(public_form_token=token, is_active=True).first()
+        return Event.objects.filter(is_active=True).order_by("-is_current", "-start_date", "name").first()
+
+    def _get_rows(self, event):
+        return list(
+            RequirementHeader.objects.filter(event=event)
+            .select_related("upashray")
+            .prefetch_related("lines__item")
+            .exclude(status=RequirementStatus.DRAFT)
+            .order_by("-updated_at", "-created_at")
+        )
+
+    def _status_summary(self, headers):
+        summary = {key: 0 for key, _label in PUBLIC_STATUS_CHOICES}
+        for header in headers:
+            summary[header.status] = summary.get(header.status, 0) + 1
+        return summary
+
+    def get(self, request, token=None):
+        event = self._get_event(token)
+        headers = self._get_rows(event) if event else []
+        return render(
+            request,
+            self.template_name,
+            {
+                "event": event,
+                "headers": headers,
+                "status_choices": PUBLIC_STATUS_CHOICES,
+                "status_summary": self._status_summary(headers),
+                "public_collect_url": reverse("requirements:public-collect", kwargs={"event_token": event.public_form_token}) if event else None,
+                "public_landing_url": reverse("public-landing"),
+                "public_items": build_public_item_preview(event) if event else [],
+                "requests_count": len(headers),
+            },
+        )
+
+    @transaction.atomic
+    def post(self, request, token=None):
+        event = self._get_event(token)
+        if event is None:
+            messages.error(request, "No active event found.")
+            return redirect(reverse_lazy("public-landing"))
+
+        order_token = request.POST.get("order_token")
+        new_status = request.POST.get("status")
+        header = RequirementHeader.objects.filter(event=event, public_view_token=order_token).first()
+        if header is None:
+            messages.error(request, "Requirement order not found.")
+            return redirect(reverse("public-requests"))
+
+        valid_statuses = {value for value, _label in PUBLIC_STATUS_CHOICES}
+        if new_status not in valid_statuses:
+            messages.error(request, "Invalid status.")
+            return redirect(reverse("public-requests"))
+
+        previous_status = header.status
+        header.status = new_status
+        header.save(update_fields=["status", "updated_at"])
+        if new_status == RequirementStatus.IN_PROGRESS and header.packing_stock_applied_at is None:
+            apply_requirement_packing(header)
+        if previous_status != new_status:
+            messages.success(request, "Status saved.")
+        return redirect(reverse("public-requests"))

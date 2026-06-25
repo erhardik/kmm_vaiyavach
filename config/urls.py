@@ -5,6 +5,8 @@ from django.contrib import admin
 from django.urls import include, path
 
 from apps.accounts.forms import BootstrapAuthenticationForm
+from apps.dashboard.views import PublicLandingView
+from apps.requirements.views import PublicRequirementListView
 from django.contrib.auth import views as auth_views
 
 urlpatterns = [
@@ -19,7 +21,9 @@ urlpatterns = [
     ),
     path("accounts/logout/", auth_views.LogoutView.as_view(), name="logout"),
     path("i18n/setlang/", set_language, name="set_language"),
-    path("", include("apps.dashboard.urls")),
+    path("", PublicLandingView.as_view(), name="public-landing"),
+    path("requests/", PublicRequirementListView.as_view(), name="public-requests"),
+    path("dashboard/", include("apps.dashboard.urls")),
     path("masters/", include("apps.masters.urls")),
     path("accounts/", include("apps.accounts.urls")),
     path("requirements/", include("apps.requirements.urls")),

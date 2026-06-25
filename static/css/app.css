@@ -94,6 +94,55 @@ body.bg-soft {
   min-width: 10rem;
 }
 
+.public-landing,
+.public-requests {
+  min-height: 100vh;
+}
+
+.public-hero,
+.public-requests-hero {
+  background: linear-gradient(135deg, #10283f 0%, #14324f 50%, #1f466d 100%);
+  color: #fff;
+}
+
+.public-brand-logo {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 0.35rem;
+}
+
+.public-hero .text-white-75,
+.public-requests-hero .text-white-75 {
+  color: rgba(255, 255, 255, 0.82) !important;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(12px);
+  border-radius: 1.4rem;
+  box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.12);
+}
+
+.metric-card-light {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.metric-card-light .label {
+  color: #64748b;
+}
+
+.metric-card-light .value {
+  color: #14324f;
+}
+
+.public-status-select {
+  min-width: 11rem;
+}
+
 .lang-select {
   min-width: 9rem;
 }

@@ -1,5 +1,7 @@
 from decimal import Decimal
 
+from django.utils import timezone
+
 from django.db import transaction
 
 from apps.inventory.models import InventoryBalance, InventoryTransaction, InventoryTransactionType
@@ -90,3 +92,27 @@ def create_inventory_transaction(*, event, item, transaction_type, qty, source_m
 
 def on_inventory_transaction_changed(instance):
     recalculate_inventory_balance(instance.event, instance.item)
+
+
+@transaction.atomic
+def apply_requirement_packing(requirement, *, created_by=None):
+    if getattr(requirement, "packing_stock_applied_at", None):
+        return False
+    if not getattr(requirement, "order_number", None):
+        return False
+    lines = list(requirement.lines.select_related("item").order_by("item__standard_serial", "item__pk"))
+    for line in lines:
+        create_inventory_transaction(
+            event=requirement.event,
+            item=line.item,
+            transaction_type=InventoryTransactionType.DISTRIBUTION,
+            qty=line.required_qty,
+            source_module="requirements",
+            reference_id=requirement.order_number or str(requirement.pk),
+            reference_label="Packing",
+            remarks=f"Packed against requirement {requirement.order_number or requirement.pk}",
+            created_by=created_by,
+        )
+    requirement.packing_stock_applied_at = timezone.now()
+    requirement.save(update_fields=["packing_stock_applied_at", "updated_at"])
+    return True
