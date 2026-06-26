@@ -130,10 +130,6 @@ class RequirementCollectionItemForm(forms.Form):
         initial=Decimal("0"),
         widget=forms.Select(attrs={"class": "form-select form-select-sm item-qty-select"}),
     )
-    remarks = forms.CharField(
-        required=False,
-        widget=forms.Textarea(attrs={"rows": 1, "placeholder": "Note", "class": "form-control form-control-sm item-remark-field"}),
-    )
 
 
 class SpecialRequirementForm(BootstrapModelForm):

@@ -181,6 +181,28 @@ def _format_main_contact(event):
     return f"Main Event Manager: {contact_text}"
 
 
+def _item_name_for_language(item, language_code):
+    if language_code == "gu":
+        if item.parent_item_id:
+            base = item.parent_item.item_name_gu or item.parent_item.item_name
+            variant = item.variant_name_gu or item.variant_name or ""
+            return f"{base} - {variant}" if variant else base
+        return item.item_name_gu or item.item_name
+    if item.parent_item_id:
+        base = item.parent_item.item_name
+        variant = item.variant_name or ""
+        return f"{base} - {variant}" if variant else base
+    return item.item_name
+
+
+def _item_size_for_language(item, language_code):
+    if item.parent_item_id:
+        return item.default_size or "-"
+    if language_code == "gu":
+        return item.default_size or "-"
+    return item.default_size or "-"
+
+
 class RequirementHeaderListView(EventScopedListView):
     model = RequirementHeader
     template_name = "requirements/header_list.html"
@@ -455,17 +477,15 @@ class RequirementCollectionView(View):
             return upashray
         return Upashray.objects.create(event=event, name=name)
 
-    def _build_formset(self, items, data=None, initial_quantities=None, initial_remarks=None):
+    def _build_formset(self, items, data=None, initial_quantities=None):
         collection_formset = formset_factory(RequirementCollectionItemForm, extra=4)
         initial_quantities = initial_quantities or {}
-        initial_remarks = initial_remarks or {}
         initial = []
         for item in items:
             initial.append(
                 {
                     "item_id": item.pk,
                     "required_qty": initial_quantities.get(item.pk, 0),
-                    "remarks": initial_remarks.get(item.pk, ""),
                 }
             )
         return collection_formset(data=data, initial=initial, prefix="items")
@@ -474,15 +494,13 @@ class RequirementCollectionView(View):
         rows = []
         existing_quantities = existing_quantities or {}
         for item, form in zip(items, formset.forms, strict=False):
-            display_name = item.display_name()
-            if language_code != "gu" and item.parent_item_id:
-                display_name = item.variant_name or display_name
             rows.append(
                 {
                     "serial": item.standard_serial or item.pk,
                     "item": item,
                     "form": form,
-                    "display_name": display_name,
+                    "display_name": _item_name_for_language(item, language_code),
+                    "item_size": _item_size_for_language(item, language_code),
                     "category_class": CATEGORY_ROW_CLASSES.get(item.category, "cat-general"),
                     "ask_qty": bool(existing_quantities and item.pk not in existing_quantities),
                 }
@@ -510,6 +528,10 @@ class RequirementCollectionView(View):
         language_code = _lang_code(request)
         draft_key = f"kmm.requirements.collect.{event.pk if event else 'noevent'}.{header.pk if header else 'new'}"
         is_public_flow = self._is_public_flow()
+        note_values = []
+        if header and header.remarks:
+            note_values = header.remarks.splitlines()
+        note_values = (note_values + ["", "", "", ""])[:4]
         return {
             "collect_base_template": "public/form_base.html" if is_public_flow else "base.html",
             "is_public_flow": is_public_flow,
@@ -517,7 +539,7 @@ class RequirementCollectionView(View):
             "header": header,
             "form": form,
             "formset": formset,
-            "extra_item_rows": [{"name": "", "size": "", "qty": "", "note": ""} for _ in range(4)],
+            "extra_note_values": note_values,
             "item_groups": self._group_rows(self._build_rows(items, formset, language_code, existing_quantities), language_code),
             "language_code": language_code,
             "page_title": "જરૂરિયાતો એકત્ર કરો" if language_code == "gu" else "Collect Requirements",
@@ -553,9 +575,8 @@ class RequirementCollectionView(View):
         header = self._get_header(event) if event else None
         items = self._get_items(event) if event else []
         existing_quantities = {line.item_id: line.required_qty for line in header.lines.all()} if header else {}
-        existing_remarks = {line.item_id: line.remarks for line in header.lines.all()} if header else {}
         form = RequirementCollectionHeaderForm(instance=header, current_event=event)
-        formset = self._build_formset(items, initial_quantities=existing_quantities, initial_remarks=existing_remarks)
+        formset = self._build_formset(items, initial_quantities=existing_quantities)
         return render(request, self.template_name, self._build_context(request, event, header, form, formset, items, existing_quantities))
 
     @transaction.atomic
@@ -570,13 +591,7 @@ class RequirementCollectionView(View):
         items = self._get_items(event)
         form = RequirementCollectionHeaderForm(request.POST, instance=header, current_event=event)
         existing_quantities = {line.item_id: line.required_qty for line in header.lines.all()} if header else {}
-        existing_remarks = {line.item_id: line.remarks for line in header.lines.all()} if header else {}
-        formset = self._build_formset(
-            items,
-            data=request.POST,
-            initial_quantities=existing_quantities,
-            initial_remarks=existing_remarks,
-        )
+        formset = self._build_formset(items, data=request.POST, initial_quantities=existing_quantities)
 
         save_details_now = "save_details" in request.POST
         confirm_now = "confirm" in request.POST
@@ -613,6 +628,14 @@ class RequirementCollectionView(View):
             header_obj.order_number = header.order_number if header else None
             header_obj.is_locked = header.is_locked if header else False
             header_obj.locked_at = header.locked_at if header else None
+            header_obj.remarks = "\n".join(
+                [
+                    (request.POST.get("extra_note_1") or "").strip(),
+                    (request.POST.get("extra_note_2") or "").strip(),
+                    (request.POST.get("extra_note_3") or "").strip(),
+                    (request.POST.get("extra_note_4") or "").strip(),
+                ]
+            ).strip()
             header_obj.save()
 
             item_errors = []
@@ -621,7 +644,6 @@ class RequirementCollectionView(View):
                 for item_form in formset.cleaned_data:
                     item_id = item_form.get("item_id")
                     qty = item_form.get("required_qty") or 0
-                    note = item_form.get("remarks") or ""
                     if not item_id or qty <= 0:
                         continue
                     RequirementLine.objects.create(
@@ -629,7 +651,6 @@ class RequirementCollectionView(View):
                         requirement=header_obj,
                         item_id=item_id,
                         required_qty=qty,
-                        remarks=note,
                     )
             else:
                 item_errors = formset.errors
@@ -696,13 +717,20 @@ class RequirementCollectionView(View):
             header_obj.order_number = header.order_number if header else None
             header_obj.is_locked = header.is_locked if header else False
             header_obj.locked_at = header.locked_at if header else None
+        header_obj.remarks = "\n".join(
+            [
+                (request.POST.get("extra_note_1") or "").strip(),
+                (request.POST.get("extra_note_2") or "").strip(),
+                (request.POST.get("extra_note_3") or "").strip(),
+                (request.POST.get("extra_note_4") or "").strip(),
+            ]
+        ).strip()
         header_obj.save()
 
         RequirementLine.objects.filter(event=event, requirement=header_obj).delete()
         for item_form in formset.cleaned_data:
             item_id = item_form.get("item_id")
             qty = item_form.get("required_qty") or 0
-            note = item_form.get("remarks") or ""
             if not item_id or qty <= 0:
                 continue
             RequirementLine.objects.create(
@@ -710,7 +738,6 @@ class RequirementCollectionView(View):
                 requirement=header_obj,
                 item_id=item_id,
                 required_qty=qty,
-                remarks=note,
             )
 
         if confirm_now:
@@ -754,8 +781,8 @@ class RequirementCollectionPrintView(View):
             if not line:
                 return ("", "", "", "")
             item = line.item
-            display_name = item.display_name()
-            size = item.default_size or "-"
+            display_name = _item_name_for_language(item, "gu")
+            size = _item_size_for_language(item, "gu")
             return (
                 str(item.standard_serial or item.pk),
                 display_name,
@@ -775,8 +802,10 @@ class RequirementCollectionPrintView(View):
                 "rows": item_rows,
                 "left_rows": [cell_for(line) for line in left_lines],
                 "right_rows": [cell_for(line) for line in right_lines],
+                "extra_note_values": ((header.remarks.splitlines() if header.remarks else []) + ["", "", "", ""])[:4],
                 "contact": _format_main_contact(header.event),
                 "order_number": header.order_number,
+                "lang": "gu",
                 "logo_exists": (Path(settings.BASE_DIR) / "pdf_header.png").exists(),
                 "pdf_header_path": str((Path(settings.BASE_DIR) / "pdf_header.png").resolve()).replace("\\", "/"),
                 "pdf_font_path": str((Path(settings.BASE_DIR) / "assets/fonts/NotoSansGujarati-Regular.ttf").resolve()).replace("\\", "/"),
@@ -932,8 +961,8 @@ class RequirementCollectionPrintView(View):
             if not line:
                 return [p("", small_style), p("", small_style), p("", small_style), p("", small_style)]
             item = line.item
-            display_name = item.display_name()
-            size = item.default_size or "-"
+            display_name = _item_name_for_language(item, "gu")
+            size = _item_size_for_language(item, "gu")
             return [
                 p(item.standard_serial or item.pk, small_style),
                 p(display_name, body_style),
@@ -961,6 +990,21 @@ class RequirementCollectionPrintView(View):
             )
         )
         story.append(item_table)
+        note_rows = ((header.remarks.splitlines() if header.remarks else []) + ["", "", "", ""])[:4]
+        story.append(Spacer(1, 4))
+        story.append(Paragraph("Extra Items", heading_style))
+        note_table = Table([[p(note, body_style)] for note in note_rows], colWidths=[180 * mm])
+        note_table.setStyle(
+            TableStyle(
+                [
+                    ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#14324f")),
+                    ("INNERGRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#9bb4c9")),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                    ("FONTNAME", (0, 0), (-1, -1), pdf_font_name),
+                ]
+            )
+        )
+        story.append(note_table)
 
         footer_contact = _format_main_contact(header.event)
 
@@ -1203,11 +1247,11 @@ class RequirementCollectionPrintView(View):
         ]
         for line in lines:
             item = line.item
-            display_name = item.display_name()
+            display_name = _item_name_for_language(item, language_code)
             content = display_name
             if item.default_size:
                 content = f"{display_name} ({item.default_size})"
-            table_data.append([p("[ ]", small_style), p(item.standard_serial or item.pk), p(content), p(_format_qty(line.required_qty), body_style), p(line.remarks)])
+            table_data.append([p("[ ]", small_style), p(item.standard_serial or item.pk), p(content), p(_format_qty(line.required_qty), body_style), p("")])
 
         item_table = Table(table_data, colWidths=[14 * mm, 18 * mm, 78 * mm, 20 * mm, 48 * mm], repeatRows=1)
         item_table.setStyle(
@@ -1224,6 +1268,21 @@ class RequirementCollectionPrintView(View):
             )
         )
         story.append(item_table)
+        note_rows = ((header.remarks.splitlines() if header.remarks else []) + ["", "", "", ""])[:4]
+        story.append(Spacer(1, 4))
+        story.append(Paragraph("Extra Items" if language_code != "gu" else "એક્સ્ટ્રા વસ્તુઓ", heading_style))
+        note_table = Table([[p(note, body_style)] for note in note_rows], colWidths=[160 * mm])
+        note_table.setStyle(
+            TableStyle(
+                [
+                    ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#14324f")),
+                    ("INNERGRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#9bb4c9")),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                    ("FONTNAME", (0, 0), (-1, -1), pdf_font_name),
+                ]
+            )
+        )
+        story.append(note_table)
 
         footer_contact = _format_main_contact(header.event)
 
