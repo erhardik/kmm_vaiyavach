@@ -654,7 +654,7 @@ class RequirementCollectionView(View):
             "order_number": header.order_number if header else None,
             "public_collect_url": reverse("requirements:public-collect", kwargs={"event_token": event.public_form_token}) if event else None,
             "public_pdf_url": reverse("requirements:public-print", kwargs={"token": header.public_view_token}) if header and header.order_number else None,
-            "public_pdf_en_url": f"{reverse('requirements:public-print', kwargs={'token': header.public_view_token})}?pdf=full" if header and header.order_number else None,
+            "public_pdf_en_url": f"{reverse('requirements:public-print', kwargs={'token': header.public_view_token})}?lang=gu&type=full" if header and header.order_number else None,
             "public_pdf_gu_url": _with_lang(reverse("requirements:public-print", kwargs={"token": header.public_view_token}), "gu") if header and header.order_number else None,
             "editing_allowed": self._editing_allowed(event, header, request.user),
             "event_requires_lock": bool(event and not event.allow_requirement_edit_after_confirm),
@@ -669,7 +669,7 @@ class RequirementCollectionView(View):
                 "header": header,
                 "lang": _lang_code(request),
                 "public_pdf_url": reverse("requirements:public-print", kwargs={"token": header.public_view_token}) if header and header.order_number else None,
-            "public_pdf_en_url": f"{reverse('requirements:public-print', kwargs={'token': header.public_view_token})}?pdf=full" if header and header.order_number else None,
+            "public_pdf_en_url": f"{reverse('requirements:public-print', kwargs={'token': header.public_view_token})}?lang=gu&type=full" if header and header.order_number else None,
                 "public_pdf_gu_url": _with_lang(reverse("requirements:public-print", kwargs={"token": header.public_view_token}), "gu") if header and header.order_number else None,
             },
         )
@@ -872,41 +872,42 @@ class RequirementCollectionPrintView(View):
         )
         language_code = _lang_code(request)
         if language_code == "gu":
+            gujarati_mode = request.GET.get("type", "opted")
+            if gujarati_mode == "full":
+                all_items = []
+                base_items = Item.objects.filter(
+                    event=header.event, is_active=True, parent_item__isnull=True
+                ).prefetch_related("variants").order_by("standard_serial", "pk")
+                for item in base_items:
+                    variants = list(item.variants.filter(is_active=True).order_by("variant_name", "pk"))
+                    if variants:
+                        all_items.extend(variants)
+                    else:
+                        all_items.append(item)
+                qty_map = {line.item_id: line.required_qty for line in items}
+                line_rows = []
+                for item in all_items:
+                    qty = qty_map.get(item.pk, 0)
+                    qty_display = "--" if not qty or qty <= 0 else _format_qty(qty)
+                    line_rows.append((
+                        _line_serial_display(item),
+                        _item_name_for_language(item, "gu"),
+                        _item_size_for_language(item, "gu"),
+                        qty_display,
+                        item.category,
+                    ))
+                contact = _format_main_contact(header.event)
+                contact_gu = contact.replace("Main Event Manager:", "મુખ્ય સંપર્ક:")
+                return generate_gujarati_pdf_fpdf2(
+                    header, line_rows, contact_gu,
+                    filename=f'{header.order_number or "requirement-order"}-full.pdf',
+                )
             line_rows = _requirement_pdf_rows(items, "gu")
             contact = _format_main_contact(header.event)
             contact_gu = contact.replace("Main Event Manager:", "મુખ્ય સંપર્ક:")
             return generate_gujarati_pdf_fpdf2(
                 header, line_rows, contact_gu,
                 filename=f'{header.order_number or "requirement-order"}-gujarati.pdf',
-            )
-        if request.GET.get("pdf") == "full":
-            all_items = []
-            base_items = Item.objects.filter(
-                event=header.event, is_active=True, parent_item__isnull=True
-            ).prefetch_related("variants").order_by("standard_serial", "pk")
-            for item in base_items:
-                variants = list(item.variants.filter(is_active=True).order_by("variant_name", "pk"))
-                if variants:
-                    all_items.extend(variants)
-                else:
-                    all_items.append(item)
-            qty_map = {line.item_id: line.required_qty for line in items}
-            line_rows = []
-            for item in all_items:
-                qty = qty_map.get(item.pk, 0)
-                qty_display = "--" if not qty or qty <= 0 else _format_qty(qty)
-                line_rows.append((
-                    _line_serial_display(item),
-                    _item_name_for_language(item, "gu"),
-                    _item_size_for_language(item, "gu"),
-                    qty_display,
-                    item.category,
-                ))
-            contact = _format_main_contact(header.event)
-            contact_gu = contact.replace("Main Event Manager:", "મુખ્ય સંપર્ક:")
-            return generate_gujarati_pdf_fpdf2(
-                header, line_rows, contact_gu,
-                filename=f'{header.order_number or "requirement-order"}-full.pdf',
             )
         return self._render_pdf(header, items, "en")
 
@@ -1428,7 +1429,7 @@ class RequirementCollectionDetailView(View):
                 "grouped_lines": _group_requirement_lines(lines),
                 "lang": _lang_code(request),
                 "public_pdf_url": reverse("requirements:public-print", kwargs={"token": header.public_view_token}) if header.order_number else None,
-                "public_pdf_en_url": f"{reverse('requirements:public-print', kwargs={'token': header.public_view_token})}?pdf=full" if header.order_number else None,
+                "public_pdf_en_url": f"{reverse('requirements:public-print', kwargs={'token': header.public_view_token})}?lang=gu&type=full" if header.order_number else None,
                 "public_pdf_gu_url": _with_lang(reverse("requirements:public-print", kwargs={"token": header.public_view_token}), "gu") if header.order_number else None,
             },
         )

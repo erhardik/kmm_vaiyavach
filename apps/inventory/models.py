@@ -34,7 +34,10 @@ class InventoryTransaction(EventScopedModel):
         ]
 
     def __str__(self) -> str:
-        return f"{self.transaction_type} - {self.item} - {self.qty}"
+        qty = self.qty
+        if qty == int(qty):
+            qty = int(qty)
+        return f"{self.transaction_type} - {self.item} - {qty}"
 
 
 class InventoryBalance(EventScopedModel):

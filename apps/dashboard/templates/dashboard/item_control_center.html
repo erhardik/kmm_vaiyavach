@@ -20,13 +20,13 @@
 </div>
 
 <div class="row g-3 mb-4">
-  <div class="col-6 col-xl-2"><div class="metric-card"><div class="label">Required Qty</div><div class="value">{{ summary.required_total|default:0 }}</div></div></div>
-  <div class="col-6 col-xl-2"><div class="metric-card"><div class="label">Acquired Qty</div><div class="value">{{ summary.acquired_total|default:0 }}</div></div></div>
-  <div class="col-6 col-xl-2"><div class="metric-card"><div class="label">Distributed</div><div class="value">{{ summary.distributed_total|default:0 }}</div></div></div>
-  <div class="col-6 col-xl-2"><div class="metric-card"><div class="label">Remaining Stock</div><div class="value">{{ summary.remaining_total|default:0 }}</div></div></div>
-  <div class="col-6 col-xl-2"><div class="metric-card"><div class="label">Shortage</div><div class="value">{{ summary.shortage_total|default:0 }}</div></div></div>
-  <div class="col-6 col-xl-2"><div class="metric-card"><div class="label">Required Cost</div><div class="value">{{ summary.required_cost_total|default:0 }}</div></div></div>
-  <div class="col-6 col-xl-2"><div class="metric-card"><div class="label">Purchase Cost</div><div class="value">{{ summary.actual_purchase_cost_total|default:0 }}</div></div></div>
+  <div class="col-6 col-xl-2"><div class="metric-card"><div class="label">Required Qty</div><div class="value">{{ summary.required_total|default:0|floatformat }}</div></div></div>
+  <div class="col-6 col-xl-2"><div class="metric-card"><div class="label">Acquired Qty</div><div class="value">{{ summary.acquired_total|default:0|floatformat }}</div></div></div>
+  <div class="col-6 col-xl-2"><div class="metric-card"><div class="label">Distributed</div><div class="value">{{ summary.distributed_total|default:0|floatformat }}</div></div></div>
+  <div class="col-6 col-xl-2"><div class="metric-card"><div class="label">Remaining Stock</div><div class="value">{{ summary.remaining_total|default:0|floatformat }}</div></div></div>
+  <div class="col-6 col-xl-2"><div class="metric-card"><div class="label">Shortage</div><div class="value">{{ summary.shortage_total|default:0|floatformat }}</div></div></div>
+  <div class="col-6 col-xl-2"><div class="metric-card"><div class="label">Required Cost</div><div class="value">{{ summary.required_cost_total|default:0|floatformat }}</div></div></div>
+  <div class="col-6 col-xl-2"><div class="metric-card"><div class="label">Purchase Cost</div><div class="value">{{ summary.actual_purchase_cost_total|default:0|floatformat }}</div></div></div>
 </div>
 
 <div class="card border-0 shadow-sm mb-4">
@@ -109,15 +109,15 @@
             <div class="fw-semibold">{{ row.item.item_name }}</div>
             <div class="small text-body-secondary">{{ row.item.get_category_display }}</div>
           </td>
-          <td class="text-end">{{ row.rate }} / {{ row.item.unit|default:"-" }}</td>
-          <td class="text-end">{{ row.required }}</td>
-          <td class="text-end">{{ row.acquired }}</td>
-          <td class="text-end">{{ row.distributed }}</td>
-          <td class="text-end {% if row.surplus > 0 %}text-success fw-semibold{% else %}text-body-secondary{% endif %}">{{ row.surplus }}</td>
-          <td class="text-end {% if row.short > 0 %}text-danger fw-semibold{% endif %}">{{ row.short }}</td>
-          <td class="text-end">{{ row.final_stock }}</td>
-          <td class="text-end">{{ row.required_cost }}</td>
-          <td class="text-end">{{ row.actual_purchase_cost }}</td>
+          <td class="text-end">{{ row.rate|floatformat }} / {{ row.item.unit|default:"-" }}</td>
+          <td class="text-end">{{ row.required|floatformat }}</td>
+          <td class="text-end">{{ row.acquired|floatformat }}</td>
+          <td class="text-end">{{ row.distributed|floatformat }}</td>
+          <td class="text-end {% if row.surplus > 0 %}text-success fw-semibold{% else %}text-body-secondary{% endif %}">{{ row.surplus|floatformat }}</td>
+          <td class="text-end {% if row.short > 0 %}text-danger fw-semibold{% endif %}">{{ row.short|floatformat }}</td>
+          <td class="text-end">{{ row.final_stock|floatformat }}</td>
+          <td class="text-end">{{ row.required_cost|floatformat }}</td>
+          <td class="text-end">{{ row.actual_purchase_cost|floatformat }}</td>
           <td>{{ row.vendor_name|default:"-" }}</td>
           <td>{{ row.ref_volunteer_name|default:"-" }}</td>
           <td class="text-end">

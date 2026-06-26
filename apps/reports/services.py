@@ -155,7 +155,7 @@ def build_requirement_export(event):
                     ("Requirement", str(line.requirement)),
                     ("Upashray", line.requirement.upashray.name),
                     ("Item", line.item.display_name()),
-                    ("Required Qty", line.required_qty),
+                    ("Required Qty", int(line.required_qty) if line.required_qty == int(line.required_qty) else line.required_qty),
                     ("Remarks", line.remarks),
                 ]
             )
