@@ -1084,7 +1084,7 @@ class RequirementCollectionPrintView(View):
 
     def _render_pdf(self, header, lines, language_code):
         buffer = BytesIO()
-        pdf_font_name = PDF_GUJARATI_FONT_NAME if language_code == "gu" else PDF_FONT_NAME
+        pdf_font_name = PDF_GUJARATI_FONT_NAME if PDF_GUJARATI_FONT_NAME != "Helvetica" else PDF_FONT_NAME
         document = SimpleDocTemplate(
             buffer,
             pagesize=A4,
