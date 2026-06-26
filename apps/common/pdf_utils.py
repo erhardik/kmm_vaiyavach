@@ -149,7 +149,11 @@ def _auto_font(pdf, text, style="", size=8.4):
 
 def generate_gujarati_pdf_fpdf2(header, line_rows, contact_info, filename="requirement-order.pdf"):
     from fpdf import FPDF
-    from fpdf.enums import XPos, YPos
+    from fpdf.enums import XPos, YPos, Align
+    from fpdf.table import TableBordersLayout as TBL
+    from fpdf.fonts import FontFace
+
+    FONT_NAME = "Guj"
 
     class GujaratiPDF(FPDF):
         def header(self):
@@ -163,7 +167,7 @@ def generate_gujarati_pdf_fpdf2(header, line_rows, contact_info, filename="requi
             form_text = f"ફોર્મ નંબર - {header.order_number or '________'}"
             _auto_font(self, form_text, "", 11)
             self.set_xy(M + page_w - 55, self.t_margin)
-            self.cell(55, 8, form_text, align="R", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            self.cell(55, 8, form_text, align="R")
 
             y_status = self.t_margin + 23
             _auto_font(self, "[ ] બધી વસ્તુઓ પેક થઈ", "", 7.2)
@@ -176,6 +180,7 @@ def generate_gujarati_pdf_fpdf2(header, line_rows, contact_info, filename="requi
             self.set_xy(M + page_w - 50, y_status)
             self.cell(50, 5, "ચેક કરનાર: ____________________", align="R")
             self.line(M, y_status + 6, M + page_w, y_status + 6)
+            self.set_xy(M, y_status + 8)
 
         def footer(self):
             self.set_y(-15)
@@ -186,113 +191,92 @@ def generate_gujarati_pdf_fpdf2(header, line_rows, contact_info, filename="requi
             self.cell(self.w / 2 - self.r_margin, 4, page_text, align="R")
 
     pdf = GujaratiPDF(orientation="P", unit="mm", format="A4")
-    pdf.set_margins(left=8, top=8, right=8)
+    pdf.set_margins(left=15, top=15, right=15)
     pdf.set_auto_page_break(auto=True, margin=15)
 
-    M = pdf.l_margin
-    page_w = pdf.w - pdf.l_margin - pdf.r_margin
-
     font_path = _resolve_font_path()
-    pdf.add_font("Guj", "", font_path)
-    pdf.add_font("Guj", "B", font_path)
-    pdf.add_font("Guj", "I", font_path)
-    pdf.add_font("Guj", "BI", font_path)
+    pdf.add_font(FONT_NAME, "", font_path)
+    pdf.add_font(FONT_NAME, "B", font_path)
+    pdf.add_font(FONT_NAME, "I", font_path)
+    pdf.add_font(FONT_NAME, "BI", font_path)
 
     pdf.set_text_shaping(True)
 
     pdf.add_page()
 
-    y_basic = pdf.t_margin + 31
+    M = pdf.l_margin
+    page_w = pdf.w - pdf.l_margin - pdf.r_margin
+
     basic_data = [
-        (True, "પૂજ્ય શ્રી", header.pujya_shri_name or "-"),
-        (False, "ઠાણા", str(header.thana_count or "-")),
-        (True, "વિસ્તાર", header.area or "-"),
-        (False, "ફોર્મ તારીખ", _format_guj_date(header.requirement_date)),
-        (True, "હાલનું સરનામું", header.current_address or "-"),
-        (False, "ચાતુર્માસ સ્થળનું સરનામું", header.chaturmas_place_address or "-"),
-        (True, "ચાતુર્માસ પ્રવેશ તારીખ", _format_guj_date(header.chaturmas_entry_date)),
-        (False, "જનારનું નામ", header.volunteer_name or "-"),
-        (True, "સંઘ ઉપાશ્રય / સ્થિરવાસ", header.get_stay_type_display() or "-"),
-        (False, "સંભાળ લેનાર", f"{header.caretaker_name or '-'} {header.caretaker_mobile or ''}".strip()),
+        ("ફોર્મ નંબર", header.order_number or "_____"),
+        ("પૂજ્ય શ્રી", header.pujya_shri_name or "-"),
+        ("ઠાણા", str(header.thana_count or "-")),
+        ("વિસ્તાર", header.area or "-"),
+        ("હાલનું સરનામું", header.current_address or "-"),
+        ("ચાતુર્માસ સ્થળનું સરનામું", header.chaturmas_place_address or "-"),
+        ("ફોર્મ તારીખ", _format_guj_date(header.requirement_date)),
+        ("ચાતુર્માસ પ્રવેશ તારીખ", _format_guj_date(header.chaturmas_entry_date)),
+        ("જનારનું નામ", header.volunteer_name or "-"),
+        ("સંઘ ઉપાશ્રય / સ્થિરવાસ", header.get_stay_type_display() or "-"),
+        ("પૂજ્ય શ્રી સંભાળ લેનાર", f"{header.caretaker_name or '-'} {header.caretaker_mobile or ''}".strip()),
     ]
-    col_widths = [32, 55, 32, page_w - 119]
-    for i in range(0, len(basic_data), 2):
-        row_idx = i // 2
-        y = y_basic + row_idx * 5.5
-        left_is_label, left_label, left_val = basic_data[i]
-        right_is_label, right_label, right_val = basic_data[i + 1]
-        pdf.set_xy(M, y)
-        _auto_font(pdf, left_label, "B", 7.2)
-        pdf.cell(col_widths[0], 5.5, left_label)
-        _auto_font(pdf, left_val, "", 8)
-        pdf.cell(col_widths[1], 5.5, left_val)
-        _auto_font(pdf, right_label, "B", 7.2)
-        pdf.cell(col_widths[2], 5.5, right_label)
-        _auto_font(pdf, right_val, "", 8)
-        pdf.cell(col_widths[3], 5.5, right_val, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
-    y_items_header = y_basic + (len(basic_data) // 2) * 5.5 + 3
-    pdf.set_draw_color(0)
-    _auto_font(pdf, "વસ્તુ સૂચિ", "B", 8.4)
-    pdf.set_xy(M, y_items_header)
-    pdf.cell(page_w, 6, "વસ્તુ સૂચિ", align="C", border=1, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.set_font(FONT_NAME, "", 13)
+    for label, value in basic_data:
+        line_text = f"• {label} : {value}"
+        pdf.multi_cell(0, 8, line_text, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.ln(2)
 
-    y_item_table = y_items_header + 6
-    col_sr = 8
-    col_name = page_w / 2 - col_sr - 30 - 12
-    for side in range(2):
-        x_base = M + side * page_w / 2
-        pdf.set_xy(x_base, y_item_table)
-        _auto_font(pdf, "નં.", "B", 7.2)
-        pdf.cell(col_sr, 5.5, "નં.", align="C", border=1)
-        _auto_font(pdf, "વસ્તુનું નામ", "B", 7.2)
-        pdf.cell(col_name, 5.5, "વસ્તુનું નામ", align="C", border=1)
-        _auto_font(pdf, "પ્રકાર/સાઈઝ", "B", 7.2)
-        pdf.cell(30, 5.5, "પ્રકાર/સાઈઝ", align="C", border=1)
-        _auto_font(pdf, "નંગ", "B", 7.2)
-        pdf.cell(12, 5.5, "નંગ", align="C", border=1)
+    pdf.ln(4)
 
-    half = (len(line_rows) + 1) // 2
-    left_col = line_rows[:half]
-    right_col = line_rows[half:]
-    max_rows = max(len(left_col), len(right_col))
+    if line_rows:
+        pdf.set_font(FONT_NAME, "B", 10)
+        pdf.cell(0, 7, "વસ્તુ સૂચિ", align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.ln(2)
 
-    for idx in range(max_rows):
-        y_row = y_item_table + 5.5 + idx * 6
-        for side in range(2):
-            col = left_col if side == 0 else right_col
-            if idx >= len(col):
-                continue
-            sr, name, size, qty = col[idx]
-            x_base = M + side * page_w / 2
-            pdf.set_xy(x_base, y_row)
-            _auto_font(pdf, sr, "", 7.2)
-            pdf.cell(col_sr, 6, sr, align="C")
-            _auto_font(pdf, name, "", 8)
-            pdf.cell(col_name, 6, name)
-            _auto_font(pdf, size, "", 7.2)
-            pdf.cell(30, 6, size, align="C")
-            _auto_font(pdf, qty, "", 7.2)
-            pdf.cell(12, 6, qty, align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        col_sr = 8
+        col_name = 55
+        col_size = 30
+        col_qty = 12
+        total_w = col_sr + col_name + col_size + col_qty
+        remaining = page_w - total_w
+        col_name += remaining
 
-    y_extra = y_item_table + 5.5 + max_rows * 6 + 2
-    _auto_font(pdf, "વધારાની વસ્તુઓ / નોંધ", "B", 8.4)
-    pdf.set_xy(M, y_extra)
-    pdf.cell(page_w, 6, "વધારાની વસ્તુઓ / નોંધ", align="C", border=1, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        heading_face = FontFace(emphasis="B", size_pt=8)
+        with pdf.table(
+            col_widths=(col_sr, col_name, col_size, col_qty),
+            borders_layout=TBL.ALL,
+            first_row_as_headings=False,
+            repeat_headings=False,
+            align=Align.C,
+            line_height=5.5,
+        ) as tbl:
+            h = tbl.row()
+            h.cell("નં.", style=heading_face)
+            h.cell("વસ્તુનું નામ", style=heading_face)
+            h.cell("પ્રકાર/સાઈઝ", style=heading_face)
+            h.cell("નંગ", style=heading_face)
+
+            for sr, name, size, qty in line_rows:
+                row = tbl.row()
+                row.cell(str(sr), align=Align.C)
+                row.cell(str(name))
+                row.cell(str(size), align=Align.C)
+                row.cell(str(qty), align=Align.C)
+    else:
+        pdf.set_font(FONT_NAME, "", 10)
+        pdf.cell(0, 7, "કોઈ વસ્તુઓ નથી", align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
+    pdf.ln(4)
 
     notes = (header.remarks or "").splitlines() if header.remarks else []
-    for i in range(4):
-        y_note = pdf.get_y()
-        pdf.set_xy(M, y_note)
-        note_text = notes[i] if i < len(notes) else ""
-        _auto_font(pdf, note_text, "", 8)
-        pdf.cell(page_w, 6, note_text, border=1, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-
-    y_note_title = pdf.get_y() + 2
-    _auto_font(pdf, "નોંધ:", "B", 8)
-    pdf.set_xy(M, y_note_title)
-    pdf.cell(page_w, 5, "નોંધ:", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-    pdf.rect(M, pdf.get_y() + 1, page_w, 18)
+    if notes:
+        pdf.set_font(FONT_NAME, "B", 10)
+        pdf.cell(0, 7, "વધારાની વસ્તુઓ / નોંધ", align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.set_font(FONT_NAME, "", 10)
+        for note in notes:
+            if note.strip():
+                pdf.multi_cell(0, 6, f"• {note.strip()}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
     response = HttpResponse(content_type="application/pdf")
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
