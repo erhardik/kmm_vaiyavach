@@ -880,7 +880,28 @@ class RequirementCollectionPrintView(View):
                 filename=f'{header.order_number or "requirement-order"}-gujarati.pdf',
             )
         if request.GET.get("pdf") == "full":
-            line_rows = _requirement_pdf_rows(items, "gu", filter_zero=False)
+            all_items = []
+            base_items = Item.objects.filter(
+                event=header.event, is_active=True, parent_item__isnull=True
+            ).prefetch_related("variants").order_by("standard_serial", "pk")
+            for item in base_items:
+                variants = list(item.variants.filter(is_active=True).order_by("variant_name", "pk"))
+                if variants:
+                    all_items.extend(variants)
+                else:
+                    all_items.append(item)
+            qty_map = {line.item_id: line.required_qty for line in items}
+            line_rows = []
+            for item in all_items:
+                qty = qty_map.get(item.pk, 0)
+                qty_display = "--" if not qty or qty <= 0 else _format_qty(qty)
+                line_rows.append((
+                    _line_serial_display(item),
+                    _item_name_for_language(item, "gu"),
+                    _item_size_for_language(item, "gu"),
+                    qty_display,
+                    item.category,
+                ))
             contact = _format_main_contact(header.event)
             contact_gu = contact.replace("Main Event Manager:", "મુખ્ય સંપર્ક:")
             return generate_gujarati_pdf_fpdf2(
