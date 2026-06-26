@@ -94,7 +94,7 @@
                       <div class="d-inline-flex flex-wrap gap-2 justify-content-end">
                         <a class="btn btn-sm btn-outline-primary" href="{% url 'requirements:public-detail' token=header.public_view_token %}">જુઓ</a>
                         {% if header.order_number %}
-                          <a class="btn btn-sm btn-outline-secondary" href="{% url 'requirements:public-print' token=header.public_view_token %}?lang=full" target="_blank" rel="noopener">Full PDF</a>
+                          <a class="btn btn-sm btn-outline-secondary" href="{% url 'requirements:public-print' token=header.public_view_token %}?pdf=full" target="_blank" rel="noopener">Full PDF</a>
                           <a class="btn btn-sm btn-warning" href="{% url 'requirements:public-print' token=header.public_view_token %}?lang=gu" target="_blank" rel="noopener">ગુજરાતી PDF</a>
                         {% endif %}
                         {% if public_collect_url %}
