@@ -799,6 +799,8 @@ class RequirementCollectionView(View):
                     form.add_error(field_name, "This field is required.")
                     missing_fields.append(field_name)
             if missing_fields:
+                if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                    return JsonResponse({"ok": False, "message": "Missing required fields: " + ", ".join(missing_fields)}, status=400)
                 missing_labels = [self.confirm_required_field_labels.get(name, name) for name in missing_fields]
                 messages.error(
                     request,

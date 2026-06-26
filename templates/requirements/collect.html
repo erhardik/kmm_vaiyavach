@@ -300,6 +300,51 @@
     return;
   }
 
+  // Confirm via AJAX (same pattern as Save Details)
+  document.addEventListener('click', async function(e) {
+    const btn = e.target.closest('button[name="confirm"]');
+    if (!btn) return;
+    e.preventDefault();
+    btn.disabled = true;
+    const originalText = btn.textContent;
+    btn.textContent = 'Confirming...';
+    const formData = new FormData(form);
+    formData.set('confirm', '1');
+    try {
+      const response = await fetch(window.location.href, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        body: formData,
+      });
+      if (response.redirected) {
+        window.location.href = response.url;
+        return;
+      }
+      if (response.redirected) {
+        window.location.href = response.url;
+        return;
+      }
+      if (response.status === 302) {
+        const loc = response.headers.get('Location');
+        if (loc) { window.location.href = loc; return; }
+      }
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.ok) {
+        showErrors(data.errors || {});
+        setStatus(data.message || 'Confirm failed', 'danger');
+        return;
+      }
+      if (data.redirect_url) { window.location.href = data.redirect_url; return; }
+      window.location.reload();
+    } catch (err) {
+      console.error('[CONFIRM ERROR]', err);
+      setStatus('Confirm failed. Please try again.', 'danger');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+  });
+
   if (saveButton) {
     saveButton.addEventListener('click', async function() {
       const original = saveButton.textContent;
