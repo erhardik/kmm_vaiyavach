@@ -197,10 +197,17 @@ def _item_name_for_language(item, language_code):
 
 def _item_size_for_language(item, language_code):
     if item.parent_item_id:
-        return item.default_size or "-"
-    if language_code == "gu":
-        return item.default_size or "-"
+        if language_code == "gu":
+            return item.variant_name_gu or item.variant_name or item.default_size or "-"
+        return item.variant_name or item.variant_name_gu or item.default_size or "-"
     return item.default_size or "-"
+
+
+def _variant_suffix(index):
+    alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    if index < len(alphabet):
+        return alphabet[index]
+    return f"X{index + 1}"
 
 
 class RequirementHeaderListView(EventScopedListView):
@@ -496,10 +503,20 @@ class RequirementCollectionView(View):
     def _build_rows(self, items, formset, language_code, existing_quantities=None):
         rows = []
         existing_quantities = existing_quantities or {}
+        variant_positions = {}
+        for item in items:
+            if item.parent_item_id:
+                siblings = variant_positions.get(item.parent_item_id)
+                if siblings is None:
+                    siblings = list(item.parent_item.variants.filter(is_active=True).order_by("variant_name", "pk"))
+                    variant_positions[item.parent_item_id] = siblings
         for item, form in zip(items, formset.forms, strict=False):
             serial = item.standard_serial or item.pk
             if item.parent_item_id:
-                serial = item.parent_item.standard_serial or item.parent_item.pk
+                parent_serial = item.parent_item.standard_serial or item.parent_item.pk
+                siblings = variant_positions.get(item.parent_item_id, [])
+                suffix_index = next((idx for idx, sibling in enumerate(siblings) if sibling.pk == item.pk), 0)
+                serial = f"{parent_serial}-{_variant_suffix(suffix_index)}"
             rows.append(
                 {
                     "serial": serial,
@@ -508,6 +525,7 @@ class RequirementCollectionView(View):
                     "display_name": _item_name_for_language(item, language_code),
                     "item_size": _item_size_for_language(item, language_code),
                     "category_class": CATEGORY_ROW_CLASSES.get(item.category, "cat-general"),
+                    "variant_row": bool(item.parent_item_id),
                     "ask_qty": bool(existing_quantities and item.pk not in existing_quantities),
                 }
             )

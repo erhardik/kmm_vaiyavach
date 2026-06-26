@@ -15,6 +15,7 @@
   .nr-btn { border-color: #dc3545; background: #ffd6d6; color: #8c1f2d; }
   .nr-btn.qty-active { background: #2f9e44; border-color: #2f9e44; color: #fff; }
   .row-active { background: #f3fff3; }
+  .variant-row { background: #fff9ec; }
   .extra-note textarea { min-height: 44px; resize: vertical; }
   .small-label { font-size: .85rem; }
 </style>
@@ -146,7 +147,7 @@
               </thead>
               <tbody>
                 {% for row in group.rows %}
-                  <tr class="{{ row.category_class }}" data-item-row>
+                  <tr class="{{ row.category_class }} {% if row.variant_row %}variant-row{% endif %}" data-item-row>
                     {{ row.form.item_id }}
                     <td class="fw-semibold">{{ row.serial }}</td>
                     <td>

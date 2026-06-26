@@ -34,6 +34,9 @@ def get_dashboard_event_queryset():
 def _item_display_rows(event, active_only=True):
     items = Item.objects.filter(event=event, parent_item__isnull=True).prefetch_related("variants").order_by("standard_serial", "pk")
     rows = []
+    def variant_suffix(index):
+        alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        return alphabet[index] if index < len(alphabet) else f"X{index + 1}"
     for item in items:
         rows.append(
             {
@@ -49,12 +52,12 @@ def _item_display_rows(event, active_only=True):
         variants = list(item.variants.all().order_by("variant_name"))
         if active_only:
             variants = [variant for variant in variants if variant.is_active]
-        for variant in variants:
+        for index, variant in enumerate(variants):
             rows.append(
                 {
                     "item": item,
                     "variant": variant,
-                    "serial": item.standard_serial or item.pk,
+                    "serial": f"{item.standard_serial or item.pk}-{variant_suffix(index)}",
                     "base_serial": item.standard_serial or item.pk,
                     "display_name": variant.display_name(),
                     "category": item.get_category_display(),
