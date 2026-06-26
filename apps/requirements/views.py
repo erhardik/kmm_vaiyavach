@@ -21,7 +21,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.graphics.barcode import createBarcodeDrawing
-from reportlab.pdfgen import canvas
+
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import Image, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
@@ -33,6 +33,8 @@ try:
 except Exception:  # pragma: no cover - optional dependency
     HTML = None
     CSS = None
+
+from apps.common.pdf_utils import generate_weasyprint_pdf, NumberedCanvas as SharedNumberedCanvas
 
 from apps.common.views import EventScopedCreateView, EventScopedDeleteView, EventScopedListView, EventScopedUpdateView
 from apps.dashboard.services import build_public_item_preview
@@ -87,39 +89,31 @@ CATEGORY_ROW_CLASSES = {
 }
 
 PDF_FONT_NAME = "Helvetica"
-_pdf_font_candidates = [
-    Path(settings.BASE_DIR) / "assets/fonts/NotoSansGujarati-Regular.ttf",
-    Path("C:/Windows/Fonts/shruti.ttf"),
-    Path("C:/Windows/Fonts/Nirmala.ttc"),
-    Path("/usr/share/fonts/truetype/noto/NotoSansGujarati-Regular.ttf"),
-    Path("/usr/share/fonts/opentype/noto/NotoSansGujarati-Regular.ttf"),
-    Path("/usr/share/fonts/truetype/lohit-gujarati/Lohit-Gujarati.ttf"),
-]
-for candidate in _pdf_font_candidates:
-    if candidate.exists():
-        try:
-            pdfmetrics.registerFont(TTFont("KMMUnicode", str(candidate)))
-            PDF_FONT_NAME = "KMMUnicode"
-            break
-        except Exception:
-            pass
-
-PDF_GUJARATI_FONT_NAME = PDF_FONT_NAME
-for candidate in [
-    Path(settings.BASE_DIR) / "assets/fonts/NotoSansGujarati-Regular.ttf",
-    Path("C:/Windows/Fonts/shruti.ttf"),
-    Path("C:/Windows/Fonts/shrutib.ttf"),
-    Path("/usr/share/fonts/truetype/noto/NotoSansGujarati-Regular.ttf"),
-    Path("/usr/share/fonts/opentype/noto/NotoSansGujarati-Regular.ttf"),
-    Path("/usr/share/fonts/truetype/lohit-gujarati/Lohit-Gujarati.ttf"),
-]:
-    if candidate.exists():
-        try:
-            pdfmetrics.registerFont(TTFont("KMMGujarati", str(candidate)))
-            PDF_GUJARATI_FONT_NAME = "KMMGujarati"
-            break
-        except Exception:
-            pass
+PDF_GUJARATI_FONT_NAME = "Helvetica"
+_config_font_path = Path(settings.GUJARATI_FONT_PATH)
+if _config_font_path.exists():
+    try:
+        pdfmetrics.registerFont(TTFont("NotoSansGujarati", str(_config_font_path)))
+        PDF_GUJARATI_FONT_NAME = "NotoSansGujarati"
+    except Exception:
+        pass
+if PDF_GUJARATI_FONT_NAME == "Helvetica":
+    _fallback_candidates = [
+        Path(settings.BASE_DIR) / "assets/fonts/NotoSansGujarati-Regular.ttf",
+        Path("C:/Windows/Fonts/shruti.ttf"),
+        Path("C:/Windows/Fonts/Nirmala.ttc"),
+        Path("/usr/share/fonts/truetype/noto/NotoSansGujarati-Regular.ttf"),
+        Path("/usr/share/fonts/opentype/noto/NotoSansGujarati-Regular.ttf"),
+        Path("/usr/share/fonts/truetype/lohit-gujarati/Lohit-Gujarati.ttf"),
+    ]
+    for candidate in _fallback_candidates:
+        if candidate.exists():
+            try:
+                pdfmetrics.registerFont(TTFont("KMMGujarati", str(candidate)))
+                PDF_GUJARATI_FONT_NAME = "KMMGujarati"
+                break
+            except Exception:
+                pass
 
 
 def _lang_code(request):
@@ -871,30 +865,26 @@ class RequirementCollectionPrintView(View):
             right = right_lines[idx] if idx < len(right_lines) else ("", "", "", "")
             item_rows.append((left, right))
 
-        html = render_to_string(
+        context = {
+            "header": header,
+            "rows": item_rows,
+            "extra_note_values": ((header.remarks.splitlines() if header.remarks else []) + ["", "", "", ""])[:4],
+            "contact": _format_main_contact(header.event),
+            "order_number": header.order_number,
+            "lang": "gu",
+            "logo_exists": (Path(settings.BASE_DIR) / "pdf_header.png").exists(),
+            "pdf_header_path": str((Path(settings.BASE_DIR) / "pdf_header.png").resolve()).replace("\\", "/"),
+            "pdf_font_path": settings.GUJARATI_FONT_PATH,
+        }
+
+        return generate_weasyprint_pdf(
             "requirements/gujarati_pdf.html",
-            {
-                "header": header,
-                "rows": item_rows,
-                "extra_note_values": ((header.remarks.splitlines() if header.remarks else []) + ["", "", "", ""])[:4],
-                "contact": _format_main_contact(header.event),
-                "order_number": header.order_number,
-                "lang": "gu",
-                "logo_exists": (Path(settings.BASE_DIR) / "pdf_header.png").exists(),
-                "pdf_header_path": str((Path(settings.BASE_DIR) / "pdf_header.png").resolve()).replace("\\", "/"),
-                "pdf_font_path": str((Path(settings.BASE_DIR) / "assets/fonts/NotoSansGujarati-Regular.ttf").resolve()).replace("\\", "/"),
-            },
+            context,
+            filename=f'{header.order_number or "requirement-order"}-gujarati.pdf',
+            extra_css="""
+                @page { size: A4; margin: 8mm 8mm 10mm 8mm; }
+            """,
         )
-        response = HttpResponse(content_type="application/pdf")
-        response["Content-Disposition"] = f'attachment; filename="{header.order_number or "requirement-order"}-gujarati.pdf"'
-        html_obj = HTML(string=html, base_url=str(settings.BASE_DIR))
-        styles = CSS(string="""
-            @page { size: A4; margin: 8mm 8mm 10mm 8mm; }
-            body { font-family: 'Noto Sans Gujarati', 'Shruti', sans-serif; color: #14324f; word-break: normal; overflow-wrap: normal; hyphens: none; }
-            table, td, th { word-break: normal; overflow-wrap: normal; hyphens: none; }
-        """)
-        response.write(html_obj.write_pdf(stylesheets=[styles]))
-        return response
 
     def _render_pdf_gujarati(self, header, lines):
         buffer = BytesIO()
@@ -1067,23 +1057,7 @@ class RequirementCollectionPrintView(View):
 
         footer_contact = _format_main_contact(header.event)
 
-        class NumberedCanvas(canvas.Canvas):
-            def __init__(self, *args, **kwargs):
-                super().__init__(*args, **kwargs)
-                self._saved_page_states = []
-
-            def showPage(self):
-                self._saved_page_states.append(dict(self.__dict__))
-                self._startPage()
-
-            def save(self):
-                page_count = len(self._saved_page_states)
-                for state in self._saved_page_states:
-                    self.__dict__.update(state)
-                    self.draw_footer(page_count)
-                    super().showPage()
-                super().save()
-
+        class NumberedCanvas(SharedNumberedCanvas):
             def draw_footer(self, page_count):
                 self.saveState()
                 self.setStrokeColor(colors.HexColor("#9bb4c9"))
@@ -1345,23 +1319,7 @@ class RequirementCollectionPrintView(View):
 
         footer_contact = _format_main_contact(header.event)
 
-        class NumberedCanvas(canvas.Canvas):
-            def __init__(self, *args, **kwargs):
-                super().__init__(*args, **kwargs)
-                self._saved_page_states = []
-
-            def showPage(self):
-                self._saved_page_states.append(dict(self.__dict__))
-                self._startPage()
-
-            def save(self):
-                page_count = len(self._saved_page_states)
-                for state in self._saved_page_states:
-                    self.__dict__.update(state)
-                    self.draw_footer(page_count)
-                    super().showPage()
-                super().save()
-
+        class NumberedCanvas(SharedNumberedCanvas):
             def draw_footer(self, page_count):
                 self.saveState()
                 self.setStrokeColor(colors.HexColor("#9bb4c9"))

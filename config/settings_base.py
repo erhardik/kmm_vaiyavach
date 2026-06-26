@@ -111,6 +111,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+GUJARATI_FONT_PATH = os.path.join(BASE_DIR, "static", "fonts", "NotoSansGujarati-Regular.ttf")
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "dashboard:item_control_center"

@@ -4,29 +4,44 @@
   <meta charset="utf-8">
   <style>
     @font-face {
-      font-family: "KMMGujarati";
-      src: url("file://{{ pdf_font_path }}") format("truetype");
-      font-weight: 400;
+      font-family: 'Noto Sans Gujarati';
+      src: url('file://{{ pdf_font_path }}') format('truetype');
+      font-weight: normal;
       font-style: normal;
     }
+    @font-face {
+      font-family: 'Noto Sans Gujarati';
+      src: url('file://{{ pdf_font_path }}') format('truetype');
+      font-weight: bold;
+      font-style: normal;
+    }
+
+    *, html, body, div, span, p, a, h1, h2, h3, h4, h5, h6, table, tr, th, td, b, strong, i, em {
+      font-family: 'Noto Sans Gujarati', Arial, sans-serif !important;
+      text-rendering: optimizeLegibility !important;
+      font-variant-ligatures: common-ligatures !important;
+      -webkit-font-feature-settings: "liga" 1, "clig" 1, "calt" 1, "akhn" 1, "rphf" 1, "blwf" 1, "pstf" 1, "vattu" 1, "cjct" 1 !important;
+      font-feature-settings: "liga" 1, "clig" 1, "calt" 1, "akhn" 1, "rphf" 1, "blwf" 1, "pstf" 1, "vattu" 1, "cjct" 1 !important;
+    }
+
+    p, td, th, span, div {
+      word-break: keep-all !important;
+      white-space: normal !important;
+    }
+
     @page { size: A4; margin: 6mm 6mm 9mm 6mm; }
     * { box-sizing: border-box; }
     body {
       margin: 0;
       color: #000;
-      font-family: "KMMGujarati", "Noto Sans Gujarati", "Shruti", sans-serif;
       font-size: 8.4pt;
       line-height: 1.2;
-      text-rendering: optimizeLegibility;
     }
     table { width: 100%; border-collapse: collapse; }
     td, th {
       border: .45pt solid #000;
       padding: 1mm 1.2mm;
       vertical-align: top;
-      word-break: normal;
-      overflow-wrap: normal;
-      hyphens: none;
     }
     .top {
       position: relative;
