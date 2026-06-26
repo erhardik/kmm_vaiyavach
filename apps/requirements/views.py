@@ -273,12 +273,15 @@ def _requirement_pdf_rows(lines, language_code="gu", filter_zero=True):
         if filter_zero and (not line.required_qty or line.required_qty <= 0):
             continue
         item = line.item
+        qty_display = _format_qty(line.required_qty)
+        if not filter_zero and (not line.required_qty or line.required_qty <= 0):
+            qty_display = "--"
         rows.append(
             (
                 _line_serial_display(item),
                 _item_name_for_language(item, language_code),
                 _item_size_for_language(item, language_code),
-                _format_qty(line.required_qty),
+                qty_display,
                 item.category,
             )
         )
