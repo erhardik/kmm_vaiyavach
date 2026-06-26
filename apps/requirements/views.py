@@ -636,6 +636,7 @@ class RequirementCollectionView(View):
             "order_number": header.order_number if header else None,
             "public_collect_url": reverse("requirements:public-collect", kwargs={"event_token": event.public_form_token}) if event else None,
             "public_pdf_url": reverse("requirements:public-print", kwargs={"token": header.public_view_token}) if header and header.order_number else None,
+            "public_pdf_en_url": _with_lang(reverse("requirements:public-print", kwargs={"token": header.public_view_token}), "en") if header and header.order_number else None,
             "public_pdf_gu_url": _with_lang(reverse("requirements:public-print", kwargs={"token": header.public_view_token}), "gu") if header and header.order_number else None,
             "editing_allowed": self._editing_allowed(event, header, request.user),
             "event_requires_lock": bool(event and not event.allow_requirement_edit_after_confirm),
@@ -650,6 +651,7 @@ class RequirementCollectionView(View):
                 "header": header,
                 "lang": _lang_code(request),
                 "public_pdf_url": reverse("requirements:public-print", kwargs={"token": header.public_view_token}) if header and header.order_number else None,
+                "public_pdf_en_url": _with_lang(reverse("requirements:public-print", kwargs={"token": header.public_view_token}), "en") if header and header.order_number else None,
                 "public_pdf_gu_url": _with_lang(reverse("requirements:public-print", kwargs={"token": header.public_view_token}), "gu") if header and header.order_number else None,
             },
         )
@@ -849,9 +851,11 @@ class RequirementCollectionPrintView(View):
             .select_related("item", "item__parent_item")
         )
         language_code = _lang_code(request)
-        if HTML is not None and CSS is not None:
-            return self._render_pdf_gujarati_html(header, items)
-        return self._render_pdf_gujarati(header, items)
+        if language_code == "gu":
+            if HTML is not None and CSS is not None:
+                return self._render_pdf_gujarati_html(header, items)
+            return self._render_pdf_gujarati(header, items)
+        return self._render_pdf(header, items, "en")
 
     def _render_pdf_gujarati_html(self, header, lines):
         line_rows = _requirement_pdf_rows(lines, "gu")
@@ -1365,6 +1369,7 @@ class RequirementCollectionDetailView(View):
                 "grouped_lines": _group_requirement_lines(lines),
                 "lang": _lang_code(request),
                 "public_pdf_url": reverse("requirements:public-print", kwargs={"token": header.public_view_token}) if header.order_number else None,
+                "public_pdf_en_url": _with_lang(reverse("requirements:public-print", kwargs={"token": header.public_view_token}), "en") if header.order_number else None,
                 "public_pdf_gu_url": _with_lang(reverse("requirements:public-print", kwargs={"token": header.public_view_token}), "gu") if header.order_number else None,
             },
         )
