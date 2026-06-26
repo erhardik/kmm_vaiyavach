@@ -869,15 +869,10 @@ class RequirementCollectionPrintView(View):
             line_rows = _requirement_pdf_rows(items, "gu")
             contact = _format_main_contact(header.event)
             contact_gu = contact.replace("Main Event Manager:", "મુખ્ય સંપર્ક:")
-            try:
-                return generate_gujarati_pdf_fpdf2(
-                    header, line_rows, contact_gu,
-                    filename=f'{header.order_number or "requirement-order"}-gujarati.pdf',
-                )
-            except Exception:
-                if HTML is not None and CSS is not None:
-                    return self._render_pdf_gujarati_html(header, items)
-                return self._render_pdf_gujarati(header, items)
+            return generate_gujarati_pdf_fpdf2(
+                header, line_rows, contact_gu,
+                filename=f'{header.order_number or "requirement-order"}-gujarati.pdf',
+            )
         return self._render_pdf(header, items, "en")
 
     def _render_pdf_gujarati_html(self, header, lines):
