@@ -447,7 +447,7 @@ class RequirementCollectionView(View):
         return Upashray.objects.create(event=event, name=name)
 
     def _build_formset(self, items, data=None, initial_quantities=None, initial_remarks=None):
-        collection_formset = formset_factory(RequirementCollectionItemForm, extra=0)
+        collection_formset = formset_factory(RequirementCollectionItemForm, extra=4)
         initial_quantities = initial_quantities or {}
         initial_remarks = initial_remarks or {}
         initial = []
@@ -506,6 +506,7 @@ class RequirementCollectionView(View):
             "header": header,
             "form": form,
             "formset": formset,
+            "extra_item_rows": [{"name": "", "size": "", "qty": "", "note": ""} for _ in range(4)],
             "item_groups": self._group_rows(self._build_rows(items, formset, language_code, existing_quantities), language_code),
             "language_code": language_code,
             "page_title": "જરૂરિયાતો એકત્ર કરો" if language_code == "gu" else "Collect Requirements",

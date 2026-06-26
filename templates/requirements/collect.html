@@ -151,12 +151,42 @@
             </p>
           </div>
           <div class="small text-body-secondary">
-            {% if lang == "gu" %}ડિફૉલ્ટ જથ્થો 0 છે.{% else %}Default quantity is 0.{% endif %}
+            {% if lang == "gu" %}ડિફૉલ્ટ જથ્થો 0 છે.{% else %}??????? ????? 0 ??.{% endif %}
           </div>
         </div>
       </div>
       <div class="card-body px-4 px-lg-5 pb-4">
         {{ formset.management_form }}
+        <div class="mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h3 class="h6 mb-0">{% if lang == "gu" %}????????? ????{% else %}Extra Item{% endif %}</h3>
+            <div class="small text-body-secondary">{% if lang == "gu" %}????? ??????? ? ??? ???? ??? ???? ???? ?????.{% else %}Add items not in the master list here.{% endif %}</div>
+          </div>
+          <div class="table-responsive rounded-3 border-0">
+            <table class="table table-hover align-middle mb-0 requirement-table">
+              <thead>
+                <tr>
+                  <th class="col-sr">{% if lang == "gu" %}???? ??.{% else %}Sr. No.{% endif %}</th>
+                  <th>{% if lang == "gu" %}???????? ???{% else %}Item Name{% endif %}</th>
+                  <th>{% if lang == "gu" %}??????/????{% else %}Type/Size{% endif %}</th>
+                  <th class="text-end">{% if lang == "gu" %}?????{% else %}Qty{% endif %}</th>
+                  <th>{% if lang == "gu" %}????{% else %}Note{% endif %}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in extra_item_rows %}
+                  <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ row.name }}</td>
+                    <td>{{ row.size }}</td>
+                    <td class="text-end">{{ row.qty }}</td>
+                    <td>{{ row.note }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
         {% for group in item_groups %}
           <div class="category-card {{ group.category_class }} mb-3">
             <div class="category-card-header">
