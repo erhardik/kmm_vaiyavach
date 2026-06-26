@@ -2,7 +2,7 @@
 
 **Kalyan Mitra Mandal – 2026, Vikram Samvat 2082**
 
-## Form Vigat
+## Form Details
 
 Form Number
 Pujya Shri
@@ -14,7 +14,7 @@ Form Tarikh
 Chaturmas Pravesh Tarikh
 Janar Nu Naam
 Sangh Upashray / Sthirvas
-Pujya Shri Sambhaal Lenar Nu Naam Ane Mobile Number
+Sambhaal Lenar Nu Naam Ane Number
 
 ## General Vastuo
 
@@ -84,6 +84,7 @@ No. | Vastunu Naam | Prakar/Size | Category
 ## Medical
 
 No. | Vastunu Naam | Prakar/Size | Category
+
 56 | D-Sona (Daante Ghasvano Powder) | 100 Gram | Medical
 57 | Eno (Gas Mate) | Green / Orange / Blue | Medical
 58 | Inhaler Balm (Thailased Balm) | Sughvano Balm | Medical
@@ -109,6 +110,7 @@ No. | Vastunu Naam | Prakar/Size | Category
 ## Ayurvedic Davao
 
 No. | Vastunu Naam | Prakar/Size | Category
+
 77 | Navkar Vati Tonic (Anahari) | 30 Goli | Ayurvedic Davao
 78 | Ghodavaj (Pustakoni Sachvani Mate) | 4-5 Nang | Ayurvedic Davao
 79 | Kushal Kanthil (Gala Tatha Udharas Mate) | Nani Dabbi | Ayurvedic Davao

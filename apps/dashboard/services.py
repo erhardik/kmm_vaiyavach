@@ -268,17 +268,35 @@ def build_public_status_summary(event):
 def build_public_item_preview(event):
     rows = []
     balances = {balance.item_id: balance for balance in InventoryBalance.objects.filter(event=event).select_related("item")}
-    for row_item in _item_display_rows(event, active_only=True):
-        item = row_item["item"]
-        balance = balances.get(row_item["item_key"])
-        rows.append(
-            {
-                "item": item,
-                "serial": row_item["serial"],
-                "stock": balance.current_stock if balance else Decimal("0"),
-                "category": item.get_category_display(),
-                "is_active": item.is_active,
-                "variant": row_item["variant"],
-            }
-        )
+    def variant_suffix(index):
+        alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        return alphabet[index] if index < len(alphabet) else f"X{index + 1}"
+    base_items = Item.objects.filter(event=event, is_active=True, parent_item__isnull=True).prefetch_related("variants").order_by("standard_serial", "pk")
+    for item in base_items:
+        variants = list(item.variants.filter(is_active=True).order_by("variant_name", "pk"))
+        if variants:
+            for index, variant in enumerate(variants):
+                balance = balances.get(variant.pk)
+                rows.append(
+                    {
+                        "item": variant,
+                        "serial": f"{item.standard_serial or item.pk}-{variant_suffix(index)}",
+                        "stock": balance.current_stock if balance else Decimal("0"),
+                        "category": item.get_category_display(),
+                        "is_active": variant.is_active,
+                        "variant": variant,
+                    }
+                )
+        else:
+            balance = balances.get(item.pk)
+            rows.append(
+                {
+                    "item": item,
+                    "serial": item.standard_serial or item.pk,
+                    "stock": balance.current_stock if balance else Decimal("0"),
+                    "category": item.get_category_display(),
+                    "is_active": item.is_active,
+                    "variant": None,
+                }
+            )
     return rows
