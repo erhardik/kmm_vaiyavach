@@ -229,7 +229,8 @@ def build_public_status_summary(event):
 def build_public_item_preview(event):
     rows = []
     balances = {balance.item_id: balance for balance in InventoryBalance.objects.filter(event=event).select_related("item")}
-    for item in Item.objects.filter(event=event, is_active=True).order_by("standard_serial", "pk"):
+    items = Item.objects.filter(event=event).order_by("standard_serial", "pk")
+    for item in items:
         balance = balances.get(item.pk)
         rows.append(
             {
@@ -237,6 +238,7 @@ def build_public_item_preview(event):
                 "serial": item.standard_serial or item.pk,
                 "stock": balance.current_stock if balance else Decimal("0"),
                 "category": item.get_category_display(),
+                "is_active": item.is_active,
             }
         )
     return rows
