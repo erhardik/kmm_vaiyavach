@@ -79,7 +79,7 @@
                     <a class="btn btn-sm btn-outline-primary js-order-view" href="{{ row.view_url }}" data-detail-url="{{ row.view_url }}" data-order-label="{{ row.object.order_number|default:row.object.upashray }}">View</a>
                   {% endif %}
                   {% if row.pdf_url %}
-                    <a class="btn btn-sm btn-outline-secondary" href="{{ row.pdf_url }}?lang=en" target="_blank" rel="noopener">View PDF</a>
+                    <a class="btn btn-sm btn-outline-secondary" href="{{ row.pdf_url }}?lang=full" target="_blank" rel="noopener">Full PDF</a>
                     <a class="btn btn-sm btn-warning" href="{{ row.pdf_url }}?lang=gu" target="_blank" rel="noopener">Gujarati PDF</a>
                   {% endif %}
                   {% if can_change and row.edit_url %}

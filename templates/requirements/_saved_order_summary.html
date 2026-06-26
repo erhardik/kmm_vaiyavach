@@ -30,7 +30,7 @@
         </div>
         <div class="d-flex gap-2">
           <button type="button" class="btn btn-outline-secondary btn-sm" data-copy-text="{{ public_pdf_url }}">{% if lang_code == "gu" %}Copy{% else %}Copy{% endif %}</button>
-          <a class="btn btn-outline-primary btn-sm" href="{% if public_pdf_en_url %}{{ public_pdf_en_url }}{% else %}{{ public_pdf_url }}?lang=en{% endif %}" target="_blank" rel="noopener">{% if lang_code == "gu" %}English PDF{% else %}English PDF{% endif %}</a>
+          <a class="btn btn-outline-primary btn-sm" href="{% if public_pdf_en_url %}{{ public_pdf_en_url }}{% else %}{{ public_pdf_url }}?lang=full{% endif %}" target="_blank" rel="noopener">{% if lang_code == "gu" %}Full PDF{% else %}Full PDF{% endif %}</a>
           {% if public_pdf_gu_url %}
             <a class="btn btn-warning btn-sm" href="{{ public_pdf_gu_url }}" target="_blank" rel="noopener">ગુજરાતી PDF</a>
           {% endif %}
