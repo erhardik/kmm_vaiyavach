@@ -253,7 +253,9 @@ def generate_gujarati_pdf_fpdf2(header, line_rows, contact_info, filename="requi
             if note.strip():
                 pdf.multi_cell(0, 6, f"• {note.strip()}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
-    response = HttpResponse(content_type="application/pdf")
+    buffer = BytesIO()
+    pdf.output(buffer)
+    buffer.seek(0)
+    response = HttpResponse(buffer, content_type="application/pdf")
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
-    pdf.output(response)
     return response
