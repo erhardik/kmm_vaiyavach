@@ -947,27 +947,13 @@ class RequirementCollectionPrintView(View):
         )
 
         basic_rows = [
-            [p("પૂજ્ય શ્રી", small_style), p(header.pujya_shri_name, body_style), p("વર્તમાન સરનામું", small_style), p(header.current_address, body_style)],
-            [p("થાણા", small_style), p(header.thana_count, body_style), p("વિસ્તાર", small_style), p(header.area, body_style)],
-            [p("ચાતુર્માસ સ્થળ સરનામું", small_style), p(header.chaturmas_place_address, body_style), p("ચાતુર્માસ પ્રવેશ તારીખ", small_style), p(_format_pdf_date(header.chaturmas_entry_date), body_style)],
-            [p("વોલન્ટિયર નામ", small_style), p(header.volunteer_name, body_style), p("રહેઠાણ પ્રકાર", small_style), p(header.get_stay_type_display(), body_style)],
-            [p("સંભાળનાર નામ", small_style), p(header.caretaker_name, body_style), p("સંભાળનાર સંપર્ક", small_style), p(header.caretaker_mobile, body_style)],
-            [p("ખાસ વિનંતી / નોંધ", small_style), p(header.remarks, body_style), p("", small_style), p("", body_style)],
+            [p("????? ????", small_style), p(header.pujya_shri_name, body_style), p("????", small_style), p(header.thana_count, body_style)],
+            [p("???????", small_style), p(header.area, body_style), p("????? ?????", small_style), p(_format_pdf_date(header.requirement_date), body_style)],
+            [p("?????? ???????", small_style), p(header.current_address, body_style), p("????????? ??????? ???????", small_style), p(header.chaturmas_place_address, body_style)],
+            [p("????????? ?????? ?????", small_style), p(_format_pdf_date(header.chaturmas_entry_date), body_style), p("??????? ???", small_style), p(header.volunteer_name, body_style)],
+            [p("??? ??????? / ????????", small_style), p(header.get_stay_type_display(), body_style), p("????? ???? ????? ???????? ??? ??? ??????", small_style), p(f"{header.caretaker_name or '-'} {header.caretaker_mobile or ''}".strip(), body_style)],
         ]
-        basic_table = Table(basic_rows, colWidths=[28 * mm, 64 * mm, 30 * mm, 62 * mm])
-        basic_table.setStyle(
-            TableStyle(
-                [
-                    ("BACKGROUND", (0, 0), (-1, -1), colors.whitesmoke),
-                    ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#14324f")),
-                    ("INNERGRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#9bb4c9")),
-                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                    ("LEADING", (0, 0), (-1, -1), 8.5),
-                    ("FONTNAME", (0, 0), (-1, -1), pdf_font_name),
-                ]
-            )
-        )
-
+        basic_table = Table(basic_rows, colWidths=[40 * mm, 53 * mm, 42 * mm, 49 * mm])
         story.extend([status_table, Spacer(1, 6), basic_table, Spacer(1, 6)])
 
         paired_rows = []
@@ -1593,3 +1579,4 @@ class PublicRequirementListView(View):
         if previous_status != new_status:
             messages.success(request, "Status saved.")
         return redirect(reverse("public-requests"))
+
