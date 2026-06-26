@@ -147,111 +147,210 @@ def _auto_font(pdf, text, style="", size=8.4):
         pdf.set_font("Helvetica", style, size)
 
 
+def _format_en_date(value):
+    if not value:
+        return "-"
+    return f"{value.day:02d}-{value.strftime('%B')}-{value.year}"
+
+
 def generate_gujarati_pdf_fpdf2(header, line_rows, contact_info, filename="requirement-order.pdf"):
     from fpdf import FPDF
     from fpdf.enums import XPos, YPos
-    FONT_NAME = "Gujarati"
+    FONT = "Gujarati"
+
+    CATEGORY_LABELS_GU = {
+        "GENERAL": "જનરલ વસ્તુઓ",
+        "STATIONERY": "સ્ટેશનરી",
+        "MEDICAL": "મેડિકલ",
+        "AYURVEDIC": "આયુર્વેદિક દવાઓ",
+        "COLOR_MATERIAL": "રંગ સામગ્રી",
+    }
 
     class GujaratiPDF(FPDF):
         def header(self):
             M = self.l_margin
-            page_w = self.w - self.l_margin - self.r_margin
-
-            logo_path = Path(settings.BASE_DIR) / "pdf_header.png"
-            if logo_path.exists():
-                self.image(str(logo_path), x=M, y=self.t_margin, w=63, h=19.6)
-
-            form_text = f"ફોર્મ નંબર - {header.order_number or '________'}"
-            _auto_font(self, form_text, "", 11)
-            self.set_xy(M + page_w - 55, self.t_margin)
-            self.cell(55, 8, form_text, align="R")
-
-            y_status = self.t_margin + 23
-            _auto_font(self, "[ ] બધી વસ્તુઓ પેક થઈ", "", 7.2)
-            self.set_xy(M, y_status)
-            self.cell(55, 5, "[ ] બધી વસ્તુઓ પેક થઈ")
-            _auto_font(self, "[ ] વિતરણ માટે તૈયાર", "", 7.2)
-            self.set_xy(M + 55, y_status)
-            self.cell(55, 5, "[ ] વિતરણ માટે તૈયાર")
-            _auto_font(self, "ચેક કરનાર", "", 7.2)
-            self.set_xy(M + page_w - 50, y_status)
-            self.cell(50, 5, "ચેક કરનાર: ____________________", align="R")
-            self.line(M, y_status + 6, M + page_w, y_status + 6)
-            self.set_xy(M, y_status + 8)
+            page_w = self.w - M - self.r_margin
+            if self.page_no() == 1:
+                logo_path = Path(settings.BASE_DIR) / "pdf_header.png"
+                if logo_path.exists():
+                    self.image(str(logo_path), x=M, y=self.t_margin, w=63, h=19.6)
+                self.set_font(FONT, "", 11)
+                self.set_xy(M + page_w - 55, self.t_margin)
+                self.cell(55, 8, f"ફોર્મ નંબર - {header.order_number or '________'}", align="R")
+                y = self.t_margin + 23
+                self.set_font(FONT, "", 7.2)
+                self.set_xy(M, y)
+                self.cell(55, 5, "[ ] બધી વસ્તુઓ પેક થઈ")
+                self.set_xy(M + 55, y)
+                self.cell(55, 5, "[ ] વિતરણ માટે તૈયાર")
+                self.set_xy(M + page_w - 50, y)
+                self.cell(50, 5, "ચેક કરનાર: ____________________", align="R")
+                self.line(M, y + 6, M + page_w, y + 6)
+                self._header_bottom = y + 10
+            else:
+                self.set_font(FONT, "", 9)
+                self.set_xy(M, self.t_margin)
+                self.cell(page_w, 6, f"ફોર્મ નંબર - {header.order_number or '________'}")
+                self.line(M, self.t_margin + 7, M + page_w, self.t_margin + 7)
+                self._header_bottom = self.t_margin + 12
 
         def footer(self):
             self.set_y(-15)
-            _auto_font(self, contact_info or "", "", 7.2)
+            self.set_font(FONT, "", 7.2)
             self.cell(self.w / 2 - self.l_margin, 4, contact_info or "", new_x=XPos.RIGHT, new_y=YPos.LAST)
-            page_text = f"પાનું {self.page_no()}"
-            _auto_font(self, page_text, "", 7.2)
-            self.cell(self.w / 2 - self.r_margin, 4, page_text, align="R")
+            self.cell(self.w / 2 - self.r_margin, 4, f"પાનું {self.page_no()}", align="R")
 
     pdf = GujaratiPDF(orientation="P", unit="mm", format="A4")
     pdf.set_margins(left=15, top=15, right=15)
     pdf.set_auto_page_break(auto=True, margin=15)
-
     font_path = _resolve_font_path()
-    pdf.add_font(FONT_NAME, "", font_path)
-    pdf.add_font(FONT_NAME, "B", font_path)
-    pdf.add_font(FONT_NAME, "I", font_path)
-    pdf.add_font(FONT_NAME, "BI", font_path)
-
+    pdf.add_font(FONT, "", font_path)
+    pdf.add_font(FONT, "B", font_path)
     pdf.set_text_shaping(True)
-
     pdf.add_page()
 
     M = pdf.l_margin
-    page_w = pdf.w - pdf.l_margin - pdf.r_margin
+    page_w = pdf.w - M - pdf.r_margin
+    page_bottom = pdf.h - pdf.b_margin - 20
+    ROW_H = 7
+    SM = 8
 
-    basic_data = [
-        ("ફોર્મ નંબર", header.order_number or "_____"),
-        ("પૂજ્ય શ્રી", header.pujya_shri_name or "-"),
-        ("ઠાણા", str(header.thana_count or "-")),
-        ("વિસ્તાર", header.area or "-"),
-        ("હાલનું સરનામું", header.current_address or "-"),
-        ("ચાતુર્માસ સ્થળનું સરનામું", header.chaturmas_place_address or "-"),
-        ("ફોર્મ તારીખ", _format_guj_date(header.requirement_date)),
-        ("ચાતુર્માસ પ્રવેશ તારીખ", _format_guj_date(header.chaturmas_entry_date)),
-        ("જનારનું નામ", header.volunteer_name or "-"),
-        ("સંઘ ઉપાશ્રય / સ્થિરવાસ", header.get_stay_type_display() or "-"),
-        ("પૂજ્ય શ્રી સંભાળ લેનાર", f"{header.caretaker_name or '-'} {header.caretaker_mobile or ''}".strip()),
-    ]
+    # === METADATA GRID ===
+    grid_y = pdf._header_bottom
+    hw = page_w / 2
+    qw = page_w / 4
 
-    pdf.set_font(FONT_NAME, "", 13)
-    for label, value in basic_data:
-        line_text = f"• {label} : {value}"
-        pdf.multi_cell(0, 8, line_text, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.ln(2)
+    def meta_cell(text, w, bold=False):
+        pdf.set_font(FONT, "B" if bold else "", SM)
+        pdf.cell(w, ROW_H, text, border=1)
 
-    pdf.ln(4)
+    pdf.set_xy(M, grid_y)
+    meta_cell(f"પૂજ્ય શ્રી : {header.pujya_shri_name or '-'}", hw)
+    meta_cell(f"ઠાણા : {str(header.thana_count or '-')}", hw)
+    grid_y += ROW_H
 
-    if line_rows:
-        pdf.set_font(FONT_NAME, "B", 10)
-        pdf.cell(0, 7, "વસ્તુ સૂચિ", align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.ln(2)
+    pdf.set_xy(M, grid_y)
+    meta_cell(f"વિસ્તાર : {header.area or '-'}", hw)
+    meta_cell(f"ફોર્મ તારીખ : {_format_en_date(header.requirement_date)}", hw)
+    grid_y += ROW_H
 
-        pdf.set_font(FONT_NAME, "B", 9)
-        pdf.multi_cell(0, 6, "વસ્તુ સૂચિ", align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.ln(2)
-        pdf.set_font(FONT_NAME, "", 9)
-        for sr, name, size, qty in line_rows:
-            item_line = f"{sr}. {name}  [{size}]  -  {qty} નંગ"
-            pdf.multi_cell(0, 6, item_line, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-    else:
-        pdf.set_font(FONT_NAME, "", 10)
-        pdf.cell(0, 7, "કોઈ વસ્તુઓ નથી", align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.set_xy(M, grid_y)
+    meta_cell(f"હાલનું સરનામું : {header.current_address or '-'}", hw)
+    meta_cell(f"ચાતુર્માસ સ્થળ સરનામું : {header.chaturmas_place_address or '-'}", hw)
+    grid_y += ROW_H
 
-    pdf.ln(4)
+    pdf.set_xy(M, grid_y)
+    meta_cell(f"ચાતુર્માસ પ્રવેશ : {_format_en_date(header.chaturmas_entry_date)}", qw)
+    meta_cell(f"જનાર : {header.volunteer_name or '-'}", qw)
+    meta_cell(f"સંઘ/સ્થિર : {header.get_stay_type_display() or '-'}", hw)
+    grid_y += ROW_H
 
-    notes = (header.remarks or "").splitlines() if header.remarks else []
-    if notes:
-        pdf.set_font(FONT_NAME, "B", 10)
-        pdf.cell(0, 7, "વધારાની વસ્તુઓ / નોંધ", align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.set_font(FONT_NAME, "", 10)
-        for note in notes:
-            if note.strip():
-                pdf.multi_cell(0, 6, f"• {note.strip()}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    caretaker = f"{header.caretaker_name or '-'} {header.caretaker_mobile or ''}".strip()
+    pdf.set_xy(M, grid_y)
+    meta_cell(f"પૂજ્ય શ્રી સંભાળ લેનાર : {caretaker}", page_w)
+    grid_y += ROW_H + 4
+
+    # === TWO-COLUMN ITEM TABLE ===
+    COL_W = (page_w - 6) / 2
+    COL_GAP = 6
+    col1_x = M
+    col2_x = M + COL_W + COL_GAP
+    TH = 5
+    HH = 6
+    CH = 5
+    FS = 7
+
+    def draw_col_headers(y):
+        pdf.set_font(FONT, "B", FS)
+        for cx in (col1_x, col2_x):
+            pdf.set_xy(cx, y)
+            pdf.cell(6, HH, "નં.", border=1, align="C")
+            pdf.cell(COL_W - 6 - 18 - 10, HH, "વસ્તુનું નામ", border=1, align="C")
+            pdf.cell(18, HH, "પ્રકાર/સાઈઝ", border=1, align="C")
+            pdf.cell(10, HH, "નંગ", border=1, align="C")
+        pdf.set_font(FONT, "", FS)
+        return y + HH
+
+    def draw_row(cx, cy, sr, name, size, qty):
+        pdf.set_font(FONT, "", FS)
+        pdf.set_xy(cx, cy)
+        pdf.cell(6, TH, str(sr), border=1, align="C")
+        pdf.cell(COL_W - 6 - 18 - 10, TH, name, border=1)
+        pdf.cell(18, TH, size, border=1, align="C")
+        pdf.cell(10, TH, str(qty), border=1, align="C")
+
+    def draw_cat(cx, cy, label):
+        pdf.set_font(FONT, "B", FS)
+        pdf.set_xy(cx, cy)
+        pdf.cell(COL_W, CH, label, border=1, align="C")
+        pdf.set_font(FONT, "", FS)
+
+    col1_y = draw_col_headers(grid_y)
+    col2_y = col1_y
+    cur = 1
+    prev_cat = None
+
+    def ensure(need):
+        nonlocal cur, col1_y, col2_y
+        cy = col1_y if cur == 1 else col2_y
+        if cy + need <= page_bottom:
+            return cy
+        if cur == 1:
+            cur = 2
+            cy = col2_y
+            if cy + need <= page_bottom:
+                return cy
+        pdf.add_page()
+        cur = 1
+        col1_y = col2_y = pdf._header_bottom
+        col1_y = draw_col_headers(col1_y)
+        col2_y = col1_y
+        return col1_y
+
+    for row in line_rows:
+        sr, name, size, qty, category = row[:5]
+
+        if category != prev_cat:
+            prev_cat = category
+            cat_label = CATEGORY_LABELS_GU.get(category, category)
+            cy = ensure(CH)
+            cx = col1_x if cur == 1 else col2_x
+            draw_cat(cx, cy, cat_label)
+            cy += CH
+            if cur == 1:
+                col1_y = cy
+            else:
+                col2_y = cy
+
+        cy = ensure(TH)
+        cx = col1_x if cur == 1 else col2_x
+        draw_row(cx, cy, sr, name, size, qty)
+        cy += TH
+        if cur == 1:
+            col1_y = cy
+        else:
+            col2_y = cy
+
+    # === NOTES SECTION ===
+    ny = max(col1_y, col2_y) + 4
+    if ny > page_bottom - 25:
+        pdf.add_page()
+        ny = pdf._header_bottom + 4
+
+    pdf.set_font(FONT, "B", 9)
+    pdf.set_xy(M, ny)
+    pdf.cell(0, 7, "નોંધ:", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    ny = pdf.get_y()
+    pdf.set_font(FONT, "", 7.2)
+    for note in (header.remarks or "").splitlines():
+        if note.strip():
+            pdf.set_xy(M + 2, ny)
+            pdf.multi_cell(page_w - 4, 5, f"• {note.strip()}")
+            ny = pdf.get_y()
+    ny = max(ny + 2, pdf.get_y() + 2)
+    pdf.rect(M, ny, page_w, 35)
+    pdf.set_xy(M + 2, ny + 2)
+    pdf.cell(page_w - 4, 5, "..............................................")
 
     buffer = BytesIO()
     pdf.output(buffer)

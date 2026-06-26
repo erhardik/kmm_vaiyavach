@@ -270,6 +270,8 @@ def _line_sort_key(line):
 def _requirement_pdf_rows(lines, language_code="gu"):
     rows = []
     for line in sorted(lines, key=_line_sort_key):
+        if not line.required_qty or line.required_qty <= 0:
+            continue
         item = line.item
         rows.append(
             (
@@ -277,6 +279,7 @@ def _requirement_pdf_rows(lines, language_code="gu"):
                 _item_name_for_language(item, language_code),
                 _item_size_for_language(item, language_code),
                 _format_qty(line.required_qty),
+                item.category,
             )
         )
     return rows
