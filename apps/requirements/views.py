@@ -840,7 +840,8 @@ class RequirementCollectionPrintView(View):
         html_obj = HTML(string=html, base_url=str(settings.BASE_DIR))
         styles = CSS(string="""
             @page { size: A4; margin: 8mm 8mm 10mm 8mm; }
-            body { font-family: 'Noto Sans Gujarati', 'Shruti', sans-serif; color: #14324f; }
+            body { font-family: 'Noto Sans Gujarati', 'Shruti', sans-serif; color: #14324f; word-break: normal; overflow-wrap: normal; hyphens: none; }
+            table, td, th { word-break: normal; overflow-wrap: normal; hyphens: none; }
         """)
         response.write(html_obj.write_pdf(stylesheets=[styles]))
         return response

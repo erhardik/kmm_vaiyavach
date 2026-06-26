@@ -15,6 +15,7 @@
       color: #000;
       font-size: 8pt;
       line-height: 1.05;
+      text-rendering: geometricPrecision;
     }
     .top { position: relative; min-height: 32mm; margin-bottom: 2mm; }
     .form-no { position: absolute; right: 0; top: 0; font-size: 12pt; }
@@ -25,6 +26,9 @@
       border: 0.35pt solid #000;
       padding: 0.8mm 1.1mm;
       vertical-align: top;
+      word-break: normal;
+      overflow-wrap: normal;
+      hyphens: none;
     }
     .status td { width: 33.333%; }
     .basic { margin-top: 1.6mm; }
@@ -32,7 +36,8 @@
     .basic td.value { width: 34%; }
     .items th { text-align: center; font-weight: 700; }
     .sr { width: 8mm; text-align: center; }
-    .name { width: 60mm; word-break: normal; overflow-wrap: normal; }
+    .name { width: 60mm; word-break: normal; overflow-wrap: normal; hyphens: none; }
+    .basic td.value, .remarks-table td { word-break: normal; overflow-wrap: anywhere; }
     .size { width: 26mm; text-align: center; }
     .qty { width: 14mm; text-align: center; }
     .section { text-align: center; font-weight: 700; padding: 1.2mm 0; border: 0.35pt solid #000; border-top: 0; }
