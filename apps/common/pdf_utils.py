@@ -149,14 +149,48 @@ def _auto_font(pdf, text, style="", size=8.4):
 
 def generate_gujarati_pdf_fpdf2(header, line_rows, contact_info, filename="requirement-order.pdf"):
     from fpdf import FPDF
+    from fpdf.enums import XPos, YPos
 
-    pdf = FPDF(orientation="P", unit="mm", format="A4")
-    pdf.set_auto_page_break(auto=True, margin=10)
-    pdf.add_page()
-    try:
-        pdf.set_text_shaping(True)
-    except Exception:
-        pass
+    class GujaratiPDF(FPDF):
+        def header(self):
+            M = self.l_margin
+            page_w = self.w - self.l_margin - self.r_margin
+
+            logo_path = Path(settings.BASE_DIR) / "pdf_header.png"
+            if logo_path.exists():
+                self.image(str(logo_path), x=M, y=self.t_margin, w=63, h=19.6)
+
+            form_text = f"ફોર્મ નંબર - {header.order_number or '________'}"
+            _auto_font(self, form_text, "", 11)
+            self.set_xy(M + page_w - 55, self.t_margin)
+            self.cell(55, 8, form_text, align="R", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
+            y_status = self.t_margin + 23
+            _auto_font(self, "[ ] બધી વસ્તુઓ પેક થઈ", "", 7.2)
+            self.set_xy(M, y_status)
+            self.cell(55, 5, "[ ] બધી વસ્તુઓ પેક થઈ")
+            _auto_font(self, "[ ] વિતરણ માટે તૈયાર", "", 7.2)
+            self.set_xy(M + 55, y_status)
+            self.cell(55, 5, "[ ] વિતરણ માટે તૈયાર")
+            _auto_font(self, "ચેક કરનાર", "", 7.2)
+            self.set_xy(M + page_w - 50, y_status)
+            self.cell(50, 5, "ચેક કરનાર: ____________________", align="R")
+            self.line(M, y_status + 6, M + page_w, y_status + 6)
+
+        def footer(self):
+            self.set_y(-15)
+            _auto_font(self, contact_info or "", "", 7.2)
+            self.cell(self.w / 2 - self.l_margin, 4, contact_info or "", new_x=XPos.RIGHT, new_y=YPos.LAST)
+            page_text = f"પાનું {self.page_no()}"
+            _auto_font(self, page_text, "", 7.2)
+            self.cell(self.w / 2 - self.r_margin, 4, page_text, align="R")
+
+    pdf = GujaratiPDF(orientation="P", unit="mm", format="A4")
+    pdf.set_margins(left=8, top=8, right=8)
+    pdf.set_auto_page_break(auto=True, margin=15)
+
+    M = pdf.l_margin
+    page_w = pdf.w - pdf.l_margin - pdf.r_margin
 
     font_path = _resolve_font_path()
     pdf.add_font("Guj", "", font_path)
@@ -164,46 +198,11 @@ def generate_gujarati_pdf_fpdf2(header, line_rows, contact_info, filename="requi
     pdf.add_font("Guj", "I", font_path)
     pdf.add_font("Guj", "BI", font_path)
 
-    M = 8
-    pdf.set_margins(M, M, M)
-    page_w = 210 - 2 * M
+    pdf.set_text_shaping(True)
 
-    def label_cell(w, h, text, align="L", border=0, fill=False, size=7.2):
-        _auto_font(pdf, text, "B", size)
-        pdf.cell(w, h, text, align=align, border=border, fill=fill)
+    pdf.add_page()
 
-    def data_cell(w, h, text, align="L", border=0, fill=False, size=8):
-        text = str(text) if text is not None else "-"
-        _auto_font(pdf, text, "", size)
-        pdf.cell(w, h, text, align=align, border=border, fill=fill)
-
-    def mixed_cell(w, h, text, align="L", border=0, fill=False, size=8, is_label=False):
-        text = str(text) if text is not None else ""
-        _auto_font(pdf, text, "B" if is_label else "", size)
-        pdf.cell(w, h, text, align=align, border=border, fill=fill)
-
-    # Logo + Form number (form number label is Gujarati, order_number might be mixed)
-    logo_path = Path(settings.BASE_DIR) / "pdf_header.png"
-    if logo_path.exists():
-        pdf.image(str(logo_path), x=M, y=M + 1, w=63, h=19.6)
-    form_text = f"ફોર્મ નંબર - {header.order_number or '________'}"
-    _auto_font(pdf, form_text, "", 11)
-    pdf.set_xy(M + page_w - 55, M + 1)
-    pdf.cell(55, 8, form_text, align="R")
-
-    # Status checkboxes
-    y_status = M + 23
-    for i, label in enumerate(["[ ] બધી વસ્તુઓ પેક થઈ", "[ ] વિતરણ માટે તૈયાર"]):
-        _auto_font(pdf, label, "", 7.2)
-        pdf.set_xy(M + i * 55, y_status)
-        pdf.cell(55, 5, label)
-    _auto_font(pdf, "ચેક કરનાર", "", 7.2)
-    pdf.set_xy(M + page_w - 50, y_status)
-    pdf.cell(50, 5, "ચેક કરનાર: ____________________", align="R")
-    pdf.line(M, y_status + 6, M + page_w, y_status + 6)
-
-    # Basic info table
-    y_basic = y_status + 8
+    y_basic = pdf.t_margin + 31
     basic_data = [
         (True, "પૂજ્ય શ્રી", header.pujya_shri_name or "-"),
         (False, "ઠાણા", str(header.thana_count or "-")),
@@ -223,19 +222,21 @@ def generate_gujarati_pdf_fpdf2(header, line_rows, contact_info, filename="requi
         left_is_label, left_label, left_val = basic_data[i]
         right_is_label, right_label, right_val = basic_data[i + 1]
         pdf.set_xy(M, y)
-        label_cell(col_widths[0], 5.5, left_label, size=7.2)
-        data_cell(col_widths[1], 5.5, left_val, size=8)
-        label_cell(col_widths[2], 5.5, right_label, size=7.2)
-        data_cell(col_widths[3], 5.5, right_val, size=8)
+        _auto_font(pdf, left_label, "B", 7.2)
+        pdf.cell(col_widths[0], 5.5, left_label)
+        _auto_font(pdf, left_val, "", 8)
+        pdf.cell(col_widths[1], 5.5, left_val)
+        _auto_font(pdf, right_label, "B", 7.2)
+        pdf.cell(col_widths[2], 5.5, right_label)
+        _auto_font(pdf, right_val, "", 8)
+        pdf.cell(col_widths[3], 5.5, right_val, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
-    # Item section header
     y_items_header = y_basic + (len(basic_data) // 2) * 5.5 + 3
     pdf.set_draw_color(0)
     _auto_font(pdf, "વસ્તુ સૂચિ", "B", 8.4)
     pdf.set_xy(M, y_items_header)
-    pdf.cell(page_w, 6, "વસ્તુ સૂચિ", align="C", border=1)
+    pdf.cell(page_w, 6, "વસ્તુ સૂચિ", align="C", border=1, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
-    # Item table header
     y_item_table = y_items_header + 6
     col_sr = 8
     col_name = page_w / 2 - col_sr - 30 - 12
@@ -251,7 +252,6 @@ def generate_gujarati_pdf_fpdf2(header, line_rows, contact_info, filename="requi
         _auto_font(pdf, "નંગ", "B", 7.2)
         pdf.cell(12, 5.5, "નંગ", align="C", border=1)
 
-    # Item rows (two columns)
     half = (len(line_rows) + 1) // 2
     left_col = line_rows[:half]
     right_col = line_rows[half:]
@@ -266,38 +266,33 @@ def generate_gujarati_pdf_fpdf2(header, line_rows, contact_info, filename="requi
             sr, name, size, qty = col[idx]
             x_base = M + side * page_w / 2
             pdf.set_xy(x_base, y_row)
-            data_cell(col_sr, 6, sr, align="C", size=7.2)
-            data_cell(col_name, 6, name, size=8)
-            data_cell(30, 6, size, align="C", size=7.2)
-            data_cell(12, 6, qty, align="C", size=7.2)
+            _auto_font(pdf, sr, "", 7.2)
+            pdf.cell(col_sr, 6, sr, align="C")
+            _auto_font(pdf, name, "", 8)
+            pdf.cell(col_name, 6, name)
+            _auto_font(pdf, size, "", 7.2)
+            pdf.cell(30, 6, size, align="C")
+            _auto_font(pdf, qty, "", 7.2)
+            pdf.cell(12, 6, qty, align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
-    # Extra notes section
     y_extra = y_item_table + 5.5 + max_rows * 6 + 2
     _auto_font(pdf, "વધારાની વસ્તુઓ / નોંધ", "B", 8.4)
     pdf.set_xy(M, y_extra)
-    pdf.cell(page_w, 6, "વધારાની વસ્તુઓ / નોંધ", align="C", border=1)
+    pdf.cell(page_w, 6, "વધારાની વસ્તુઓ / નોંધ", align="C", border=1, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
     notes = (header.remarks or "").splitlines() if header.remarks else []
     for i in range(4):
-        y_note = y_extra + 6 + i * 6
+        y_note = pdf.get_y()
         pdf.set_xy(M, y_note)
         note_text = notes[i] if i < len(notes) else ""
-        data_cell(page_w, 6, note_text, size=8, border=1)
+        _auto_font(pdf, note_text, "", 8)
+        pdf.cell(page_w, 6, note_text, border=1, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
-    # Note box
-    y_note_title = y_extra + 6 + 4 * 6 + 2
+    y_note_title = pdf.get_y() + 2
     _auto_font(pdf, "નોંધ:", "B", 8)
     pdf.set_xy(M, y_note_title)
-    pdf.cell(page_w, 5, "નોંધ:")
-    pdf.rect(M, y_note_title + 6, page_w, 18)
-
-    # Footer
-    y_footer = 290
-    pdf.line(M, y_footer, M + page_w, y_footer)
-    _auto_font(pdf, contact_info or "", "", 7.2)
-    pdf.set_xy(M, y_footer + 1)
-    pdf.cell(page_w / 2, 4, contact_info or "")
-    _auto_font(pdf, "Page 1 of 1", "", 7.2)
-    pdf.cell(page_w / 2, 4, "Page 1 of 1", align="R")
+    pdf.cell(page_w, 5, "નોંધ:", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.rect(M, pdf.get_y() + 1, page_w, 18)
 
     response = HttpResponse(content_type="application/pdf")
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
