@@ -461,8 +461,11 @@ class RequirementCollectionView(View):
         )
         items = []
         for item in base_items:
-            items.append(item)
-            items.extend(list(item.variants.filter(is_active=True).order_by("variant_name", "pk")))
+            variants = list(item.variants.filter(is_active=True).order_by("variant_name", "pk"))
+            if variants:
+                items.extend(variants)
+            else:
+                items.append(item)
         return items
 
     def _resolve_upashray(self, event, upashray_name):
@@ -494,9 +497,12 @@ class RequirementCollectionView(View):
         rows = []
         existing_quantities = existing_quantities or {}
         for item, form in zip(items, formset.forms, strict=False):
+            serial = item.standard_serial or item.pk
+            if item.parent_item_id:
+                serial = item.parent_item.standard_serial or item.parent_item.pk
             rows.append(
                 {
-                    "serial": item.standard_serial or item.pk,
+                    "serial": serial,
                     "item": item,
                     "form": form,
                     "display_name": _item_name_for_language(item, language_code),

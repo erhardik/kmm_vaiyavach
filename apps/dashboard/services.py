@@ -54,7 +54,7 @@ def _item_display_rows(event, active_only=True):
                 {
                     "item": item,
                     "variant": variant,
-                    "serial": f"{item.standard_serial}-{variant.variant_name}",
+                    "serial": item.standard_serial or item.pk,
                     "base_serial": item.standard_serial or item.pk,
                     "display_name": variant.display_name(),
                     "category": item.get_category_display(),
