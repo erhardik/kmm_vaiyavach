@@ -164,6 +164,7 @@ def generate_gujarati_pdf_fpdf2(header, line_rows, contact_info, filename="requi
         "MEDICAL": "મેડિકલ",
         "AYURVEDIC": "આયુર્વેદિક દવાઓ",
         "COLOR_MATERIAL": "રંગ સામગ્રી",
+        "EXTRA": "Extra",
     }
 
     class GujaratiPDF(FPDF):
@@ -276,6 +277,10 @@ def generate_gujarati_pdf_fpdf2(header, line_rows, contact_info, filename="requi
         pdf.set_xy(cx, cy)
         pdf.cell(COL_W, CH, label, border=1, align="C")
         pdf.set_font(FONT, "", FS)
+
+    # Append 4 blank extra rows
+    blank = ("", "", "", "", "EXTRA")
+    line_rows = list(line_rows) + [blank] * 4
 
     col1_y = draw_col_headers(grid_y)
     col2_y = col1_y
