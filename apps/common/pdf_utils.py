@@ -74,17 +74,19 @@ class NumberedCanvas(canvas.Canvas):
         pass
 
 
-def generate_weasyprint_pdf(template_name, context, filename="document.pdf", extra_css=None):
+def generate_weasyprint_pdf(template_name, context, filename="document.pdf", extra_css=None, font_path=None):
     font_config = FontConfiguration() if FontConfiguration else None
-    context.setdefault("font_path", settings.GUJARATI_FONT_PATH)
+    resolved_font_path = str(font_path or settings.GUJARATI_FONT_PATH)
+    context.setdefault("font_path", resolved_font_path)
     html_string = render_to_string(template_name, context)
     html = HTML(string=html_string)
 
+    font_src = resolved_font_path.replace("\\", "/")
     base_css = CSS(string=f"""
         @page {{ size: A4; margin: 8mm 8mm 10mm 8mm; }}
         @font-face {{
             font-family: 'Noto Sans Gujarati';
-            src: url('file://{settings.GUJARATI_FONT_PATH}') format('truetype');
+            src: url('file:///{font_src.lstrip("/")}') format('truetype');
         }}
         *, html, body, div, span, p, a, h1, h2, h3, h4, h5, h6, table, tr, th, td, b, strong, i, em {{
             font-family: 'Noto Sans Gujarati', Arial, sans-serif !important;

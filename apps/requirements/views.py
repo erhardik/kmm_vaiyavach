@@ -34,6 +34,7 @@ except Exception:  # pragma: no cover - optional dependency
 
 from apps.common.pdf_utils import (
     GUJARATI_FONT_NAME as PDF_UTILS_GUJARATI_FONT,
+    _gujarati_font_registered as PDF_GUJARATI_FONT_REGISTERED,
     generate_weasyprint_pdf,
     NumberedCanvas as SharedNumberedCanvas,
 )
@@ -92,9 +93,10 @@ CATEGORY_ROW_CLASSES = {
 
 PDF_FONT_NAME = "Helvetica"
 PDF_GUJARATI_FONT_NAME = PDF_UTILS_GUJARATI_FONT
-if PDF_GUJARATI_FONT_NAME == "Helvetica":
+if not PDF_GUJARATI_FONT_REGISTERED:
     _fallback_candidates = [
         Path(settings.BASE_DIR) / "assets/fonts/NotoSansGujarati-Regular.ttf",
+        Path(settings.GUJARATI_FONT_PATH),
         Path("C:/Windows/Fonts/shruti.ttf"),
         Path("C:/Windows/Fonts/Nirmala.ttc"),
         Path("/usr/share/fonts/truetype/noto/NotoSansGujarati-Regular.ttf"),
@@ -109,6 +111,20 @@ if PDF_GUJARATI_FONT_NAME == "Helvetica":
                 break
             except Exception:
                 pass
+
+
+def _resolve_font_path():
+    path = Path(settings.GUJARATI_FONT_PATH)
+    if path.exists():
+        return str(path)
+    candidates = [
+        Path(settings.BASE_DIR) / "static" / "fonts" / "NotoSansGujarati-Regular.ttf",
+        Path(settings.BASE_DIR) / "assets/fonts/NotoSansGujarati-Regular.ttf",
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return str(candidate)
+    return settings.GUJARATI_FONT_PATH
 
 
 def _lang_code(request):
@@ -864,6 +880,10 @@ class RequirementCollectionPrintView(View):
             right = right_lines[idx] if idx < len(right_lines) else ("", "", "", "")
             item_rows.append((left, right))
 
+        resolved_font_path = _resolve_font_path()
+        font_src = resolved_font_path.replace("\\", "/")
+        pdf_font_url = f"file:///{font_src.lstrip('/')}"
+
         context = {
             "header": header,
             "rows": item_rows,
@@ -873,7 +893,8 @@ class RequirementCollectionPrintView(View):
             "lang": "gu",
             "logo_exists": (Path(settings.BASE_DIR) / "pdf_header.png").exists(),
             "pdf_header_path": str((Path(settings.BASE_DIR) / "pdf_header.png").resolve()).replace("\\", "/"),
-            "pdf_font_path": settings.GUJARATI_FONT_PATH,
+            "pdf_font_url": pdf_font_url,
+            "pdf_font_path": resolved_font_path,
         }
 
         return generate_weasyprint_pdf(
@@ -883,6 +904,7 @@ class RequirementCollectionPrintView(View):
             extra_css="""
                 @page { size: A4; margin: 8mm 8mm 10mm 8mm; }
             """,
+            font_path=resolved_font_path,
         )
 
     def _render_pdf_gujarati(self, header, lines):
