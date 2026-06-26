@@ -13,5 +13,6 @@ backup/
 .ruff_cache/
 .coverage
 htmlcov/
+cookies.txt
 *.log
 token_repo.txt
