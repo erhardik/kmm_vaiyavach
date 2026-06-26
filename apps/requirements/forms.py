@@ -121,7 +121,7 @@ class RequirementCollectionHeaderForm(BootstrapModelForm):
 
 
 class RequirementCollectionItemForm(forms.Form):
-    item_id = forms.IntegerField(widget=forms.HiddenInput())
+    item_id = forms.IntegerField(required=False, widget=forms.HiddenInput())
     quantity_choices = [(str(index), str(index)) for index in range(0, 101)]
     required_qty = forms.TypedChoiceField(
         choices=quantity_choices,
