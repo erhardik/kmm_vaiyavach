@@ -278,71 +278,72 @@ def generate_gujarati_pdf_fpdf2(header, line_rows, contact_info, filename="requi
         pdf.cell(COL_W, CH, label, border=1, align="C")
         pdf.set_font(FONT, "", FS)
 
-    # Append 4 blank extra rows
-    blank = ("", "", "", "", "EXTRA")
-    line_rows = list(line_rows) + [blank] * 4
-
-    col1_y = draw_col_headers(grid_y)
-    col2_y = col1_y
-    cur = 1
-    prev_cat = None
-
-    def ensure(need):
-        nonlocal cur, col1_y, col2_y
-        cy = col1_y if cur == 1 else col2_y
-        if cy + need <= page_bottom:
-            return cy
-        if cur == 1:
-            cur = 2
-            cy = col2_y
-            if cy + need <= page_bottom:
-                return cy
-        pdf.add_page()
-        cur = 1
-        col1_y = col2_y = pdf._header_bottom
-        col1_y = draw_col_headers(col1_y)
-        col2_y = col1_y
-        return col1_y
-
-    for row in line_rows:
-        sr, name, size, qty, category = row[:5]
-
-        if category != prev_cat:
-            prev_cat = category
-            cat_label = CATEGORY_LABELS_GU.get(category, category)
-            cy = ensure(CH)
-            cx = col1_x if cur == 1 else col2_x
-            draw_cat(cx, cy, cat_label)
-            cy += CH
-            if cur == 1:
-                col1_y = cy
-            else:
-                col2_y = cy
-
-        cy = ensure(TH)
-        cx = col1_x if cur == 1 else col2_x
+    def draw_row(cx, cy, sr, name, size, qty):
         pdf.set_font(FONT, "", FS)
         pdf.set_xy(cx, cy)
         pdf.cell(6, TH, str(sr), border=1, align="C")
-        if qty and str(qty) != "--":
-            pdf.set_font(FONT, "B", FS)
-        else:
-            pdf.set_font(FONT, "", FS)
+        pdf.set_font(FONT, "B" if qty and str(qty) != "--" else "", FS)
         pdf.cell(COL_W - 6 - 18 - 10, TH, name, border=1)
         pdf.set_font(FONT, "", FS)
         pdf.cell(18, TH, size, border=1, align="C")
         pdf.cell(10, TH, str(qty), border=1, align="C")
-        cy += TH
-        if cur == 1:
-            col1_y = cy
+
+    # Append 4 blank extra rows
+    blank = ("", "", "", "", "EXTRA")
+    line_rows = list(line_rows) + [blank] * 4
+
+    def count_fit(rows, start_y):
+        """How many rows (with category headers) fit in one column."""
+        y = start_y
+        prev_cat = None
+        for i, row in enumerate(rows):
+            sr, name, size, qty, cat = row[:5]
+            need = TH
+            if cat != prev_cat:
+                need += CH
+                prev_cat = cat
+            if y + need > page_bottom:
+                return i
+            y += need
+        return len(rows)
+
+    def draw_batch(rows, cx, start_y):
+        """Draw rows in one column, returns end y."""
+        y = start_y
+        prev_cat = None
+        for sr, name, size, qty, cat in rows:
+            if cat != prev_cat:
+                prev_cat = cat
+                draw_cat(cx, y, CATEGORY_LABELS_GU.get(cat, cat))
+                y += CH
+            draw_row(cx, y, sr, name, size, qty)
+            y += TH
+        return y
+
+    # Batch-based drawing: left → right → new page → left → right
+    remaining = line_rows
+    page_num = 0
+    while remaining:
+        page_num += 1
+        if page_num == 1:
+            col_start = draw_col_headers(grid_y)
         else:
-            col2_y = cy
+            pdf.add_page()
+            col_start = draw_col_headers(pdf._header_bottom)
+
+        per_col = count_fit(remaining, col_start)
+        left_rows = remaining[:per_col]
+        right_rows = remaining[per_col:per_col * 2]
+        remaining = remaining[per_col * 2:]
+
+        col1_end = draw_batch(left_rows, col1_x, col_start)
+        col2_end = draw_batch(right_rows, col2_x, col_start) if right_rows else col_start
 
     # === NOTE: Extra Remarks ===
     remark_lines = (header.remarks or "").splitlines()
     has_remarks = any(line.strip() for line in remark_lines)
     REMARKS_H = 28
-    ny = max(col1_y, col2_y) + 4
+    ny = max(col1_end, col2_end) + 4
     pdf.set_font(FONT, "B", 9)
     pdf.set_xy(M, ny)
     pdf.cell(page_w, 6, "Extra Remarks", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
