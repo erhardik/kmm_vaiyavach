@@ -153,6 +153,10 @@ def generate_gujarati_pdf_fpdf2(header, line_rows, contact_info, filename="requi
     pdf = FPDF(orientation="P", unit="mm", format="A4")
     pdf.set_auto_page_break(auto=True, margin=10)
     pdf.add_page()
+    try:
+        pdf.set_text_shaping(True)
+    except Exception:
+        pass
 
     font_path = _resolve_font_path()
     pdf.add_font("Guj", "", font_path)
