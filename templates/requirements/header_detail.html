@@ -45,25 +45,15 @@
           </thead>
           <tbody>
             {% for group in grouped_lines %}
-              <tr class="table-secondary">
-                <td>{{ group.base_item.standard_serial|default:group.base_item.pk }}</td>
-                <td class="fw-semibold">
-                  {% if lang_code == "gu" %}
-                    {{ group.base_item.item_name_gu|default:group.base_item.item_name }}
-                  {% else %}
-                    {{ group.base_item.item_name }}
-                  {% endif %}
-                </td>
-                <td></td>
-                <td></td>
-              </tr>
               {% for row in group.lines %}
-                <tr>
-                  <td class="text-body-secondary">{{ row.serial_display }}</td>
-                  <td class="fw-semibold">{{ row.display_name }}</td>
-                  <td>{{ row.size_display }}</td>
-                  <td class="text-end">{{ row.line.required_qty }}</td>
-                </tr>
+                {% if row.line.required_qty > 0 %}
+                  <tr>
+                    <td class="text-body-secondary">{{ row.serial_display }}</td>
+                    <td class="fw-semibold">{{ row.display_name }}</td>
+                    <td>{{ row.size_display }}</td>
+                    <td class="text-end">{{ row.line.required_qty|floatformat:0 }}</td>
+                  </tr>
+                {% endif %}
               {% endfor %}
             {% empty %}
               <tr>
