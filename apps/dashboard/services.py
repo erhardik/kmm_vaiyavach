@@ -31,10 +31,43 @@ def get_dashboard_event_queryset():
     return Event.objects.filter(is_active=True).order_by("-is_current", "-start_date", "name")
 
 
+def _item_display_rows(event, active_only=True):
+    items = Item.objects.filter(event=event, parent_item__isnull=True).prefetch_related("variants").order_by("standard_serial", "pk")
+    rows = []
+    for item in items:
+        rows.append(
+            {
+                "item": item,
+                "variant": None,
+                "serial": item.standard_serial or item.pk,
+                "base_serial": item.standard_serial or item.pk,
+                "display_name": item.display_name(),
+                "category": item.get_category_display(),
+                "item_key": item.pk,
+            }
+        )
+        variants = list(item.variants.all().order_by("variant_name"))
+        if active_only:
+            variants = [variant for variant in variants if variant.is_active]
+        for variant in variants:
+            rows.append(
+                {
+                    "item": item,
+                    "variant": variant,
+                    "serial": f"{item.standard_serial}-{variant.variant_name}",
+                    "base_serial": item.standard_serial or item.pk,
+                    "display_name": variant.display_name(),
+                    "category": item.get_category_display(),
+                    "item_key": variant.pk,
+                }
+            )
+    return rows
+
+
 def build_item_control_center(event, category=None, pending_only=False, fully_covered=False, shortage=False):
-    items = Item.objects.filter(event=event, is_active=True).order_by("standard_serial", "pk")
+    items = _item_display_rows(event, active_only=True)
     if category:
-        items = items.filter(category=category)
+        items = [row for row in items if row["item"].category == category]
 
     required_map = _sum_by_item(
         RequirementLine.objects.filter(event=event),
@@ -104,15 +137,17 @@ def build_item_control_center(event, category=None, pending_only=False, fully_co
     )
 
     rows = []
-    for item in items:
-        required = required_map.get(item.id, Decimal("0"))
-        sponsored = committed_map.get(item.id, Decimal("0"))
-        received = received_map.get(item.id, Decimal("0"))
-        donated = donated_map.get(item.id, Decimal("0"))
-        purchased_qty = purchase_qty_map.get(item.id, Decimal("0"))
-        acquired = acquired_map.get(item.id, Decimal("0"))
-        stock = stock_map.get(item.id, Decimal("0"))
-        distributed = distributed_map.get(item.id, Decimal("0"))
+    for row_item in items:
+        item = row_item["item"]
+        key = row_item["item_key"]
+        required = required_map.get(key, Decimal("0"))
+        sponsored = committed_map.get(key, Decimal("0"))
+        received = received_map.get(key, Decimal("0"))
+        donated = donated_map.get(key, Decimal("0"))
+        purchased_qty = purchase_qty_map.get(key, Decimal("0"))
+        acquired = acquired_map.get(key, Decimal("0"))
+        stock = stock_map.get(key, Decimal("0"))
+        distributed = distributed_map.get(key, Decimal("0"))
         shortage_qty = max(required - acquired, Decimal("0"))
         remaining = stock
         surplus = max(acquired - required, Decimal("0"))
@@ -131,7 +166,8 @@ def build_item_control_center(event, category=None, pending_only=False, fully_co
 
         row = {
             "item": item,
-            "serial": item.standard_serial or item.pk,
+            "variant": row_item["variant"],
+            "serial": row_item["serial"],
             "rate": rate,
             "required": required,
             "sponsored": sponsored,
@@ -151,8 +187,8 @@ def build_item_control_center(event, category=None, pending_only=False, fully_co
             "required_cost": required_cost,
             "actual_purchase_cost": actual_purchase_cost,
             "source_type": source_type,
-            "vendor_name": vendor_map.get(item.id, ""),
-            "ref_volunteer_name": ref_volunteer_map.get(item.id, ""),
+            "vendor_name": vendor_map.get(key, ""),
+            "ref_volunteer_name": ref_volunteer_map.get(key, ""),
         }
         if pending_only and shortage_qty <= 0:
             continue
@@ -229,16 +265,17 @@ def build_public_status_summary(event):
 def build_public_item_preview(event):
     rows = []
     balances = {balance.item_id: balance for balance in InventoryBalance.objects.filter(event=event).select_related("item")}
-    items = Item.objects.filter(event=event).order_by("standard_serial", "pk")
-    for item in items:
-        balance = balances.get(item.pk)
+    for row_item in _item_display_rows(event, active_only=True):
+        item = row_item["item"]
+        balance = balances.get(row_item["item_key"])
         rows.append(
             {
                 "item": item,
-                "serial": item.standard_serial or item.pk,
+                "serial": row_item["serial"],
                 "stock": balance.current_stock if balance else Decimal("0"),
                 "category": item.get_category_display(),
                 "is_active": item.is_active,
+                "variant": row_item["variant"],
             }
         )
     return rows

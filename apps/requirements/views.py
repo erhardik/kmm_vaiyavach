@@ -432,7 +432,16 @@ class RequirementCollectionView(View):
         return True
 
     def _get_items(self, event):
-        return list(Item.objects.filter(event=event, is_active=True).order_by("standard_serial", "pk"))
+        base_items = list(
+            Item.objects.filter(event=event, is_active=True, parent_item__isnull=True)
+            .prefetch_related("variants")
+            .order_by("standard_serial", "pk")
+        )
+        items = []
+        for item in base_items:
+            items.append(item)
+            items.extend(list(item.variants.filter(is_active=True).order_by("variant_name", "pk")))
+        return items
 
     def _resolve_upashray(self, event, upashray_name):
         name = (upashray_name or "").strip()
@@ -465,7 +474,9 @@ class RequirementCollectionView(View):
         rows = []
         existing_quantities = existing_quantities or {}
         for item, form in zip(items, formset.forms, strict=False):
-            display_name = item.item_name_gu if language_code == "gu" and item.item_name_gu else item.item_name
+            display_name = item.display_name()
+            if language_code != "gu" and item.parent_item_id:
+                display_name = item.variant_name or display_name
             rows.append(
                 {
                     "serial": item.standard_serial or item.pk,
@@ -743,7 +754,7 @@ class RequirementCollectionPrintView(View):
             if not line:
                 return ("", "", "", "")
             item = line.item
-            display_name = item.item_name_gu or item.item_name
+            display_name = item.display_name()
             size = item.default_size or "-"
             return (
                 str(item.standard_serial or item.pk),
@@ -921,7 +932,7 @@ class RequirementCollectionPrintView(View):
             if not line:
                 return [p("", small_style), p("", small_style), p("", small_style), p("", small_style)]
             item = line.item
-            display_name = item.item_name_gu or item.item_name
+            display_name = item.display_name()
             size = item.default_size or "-"
             return [
                 p(item.standard_serial or item.pk, small_style),
@@ -1192,7 +1203,7 @@ class RequirementCollectionPrintView(View):
         ]
         for line in lines:
             item = line.item
-            display_name = item.item_name_gu if language_code == "gu" and item.item_name_gu else item.item_name
+            display_name = item.display_name()
             content = display_name
             if item.default_size:
                 content = f"{display_name} ({item.default_size})"

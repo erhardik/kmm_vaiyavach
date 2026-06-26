@@ -134,7 +134,10 @@ class Command(BaseCommand):
         updated_count = 0
         counters = defaultdict(int)
         english_rows = parse_markdown_rows(source_path)
-        existing_items = {item.standard_serial: item for item in Item.objects.filter(event=event).order_by("standard_serial", "pk")}
+        existing_items = {
+            item.standard_serial: item
+            for item in Item.objects.filter(event=event, parent_item__isnull=True).order_by("standard_serial", "pk")
+        }
         imported_serials = set()
 
         for row in english_rows:
@@ -175,7 +178,7 @@ class Command(BaseCommand):
             created_count += 1
 
         if options["replace"]:
-            Item.objects.filter(event=event).exclude(standard_serial__in=imported_serials).update(is_active=False)
+            Item.objects.filter(event=event, parent_item__isnull=True).exclude(standard_serial__in=imported_serials).update(is_active=False)
 
         self.stdout.write(self.style.SUCCESS(f"Imported {created_count} items, updated {updated_count} items for {event.name}."))
 

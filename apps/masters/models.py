@@ -83,10 +83,13 @@ class EventManagerContact(EventScopedModel):
 
 
 class Item(EventScopedModel):
+    parent_item = models.ForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, related_name="variants")
     standard_serial = models.PositiveIntegerField(default=0)
     item_code = models.CharField(max_length=50)
     item_name = models.CharField(max_length=200)
     item_name_gu = models.CharField(max_length=200, blank=True)
+    variant_name = models.CharField(max_length=120, blank=True, default="")
+    variant_name_gu = models.CharField(max_length=120, blank=True, default="")
     category = models.CharField(max_length=40, choices=ItemCategory.choices)
     unit = models.CharField(max_length=40, blank=True)
     default_size = models.CharField(max_length=80, blank=True)
@@ -98,6 +101,7 @@ class Item(EventScopedModel):
         constraints = [
             models.UniqueConstraint(fields=["event", "standard_serial"], name="unique_event_item_standard_serial"),
             models.UniqueConstraint(fields=["event", "item_code"], name="unique_event_item_code"),
+            models.UniqueConstraint(fields=["event", "parent_item", "variant_name"], name="unique_event_item_variant_name"),
         ]
         indexes = [
             models.Index(fields=["event", "category"]),
@@ -109,6 +113,10 @@ class Item(EventScopedModel):
         return self.item_name
 
     def display_name(self) -> str:
+        if self.parent_item_id:
+            base = self.parent_item.item_name_gu if self.parent_item.item_name_gu else self.parent_item.item_name
+            variant = self.variant_name_gu or self.variant_name or ""
+            return f"{base} - {variant}" if variant else base
         if self.item_name_gu:
             return f"{self.item_name} / {self.item_name_gu}"
         return self.item_name
