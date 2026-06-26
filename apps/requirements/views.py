@@ -1,4 +1,4 @@
-﻿from collections import defaultdict
+from collections import defaultdict
 from io import BytesIO
 from pathlib import Path
 from xml.sax.saxutils import escape
@@ -35,6 +35,7 @@ except Exception:  # pragma: no cover - optional dependency
 from apps.common.pdf_utils import (
     GUJARATI_FONT_NAME as PDF_UTILS_GUJARATI_FONT,
     _gujarati_font_registered as PDF_GUJARATI_FONT_REGISTERED,
+    generate_gujarati_pdf_fpdf2,
     generate_weasyprint_pdf,
     NumberedCanvas as SharedNumberedCanvas,
 )
@@ -863,9 +864,18 @@ class RequirementCollectionPrintView(View):
         )
         language_code = _lang_code(request)
         if language_code == "gu":
-            if HTML is not None and CSS is not None:
-                return self._render_pdf_gujarati_html(header, items)
-            return self._render_pdf_gujarati(header, items)
+            line_rows = _requirement_pdf_rows(items, "gu")
+            contact = _format_main_contact(header.event)
+            contact_gu = contact.replace("Main Event Manager:", "મુખ્ય સંપર્ક:")
+            try:
+                return generate_gujarati_pdf_fpdf2(
+                    header, line_rows, contact_gu,
+                    filename=f'{header.order_number or "requirement-order"}-gujarati.pdf',
+                )
+            except Exception:
+                if HTML is not None and CSS is not None:
+                    return self._render_pdf_gujarati_html(header, items)
+                return self._render_pdf_gujarati(header, items)
         return self._render_pdf(header, items, "en")
 
     def _render_pdf_gujarati_html(self, header, lines):
