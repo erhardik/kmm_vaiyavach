@@ -149,10 +149,7 @@ def _auto_font(pdf, text, style="", size=8.4):
 
 def generate_gujarati_pdf_fpdf2(header, line_rows, contact_info, filename="requirement-order.pdf"):
     from fpdf import FPDF
-    from fpdf.enums import XPos, YPos, Align
-    from fpdf.table import TableBordersLayout as TBL
-    from fpdf.fonts import FontFace
-
+    from fpdf.enums import XPos, YPos
     FONT_NAME = "Gujarati"
 
     class GujaratiPDF(FPDF):
@@ -234,35 +231,13 @@ def generate_gujarati_pdf_fpdf2(header, line_rows, contact_info, filename="requi
         pdf.cell(0, 7, "વસ્તુ સૂચિ", align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         pdf.ln(2)
 
-        col_sr = 8
-        col_name = 55
-        col_size = 30
-        col_qty = 12
-        total_w = col_sr + col_name + col_size + col_qty
-        remaining = page_w - total_w
-        col_name += remaining
-
-        heading_face = FontFace(emphasis="B", size_pt=8)
-        with pdf.table(
-            col_widths=(col_sr, col_name, col_size, col_qty),
-            borders_layout=TBL.ALL,
-            first_row_as_headings=False,
-            repeat_headings=False,
-            align=Align.C,
-            line_height=5.5,
-        ) as tbl:
-            h = tbl.row()
-            h.cell("નં.", style=heading_face)
-            h.cell("વસ્તુનું નામ", style=heading_face)
-            h.cell("પ્રકાર/સાઈઝ", style=heading_face)
-            h.cell("નંગ", style=heading_face)
-
-            for sr, name, size, qty in line_rows:
-                row = tbl.row()
-                row.cell(str(sr), align=Align.C)
-                row.cell(str(name))
-                row.cell(str(size), align=Align.C)
-                row.cell(str(qty), align=Align.C)
+        pdf.set_font(FONT_NAME, "B", 9)
+        pdf.multi_cell(0, 6, "વસ્તુ સૂચિ", align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.ln(2)
+        pdf.set_font(FONT_NAME, "", 9)
+        for sr, name, size, qty in line_rows:
+            item_line = f"{sr}. {name}  [{size}]  -  {qty} નંગ"
+            pdf.multi_cell(0, 6, item_line, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     else:
         pdf.set_font(FONT_NAME, "", 10)
         pdf.cell(0, 7, "કોઈ વસ્તુઓ નથી", align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
