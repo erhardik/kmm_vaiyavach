@@ -1,4 +1,4 @@
-from collections import defaultdict
+﻿from collections import defaultdict
 from io import BytesIO
 from pathlib import Path
 from xml.sax.saxutils import escape
@@ -70,10 +70,10 @@ CATEGORY_LABELS = {
         ItemCategory.COLOR_MATERIAL: "Color Material",
     },
     "gu": {
-        ItemCategory.GENERAL: "સામાન્ય",
+        ItemCategory.GENERAL: "જનરલ વસ્તુઓ",
         ItemCategory.STATIONERY: "સ્ટેશનરી",
         ItemCategory.MEDICAL: "મેડિકલ",
-        ItemCategory.AYURVEDIC: "આયુર્વેદિક",
+        ItemCategory.AYURVEDIC: "આયુર્વેદિક દવાઓ",
         ItemCategory.COLOR_MATERIAL: "રંગ સામગ્રી",
     },
 }
@@ -208,6 +208,72 @@ def _variant_suffix(index):
     if index < len(alphabet):
         return alphabet[index]
     return f"X{index + 1}"
+
+
+def _group_requirement_lines(lines):
+    grouped = []
+    current_key = None
+    current_group = None
+    for line in sorted(lines, key=_line_sort_key):
+        item = line.item
+        base_item = item.parent_item if item.parent_item_id else item
+        key = base_item.pk
+        if key != current_key:
+            current_key = key
+            current_group = {
+                "base_item": base_item,
+                "lines": [],
+            }
+            grouped.append(current_group)
+        if item.parent_item_id:
+            siblings = list(base_item.variants.filter(is_active=True).order_by("variant_name", "pk"))
+            suffix_index = next((idx for idx, sibling in enumerate(siblings) if sibling.pk == item.pk), 0)
+            serial_display = f"{base_item.standard_serial or base_item.pk}-{_variant_suffix(suffix_index)}"
+            size_display = item.variant_name_gu or item.variant_name or item.default_size or ""
+            display_name = f"{item.item_name_gu or item.item_name} - {item.variant_name_gu or item.variant_name or ''}".strip(" -")
+        else:
+            serial_display = str(item.standard_serial or item.pk)
+            size_display = item.default_size or ""
+            display_name = item.item_name_gu or item.item_name
+        current_group["lines"].append(
+            {
+                "line": line,
+                "serial_display": serial_display,
+                "display_name": display_name,
+                "size_display": size_display,
+            }
+        )
+    return grouped
+
+
+def _line_serial_display(item):
+    if not item.parent_item_id:
+        return str(item.standard_serial or item.pk)
+    base_item = item.parent_item
+    siblings = list(base_item.variants.filter(is_active=True).order_by("variant_name", "pk"))
+    suffix_index = next((idx for idx, sibling in enumerate(siblings) if sibling.pk == item.pk), 0)
+    return f"{base_item.standard_serial or base_item.pk}-{_variant_suffix(suffix_index)}"
+
+
+def _line_sort_key(line):
+    item = line.item
+    base_item = item.parent_item if item.parent_item_id else item
+    return (base_item.standard_serial or base_item.pk, 1 if item.parent_item_id else 0, item.variant_name or "", item.pk)
+
+
+def _requirement_pdf_rows(lines, language_code="gu"):
+    rows = []
+    for line in sorted(lines, key=_line_sort_key):
+        item = line.item
+        rows.append(
+            (
+                _line_serial_display(item),
+                _item_name_for_language(item, language_code),
+                _item_size_for_language(item, language_code),
+                _format_qty(line.required_qty),
+            )
+        )
+    return rows
 
 
 class RequirementHeaderListView(EventScopedListView):
@@ -786,8 +852,7 @@ class RequirementCollectionPrintView(View):
 
         items = list(
             RequirementLine.objects.filter(requirement=header)
-            .select_related("item")
-            .order_by("item__standard_serial", "item__pk")
+            .select_related("item", "item__parent_item")
         )
         language_code = _lang_code(request)
         if HTML is not None and CSS is not None:
@@ -795,28 +860,15 @@ class RequirementCollectionPrintView(View):
         return self._render_pdf_gujarati(header, items)
 
     def _render_pdf_gujarati_html(self, header, lines):
-        item_rows = []
-        half = (len(lines) + 1) // 2
-        left_lines = lines[:half]
-        right_lines = lines[half:]
+        line_rows = _requirement_pdf_rows(lines, "gu")
+        half = (len(line_rows) + 1) // 2
+        left_lines = line_rows[:half]
+        right_lines = line_rows[half:]
         max_rows = max(len(left_lines), len(right_lines))
-
-        def cell_for(line):
-            if not line:
-                return ("", "", "", "")
-            item = line.item
-            display_name = _item_name_for_language(item, "gu")
-            size = _item_size_for_language(item, "gu")
-            return (
-                str(item.standard_serial or item.pk),
-                display_name,
-                size,
-                _format_qty(line.required_qty),
-            )
-
+        item_rows = []
         for idx in range(max_rows):
-            left = cell_for(left_lines[idx] if idx < len(left_lines) else None)
-            right = cell_for(right_lines[idx] if idx < len(right_lines) else None)
+            left = left_lines[idx] if idx < len(left_lines) else ("", "", "", "")
+            right = right_lines[idx] if idx < len(right_lines) else ("", "", "", "")
             item_rows.append((left, right))
 
         html = render_to_string(
@@ -824,8 +876,6 @@ class RequirementCollectionPrintView(View):
             {
                 "header": header,
                 "rows": item_rows,
-                "left_rows": [cell_for(line) for line in left_lines],
-                "right_rows": [cell_for(line) for line in right_lines],
                 "extra_note_values": ((header.remarks.splitlines() if header.remarks else []) + ["", "", "", ""])[:4],
                 "contact": _format_main_contact(header.event),
                 "order_number": header.order_number,
@@ -904,7 +954,7 @@ class RequirementCollectionPrintView(View):
         qr_drawing = createBarcodeDrawing("QR", value=qr_value, barBorder=0, width=22 * mm, height=22 * mm)
 
         logo_path = Path(settings.BASE_DIR) / "pdf_header.png"
-        logo_image = Image(str(logo_path), width=94 * mm, height=28 * mm) if logo_path.exists() else None
+        logo_image = Image(str(logo_path), width=63 * mm, height=19.6 * mm) if logo_path.exists() else None
         brand_content = logo_image if logo_image else Paragraph("કલ્યાણ મિત્ર મંડળ", title_style)
         brand_row = Table([[brand_content, qr_drawing]], colWidths=[156 * mm, 22 * mm])
         brand_row.setStyle(
@@ -948,19 +998,20 @@ class RequirementCollectionPrintView(View):
         )
 
         basic_rows = [
-            [p("????? ????", small_style), p(header.pujya_shri_name, body_style), p("????", small_style), p(header.thana_count, body_style)],
-            [p("???????", small_style), p(header.area, body_style), p("????? ?????", small_style), p(_format_pdf_date(header.requirement_date), body_style)],
-            [p("?????? ???????", small_style), p(header.current_address, body_style), p("????????? ??????? ???????", small_style), p(header.chaturmas_place_address, body_style)],
-            [p("????????? ?????? ?????", small_style), p(_format_pdf_date(header.chaturmas_entry_date), body_style), p("??????? ???", small_style), p(header.volunteer_name, body_style)],
-            [p("??? ??????? / ????????", small_style), p(header.get_stay_type_display(), body_style), p("????? ???? ????? ???????? ??? ??? ??????", small_style), p(f"{header.caretaker_name or '-'} {header.caretaker_mobile or ''}".strip(), body_style)],
+            [p("પૂજ્ય શ્રી", small_style), p(header.pujya_shri_name, body_style), p("ઠાણા", small_style), p(header.thana_count, body_style)],
+            [p("વિસ્તાર", small_style), p(header.area, body_style), p("ફોર્મ તારીખ", small_style), p(_format_pdf_date(header.requirement_date), body_style)],
+            [p("હાલનું સરનામું", small_style), p(header.current_address, body_style), p("ચાતુર્માસ સ્થળનું સરનામું", small_style), p(header.chaturmas_place_address, body_style)],
+            [p("ચાતુર્માસ પ્રવેશ તારીખ", small_style), p(_format_pdf_date(header.chaturmas_entry_date), body_style), p("જનારનું નામ", small_style), p(header.volunteer_name, body_style)],
+            [p("સંઘ ઉપાશ્રય / સ્થિરવાસ", small_style), p(header.get_stay_type_display(), body_style), p("પૂજ્ય શ્રી સંભાળ લેનારનું નામ અને મોબાઇલ", small_style), p(f"{header.caretaker_name or '-'} {header.caretaker_mobile or ''}".strip(), body_style)],
         ]
         basic_table = Table(basic_rows, colWidths=[40 * mm, 53 * mm, 42 * mm, 49 * mm])
         story.extend([status_table, Spacer(1, 6), basic_table, Spacer(1, 6)])
 
         paired_rows = []
-        half = (len(lines) + 1) // 2
-        left_lines = lines[:half]
-        right_lines = lines[half:]
+        line_rows = _requirement_pdf_rows(lines, "gu")
+        half = (len(line_rows) + 1) // 2
+        left_lines = line_rows[:half]
+        right_lines = line_rows[half:]
         max_rows = max(len(left_lines), len(right_lines))
 
         paired_rows.append([
@@ -968,17 +1019,14 @@ class RequirementCollectionPrintView(View):
             p("નં.", small_style), p("વસ્તુનું નામ", small_style), p("પ્રકાર/સાઈઝ", small_style), p("નંગ", small_style),
         ])
 
-        def row_bits(line):
-            if not line:
+        def row_bits(row):
+            if not row:
                 return [p("", small_style), p("", small_style), p("", small_style), p("", small_style)]
-            item = line.item
-            display_name = _item_name_for_language(item, "gu")
-            size = _item_size_for_language(item, "gu")
             return [
-                p(item.standard_serial or item.pk, small_style),
-                p(display_name, body_style),
-                p(size, small_style),
-                p(_format_qty(line.required_qty), body_style),
+                p(row[0], small_style),
+                p(row[1], body_style),
+                p(row[2], small_style),
+                p(row[3], body_style),
             ]
 
         for idx in range(max_rows):
@@ -1110,7 +1158,7 @@ class RequirementCollectionPrintView(View):
             return Paragraph("<br/>".join(parts), style)
 
         story = [
-            Paragraph("Requirement Order" if language_code != "gu" else "વૈયાવચ્ચ લાભ પત્રક", title_style),
+            Paragraph("Requirement Order" if language_code != "gu" else "àªµà«ˆàª¯àª¾àªµàªšà«àªš àª²àª¾àª­ àªªàª¤à«àª°àª•", title_style),
             Paragraph(f"Order No.: {header.order_number}", heading_style),
             Spacer(1, 4),
         ]
@@ -1124,7 +1172,7 @@ class RequirementCollectionPrintView(View):
             [
                 [
                     [
-                        Paragraph("Requirement Order" if language_code != "gu" else "àªœàª°à«‚àª°àª¿àª¯àª¾àª¤ àª“àª°à«àª¡àª°", title_style),
+                        Paragraph("Requirement Order" if language_code != "gu" else "Ã ÂªÅ“Ã ÂªÂ°Ã Â«â€šÃ ÂªÂ°Ã ÂªÂ¿Ã ÂªÂ¯Ã ÂªÂ¾Ã ÂªÂ¤ Ã Âªâ€œÃ ÂªÂ°Ã Â«ÂÃ ÂªÂ¡Ã ÂªÂ°", title_style),
                         Paragraph(f"Order No.: {header.order_number}", heading_style),
                     ],
                     qr_drawing,
@@ -1149,8 +1197,8 @@ class RequirementCollectionPrintView(View):
             parent=title_style,
             fontName=PDF_GUJARATI_FONT_NAME,
         )
-        brand_title = Paragraph("કલ્યાણ મિત્ર મંડળ", gujarati_title_style)
-        order_label_text = f"Vaiyavachch laabh number: {header.order_number}" if language_code != "gu" else f"વૈયાવચ્ચ લાભ નંબર: {header.order_number}"
+        brand_title = Paragraph("àª•àª²à«àª¯àª¾àª£ àª®àª¿àª¤à«àª° àª®àª‚àª¡àª³", gujarati_title_style)
+        order_label_text = f"Vaiyavachch laabh number: {header.order_number}" if language_code != "gu" else f"àªµà«ˆàª¯àª¾àªµàªšà«àªš àª²àª¾àª­ àª¨àª‚àª¬àª°: {header.order_number}"
         order_label = Paragraph(order_label_text, heading_style)
         if logo_image:
             brand_row = Table([[logo_image, qr_drawing]], colWidths=[150 * mm, 26 * mm])
@@ -1173,9 +1221,9 @@ class RequirementCollectionPrintView(View):
         status_table = Table(
             [
                 [
-                    p("[ ] All Items Packed" if language_code != "gu" else "[ ] બધી વસ્તુઓ પેક થઈ", small_style),
-                    p("[ ] Ready for Distribution" if language_code != "gu" else "[ ] વિતરણ માટે તૈયાર", small_style),
-                    p("Checked by: ____________________" if language_code != "gu" else "ચેક કરનાર: ____________________", small_style),
+                    p("[ ] All Items Packed" if language_code != "gu" else "[ ] àª¬àª§à«€ àªµàª¸à«àª¤à«àª“ àªªà«‡àª• àª¥àªˆ", small_style),
+                    p("[ ] Ready for Distribution" if language_code != "gu" else "[ ] àªµàª¿àª¤àª°àª£ àª®àª¾àªŸà«‡ àª¤à«ˆàª¯àª¾àª°", small_style),
+                    p("Checked by: ____________________" if language_code != "gu" else "àªšà«‡àª• àª•àª°àª¨àª¾àª°: ____________________", small_style),
                 ]
             ],
             colWidths=[55 * mm, 55 * mm, 74 * mm],
@@ -1194,37 +1242,37 @@ class RequirementCollectionPrintView(View):
 
         basic_rows = [
             [
-                p("Pujya Shri" if language_code != "gu" else "પૂજ્ય શ્રી", small_style),
+                p("Pujya Shri" if language_code != "gu" else "àªªà«‚àªœà«àª¯ àª¶à«àª°à«€", small_style),
                 p(header.pujya_shri_name, body_style),
-                p("Current Address" if language_code != "gu" else "વર્તમાન સરનામું", small_style),
+                p("Current Address" if language_code != "gu" else "àªµàª°à«àª¤àª®àª¾àª¨ àª¸àª°àª¨àª¾àª®à«àª‚", small_style),
                 p(header.current_address, body_style),
             ],
             [
-                p("Thana" if language_code != "gu" else "થાણા", small_style),
+                p("Thana" if language_code != "gu" else "àª¥àª¾àª£àª¾", small_style),
                 p(header.thana_count, body_style),
-                p("Area" if language_code != "gu" else "વિસ્તાર", small_style),
+                p("Area" if language_code != "gu" else "àªµàª¿àª¸à«àª¤àª¾àª°", small_style),
                 p(header.area, body_style),
             ],
             [
-                p("Chaturmas Place Address" if language_code != "gu" else "ચાતુર્માસ સ્થળ સરનામું", small_style),
+                p("Chaturmas Place Address" if language_code != "gu" else "àªšàª¾àª¤à«àª°à«àª®àª¾àª¸ àª¸à«àª¥àª³ àª¸àª°àª¨àª¾àª®à«àª‚", small_style),
                 p(header.chaturmas_place_address, body_style),
-                p("Chaturmas Entry Date" if language_code != "gu" else "ચાતુર્માસ પ્રવેશ તારીખ", small_style),
+                p("Chaturmas Entry Date" if language_code != "gu" else "àªšàª¾àª¤à«àª°à«àª®àª¾àª¸ àªªà«àª°àªµà«‡àª¶ àª¤àª¾àª°à«€àª–", small_style),
                 p(_format_pdf_date(header.chaturmas_entry_date), body_style),
             ],
             [
-                p("Volunteer Name" if language_code != "gu" else "વોલન્ટિયર નામ", small_style),
+                p("Volunteer Name" if language_code != "gu" else "àªµà«‹àª²àª¨à«àªŸàª¿àª¯àª° àª¨àª¾àª®", small_style),
                 p(header.volunteer_name, body_style),
-                p("Stay Type" if language_code != "gu" else "રહેઠાણ પ્રકાર", small_style),
+                p("Stay Type" if language_code != "gu" else "àª°àª¹à«‡àª àª¾àª£ àªªà«àª°àª•àª¾àª°", small_style),
                 p(header.stay_type, body_style),
             ],
             [
-                p("Care Taker Name" if language_code != "gu" else "સંભાળનાર નામ", small_style),
+                p("Care Taker Name" if language_code != "gu" else "àª¸àª‚àª­àª¾àª³àª¨àª¾àª° àª¨àª¾àª®", small_style),
                 p(header.caretaker_name, body_style),
-                p("Care Taker Contact" if language_code != "gu" else "સંભાળનાર સંપર્ક", small_style),
+                p("Care Taker Contact" if language_code != "gu" else "àª¸àª‚àª­àª¾àª³àª¨àª¾àª° àª¸àª‚àªªàª°à«àª•", small_style),
                 p(header.caretaker_mobile, body_style),
             ],
             [
-                p("Special Request / Note" if language_code != "gu" else "ખાસ વિનંતી / નોંધ", small_style),
+                p("Special Request / Note" if language_code != "gu" else "àª–àª¾àª¸ àªµàª¿àª¨àª‚àª¤à«€ / àª¨à«‹àª‚àª§", small_style),
                 p(header.remarks, body_style),
                 p("", small_style),
                 p("", body_style),
@@ -1245,15 +1293,15 @@ class RequirementCollectionPrintView(View):
         )
         story.append(status_table)
         story.append(Spacer(1, 8))
-        story.extend([basic_table, Spacer(1, 8), Paragraph("Item List" if language_code != "gu" else "આઇટમ સૂચિ", heading_style)])
+        story.extend([basic_table, Spacer(1, 8), Paragraph("Item List" if language_code != "gu" else "àª†àª‡àªŸàª® àª¸à«‚àªšàª¿", heading_style)])
 
         table_data = [
             [
-                p("Pack" if language_code != "gu" else "પેક", small_style),
-                p("Sr. No." if language_code != "gu" else "ક્રમ નં.", small_style),
-                p("Name of Item" if language_code != "gu" else "વસ્તુનું નામ", small_style),
-                p("QTY Req" if language_code != "gu" else "જથ્થો", small_style),
-                p("Remark" if language_code != "gu" else "નોંધ", small_style),
+                p("Pack" if language_code != "gu" else "àªªà«‡àª•", small_style),
+                p("Sr. No." if language_code != "gu" else "àª•à«àª°àª® àª¨àª‚.", small_style),
+                p("Name of Item" if language_code != "gu" else "àªµàª¸à«àª¤à«àª¨à«àª‚ àª¨àª¾àª®", small_style),
+                p("QTY Req" if language_code != "gu" else "àªœàª¥à«àª¥à«‹", small_style),
+                p("Remark" if language_code != "gu" else "àª¨à«‹àª‚àª§", small_style),
             ]
         ]
         for line in lines:
@@ -1281,7 +1329,7 @@ class RequirementCollectionPrintView(View):
         story.append(item_table)
         note_rows = ((header.remarks.splitlines() if header.remarks else []) + ["", "", "", ""])[:4]
         story.append(Spacer(1, 4))
-        story.append(Paragraph("Extra Items" if language_code != "gu" else "એક્સ્ટ્રા વસ્તુઓ", heading_style))
+        story.append(Paragraph("Extra Items" if language_code != "gu" else "àªàª•à«àª¸à«àªŸà«àª°àª¾ àªµàª¸à«àª¤à«àª“", heading_style))
         note_table = Table([[p(note, body_style)] for note in note_rows], colWidths=[160 * mm])
         note_table.setStyle(
             TableStyle(
@@ -1348,7 +1396,7 @@ class RequirementCollectionDetailView(View):
         lines = list(
             RequirementLine.objects.filter(requirement=header)
             .select_related("item")
-            .order_by("item__standard_serial", "item__pk")
+            .order_by("item__parent_item__standard_serial", "item__standard_serial", "item__pk")
         )
         return render(
             request,
@@ -1356,6 +1404,7 @@ class RequirementCollectionDetailView(View):
             {
                 "header": header,
                 "lines": lines,
+                "grouped_lines": _group_requirement_lines(lines),
                 "lang": _lang_code(request),
                 "public_pdf_url": reverse("requirements:public-print", kwargs={"token": header.public_view_token}) if header.order_number else None,
                 "public_pdf_gu_url": _with_lang(reverse("requirements:public-print", kwargs={"token": header.public_view_token}), "gu") if header.order_number else None,

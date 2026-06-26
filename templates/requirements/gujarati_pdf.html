@@ -6,151 +6,192 @@
     @font-face {
       font-family: "KMMGujarati";
       src: url("file://{{ pdf_font_path }}") format("truetype");
+      font-weight: 400;
+      font-style: normal;
     }
-    @page { size: A4; margin: 5mm 5mm 7mm 5mm; }
+    @page { size: A4; margin: 6mm 6mm 9mm 6mm; }
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      font-family: "KMMGujarati", "Shruti", sans-serif;
       color: #000;
-      font-size: 8pt;
-      line-height: 1.05;
-      text-rendering: geometricPrecision;
+      font-family: "KMMGujarati", "Noto Sans Gujarati", "Shruti", sans-serif;
+      font-size: 8.4pt;
+      line-height: 1.2;
+      text-rendering: optimizeLegibility;
     }
-    .top { position: relative; min-height: 32mm; margin-bottom: 2mm; }
-    .form-no { position: absolute; right: 0; top: 0; font-size: 12pt; }
-    .brand { display: flex; align-items: center; gap: 4mm; padding-top: 8mm; }
-    .brand img { width: 63mm; height: 19.6mm; object-fit: contain; }
-    .status, .basic, .items { width: 100%; border-collapse: collapse; }
-    .status td, .basic td, .items th, .items td {
-      border: 0.35pt solid #000;
-      padding: 0.8mm 1.1mm;
+    table { width: 100%; border-collapse: collapse; }
+    td, th {
+      border: .45pt solid #000;
+      padding: 1mm 1.2mm;
       vertical-align: top;
       word-break: normal;
       overflow-wrap: normal;
       hyphens: none;
     }
-    .status td { width: 33.333%; }
-    .basic { margin-top: 1.6mm; }
-    .basic td.label { width: 16%; font-weight: 700; }
-    .basic td.value { width: 34%; }
-    .items th { text-align: center; font-weight: 700; }
+    .top {
+      position: relative;
+      min-height: 24mm;
+      margin-bottom: 1.5mm;
+    }
+    .form-number {
+      position: absolute;
+      right: 2mm;
+      top: 0;
+      font-size: 11pt;
+    }
+    .logo {
+      width: 63mm;
+      height: 19.6mm;
+      object-fit: contain;
+      margin-top: 3mm;
+    }
+    .status td {
+      width: 33.333%;
+      font-weight: 700;
+      padding: 1.2mm 1.5mm;
+    }
+    .basic { margin-top: 1.5mm; }
+    .basic .label {
+      width: 18%;
+      font-weight: 700;
+      background: #f7f7f7;
+    }
+    .basic .value { width: 32%; }
+    .section {
+      margin-top: 3mm;
+      border: .45pt solid #000;
+      border-bottom: 0;
+      text-align: center;
+      font-weight: 700;
+      padding: 1.1mm;
+    }
+    .items th {
+      text-align: center;
+      font-weight: 700;
+      background: #f3f3f3;
+    }
     .sr { width: 8mm; text-align: center; }
-    .name { width: 60mm; word-break: normal; overflow-wrap: normal; hyphens: none; }
-    .basic td.value, .remarks-table td { word-break: normal; overflow-wrap: anywhere; }
-    .size { width: 26mm; text-align: center; }
-    .qty { width: 14mm; text-align: center; }
-    .section { text-align: center; font-weight: 700; padding: 1.2mm 0; border: 0.35pt solid #000; border-top: 0; }
-    .remarks-title { margin-top: 2mm; font-weight: 700; }
-    .remarks-table { width: 100%; border-collapse: collapse; margin-top: 1mm; }
-    .remarks-table td { border: 0.35pt solid #000; height: 10mm; }
+    .name { width: 61mm; }
+    .size { width: 25mm; text-align: center; }
+    .qty { width: 12mm; text-align: center; }
+    .variant { background: #fffaf0; }
+    .extra-title {
+      text-align: center;
+      font-weight: 700;
+      background: #f7f7f7;
+    }
+    .extra td { height: 8.5mm; }
+    .note-title {
+      margin-top: 2mm;
+      font-weight: 700;
+    }
+    .note-box {
+      height: 18mm;
+      border: .45pt solid #000;
+      margin-top: .8mm;
+    }
     .footer {
       position: fixed;
       left: 0;
       right: 0;
-      bottom: 0;
+      bottom: -4mm;
+      border-top: .45pt solid #000;
+      padding-top: 1mm;
+      font-size: 7.2pt;
       display: flex;
       justify-content: space-between;
-      border-top: 0.35pt solid #000;
-      padding-top: 1mm;
-      font-size: 7pt;
+      gap: 8mm;
     }
   </style>
 </head>
 <body>
   <div class="top">
-    <div class="form-no">{% if lang == "gu" %}ફોર્મ નંબર -{% else %}Form Number -{% endif %} {{ header.order_number|default:"________" }}</div>
-    <div class="brand">
-      {% if logo_exists %}
-        <img src="file://{{ pdf_header_path }}" alt="Kalyan Mitra Mandal">
-      {% endif %}
-    </div>
+    <div class="form-number">ફોર્મ નંબર - {{ header.order_number|default:"________" }}</div>
+    {% if logo_exists %}
+      <img class="logo" src="file://{{ pdf_header_path }}" alt="Kalyan Mitra Mandal">
+    {% endif %}
   </div>
 
   <table class="status">
     <tr>
-      <td>[ ] {% if lang == "gu" %}બધી વસ્તુઓ પેક થઈ{% else %}All items packed{% endif %}</td>
-      <td>[ ] {% if lang == "gu" %}વિતરણ માટે તૈયાર{% else %}Ready for distribution{% endif %}</td>
-      <td>{% if lang == "gu" %}ચેક કરનાર:{% else %}Checked by:{% endif %} ____________________</td>
+      <td>[ ] બધી વસ્તુઓ પેક થઈ</td>
+      <td>[ ] વિતરણ માટે તૈયાર</td>
+      <td>ચેક કરનાર: ____________________</td>
     </tr>
   </table>
 
   <table class="basic">
     <tr>
-      <td class="label">{% if lang == "gu" %}પૂજ્ય શ્રી{% else %}Pujya Shri{% endif %}</td><td class="value">{{ header.pujya_shri_name|default:"-" }}</td>
-      <td class="label">{% if lang == "gu" %}ઠાણા{% else %}Thana{% endif %}</td><td class="value">{{ header.thana_count|default:"-" }}</td>
+      <td class="label">પૂજ્ય શ્રી</td>
+      <td class="value">{{ header.pujya_shri_name|default:"-" }}</td>
+      <td class="label">ઠાણા</td>
+      <td class="value">{{ header.thana_count|default:"-" }}</td>
     </tr>
     <tr>
-      <td class="label">{% if lang == "gu" %}વિસ્તાર{% else %}Vistar{% endif %}</td><td class="value">{{ header.area|default:"-" }}</td>
-      <td class="label">{% if lang == "gu" %}ફોર્મ તારીખ{% else %}Form Date{% endif %}</td><td class="value">{{ header.requirement_date|date:"d-F-Y" }}</td>
+      <td class="label">વિસ્તાર</td>
+      <td class="value">{{ header.area|default:"-" }}</td>
+      <td class="label">ફોર્મ તારીખ</td>
+      <td class="value">{{ header.requirement_date|date:"d-F-Y" }}</td>
     </tr>
     <tr>
-      <td class="label">{% if lang == "gu" %}હાલનું સરનામું{% else %}Halnu Sarnamu{% endif %}</td><td class="value">{{ header.current_address|default:"-" }}</td>
-      <td class="label">{% if lang == "gu" %}ચાતુર્માસ સ્થળનું સરનામું{% else %}Chaturmas Sthalnu Sarnamu{% endif %}</td><td class="value">{{ header.chaturmas_place_address|default:"-" }}</td>
+      <td class="label">હાલનું સરનામું</td>
+      <td class="value">{{ header.current_address|default:"-" }}</td>
+      <td class="label">ચાતુર્માસ સ્થળનું સરનામું</td>
+      <td class="value">{{ header.chaturmas_place_address|default:"-" }}</td>
     </tr>
     <tr>
-      <td class="label">{% if lang == "gu" %}ચાતુર્માસ પ્રવેશ તારીખ{% else %}Chaturmas Entry Date{% endif %}</td><td class="value">{{ header.chaturmas_entry_date|date:"d-F-Y" }}</td>
-      <td class="label">{% if lang == "gu" %}જનારનું નામ{% else %}Janar Nu Naam{% endif %}</td><td class="value">{{ header.volunteer_name|default:"-" }}</td>
+      <td class="label">ચાતુર્માસ પ્રવેશ તારીખ</td>
+      <td class="value">{{ header.chaturmas_entry_date|date:"d-F-Y" }}</td>
+      <td class="label">જનારનું નામ</td>
+      <td class="value">{{ header.volunteer_name|default:"-" }}</td>
     </tr>
     <tr>
-      <td class="label">{% if lang == "gu" %}સંઘ ઉપાશ્રય / સ્થિરવાસ{% else %}Sangh Upashray / Sthirvas{% endif %}</td><td class="value">{{ header.get_stay_type_display|default:"-" }}</td>
-      <td class="label">{% if lang == "gu" %}પૂજ્ય શ્રી સંભાળ લેનારનું નામ અને મોબાઇલ{% else %}Sambhaal Lenar Nu Naam Ane Number{% endif %}</td><td class="value">{{ header.caretaker_name|default:"-" }} {{ header.caretaker_mobile|default:"" }}</td>
+      <td class="label">સંઘ ઉપાશ્રય / સ્થિરવાસ</td>
+      <td class="value">{{ header.get_stay_type_display|default:"-" }}</td>
+      <td class="label">પૂજ્ય શ્રી સંભાળ લેનારનું નામ અને મોબાઇલ</td>
+      <td class="value">{{ header.caretaker_name|default:"-" }} {{ header.caretaker_mobile|default:"" }}</td>
     </tr>
   </table>
 
-  <div class="section">{% if lang == "gu" %}વસ્તુ સૂચિ{% else %}Item List{% endif %}</div>
+  <div class="section">વસ્તુ સૂચિ</div>
   <table class="items">
     <thead>
       <tr>
-        <th class="sr">{% if lang == "gu" %}નં.{% else %}Sr. No.{% endif %}</th>
-        <th class="name">{% if lang == "gu" %}વસ્તુનું નામ{% else %}Name of Item{% endif %}</th>
-        <th class="size">{% if lang == "gu" %}પ્રકાર/સાઈઝ{% else %}Type/Size{% endif %}</th>
-        <th class="qty">{% if lang == "gu" %}નંગ{% else %}Qty{% endif %}</th>
+        <th class="sr">નં.</th>
+        <th class="name">વસ્તુનું નામ</th>
+        <th class="size">પ્રકાર/સાઈઝ</th>
+        <th class="qty">નંગ</th>
+        <th class="sr">નં.</th>
+        <th class="name">વસ્તુનું નામ</th>
+        <th class="size">પ્રકાર/સાઈઝ</th>
+        <th class="qty">નંગ</th>
       </tr>
     </thead>
     <tbody>
-      {% for row in left_rows %}
+      {% for left, right in rows %}
         <tr>
-          <td class="sr">{{ row.0 }}</td>
-          <td class="name">{{ row.1 }}</td>
-          <td class="size">{{ row.2 }}</td>
-          <td class="qty">{{ row.3 }}</td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  <table class="items" style="margin-top:-0.35pt;">
-    <thead>
-      <tr>
-        <th class="sr">{% if lang == "gu" %}નં.{% else %}Sr. No.{% endif %}</th>
-        <th class="name">{% if lang == "gu" %}વસ્તુનું નામ{% else %}Name of Item{% endif %}</th>
-        <th class="size">{% if lang == "gu" %}પ્રકાર/સાઈઝ{% else %}Type/Size{% endif %}</th>
-        <th class="qty">{% if lang == "gu" %}નંગ{% else %}Qty{% endif %}</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for row in right_rows %}
-        <tr>
-          <td class="sr">{{ row.0 }}</td>
-          <td class="name">{{ row.1 }}</td>
-          <td class="size">{{ row.2 }}</td>
-          <td class="qty">{{ row.3 }}</td>
+          <td class="sr">{{ left.0 }}</td>
+          <td class="name">{{ left.1 }}</td>
+          <td class="size">{{ left.2 }}</td>
+          <td class="qty">{{ left.3 }}</td>
+          <td class="sr">{{ right.0 }}</td>
+          <td class="name">{{ right.1 }}</td>
+          <td class="size">{{ right.2 }}</td>
+          <td class="qty">{{ right.3 }}</td>
         </tr>
       {% endfor %}
     </tbody>
   </table>
 
-  <div class="section" style="margin-top:0.5mm;">Extra Items</div>
-  <table class="remarks-table">
+  <table class="extra">
+    <tr><td colspan="4" class="extra-title">Extra Items / નોંધ</td></tr>
     {% for note in extra_note_values %}
-      <tr><td>{{ note|default:"" }}</td></tr>
+      <tr><td colspan="4">{{ note }}</td></tr>
     {% endfor %}
   </table>
 
-  <div class="remarks-title">{% if lang == "gu" %}નોંધ:{% else %}Note:{% endif %}</div>
-  <table class="remarks-table">
-    <tr><td></td></tr>
-  </table>
+  <div class="note-title">નોંધ:</div>
+  <div class="note-box"></div>
 
   <div class="footer">
     <div>{{ contact }}</div>
