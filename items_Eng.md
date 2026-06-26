@@ -1,105 +1,117 @@
-I extracted and organized the document into a structured format. The PDF is a **"Chaturmas Vaiyavach List 2025"** form used by **Kalyan Mitra Mandal – Arihant Group – Kalyan Group, Ahmedabad (Vikram Samvat 2081)**. 
+# Chaturmas Vaiyavach Yadi 2026
 
-# Chaturmas Vaiyavach List 2025
+**Kalyan Mitra Mandal – 2026, Vikram Samvat 2082**
 
-## Form Details
+## Form Vigat
 
-* Form Number: __________
-* Pujya Shri:
-* Current Address:
-* Thana:
-* Area:
-* Chaturmas Place Address:
-* Chaturmas Entry Date:
-* Janaran Name:
-* Sangh Upashray / Sthirvas
+Form Number
+Pujya Shri
+Thana
+Vistar
+Halnu Sarnamu
+Chaturmas Sthalnu Sarnamu
+Form Tarikh
+Chaturmas Pravesh Tarikh
+Janar Nu Naam
+Sangh Upashray / Sthirvas
+Pujya Shri Sambhaal Lenar Nu Naam Ane Mobile Number
 
----
-No. | Item Name | Details / Contents | Category
+## General Vastuo
 
-1 | Ahinsak Laundry Soap (for stain removal) | 100 g | General Utility Items
-2 | Soap for Lunaa (Monastic Cloth) Washing | Small | General Utility Items
-3 | Aambla Soap | For Sadhviji Maharaj Saheb | General Utility Items
-4 | Ahinsak Clothes Washing Powder | 500 g | General Utility Items
-5 | Fly-Mosquito Protection Liquid | 100 ml (5 drops per bucket) | General Utility Items
-6 | Fodelo Chuno (Lime Powder) | 250 g | General Utility Items
-7 | Lochni Raakh | 100 g | General Utility Items
-8 | Loch Karvana Tota | As required | General Utility Items
-9 | Dudhi Oil | 100 ml (Cooling after Loch) | General Utility Items
-10 | Narangi Oil | 100 ml (Mosquito protection) | General Utility Items
-11 | Nilgiri Oil | 10 ml (Cold relief) | General Utility Items
-12 | Amrut Bindu | 8 ml (For cold & congestion) | General Utility Items
-13 | Tulsi Drops | 20 ml (For cough & cold) | General Utility Items
-14 | Damar Goli | 100 g | General Utility Items
-15 | Kapur (Camphor) | 50 g | General Utility Items
-16 | Vasakshep | 100 g | General Utility Items
-17 | Clothes Drying Rope | Nylon, 4 meters | General Utility Items
-18 | Clothes Drying Pins | Small Aluminium | General Utility Items
-19 | Copper Water Pots | 3 L / 4 L with Stand | General Utility Items
-20 | Ahmedabadi Clay Pots | - | General Utility Items
-21 | Pot Stand | Plastic | General Utility Items
-22 | Aluminium Vadka for Matru Parathavvu | 9×4 inch with Plastic Dish | General Utility Items
-23 | Brown Jute Bag | Large | General Utility Items
+No. | Vastunu Naam | Prakar/Size | Category
 
-24 | Letter Pad | Spiral Type, 7×4 or 9×6 inch | Stationery
-25 | Reusable Ball Pen | Blue, Red | Stationery
-26 | Gel Pen (Natraj Waterproof Ink) | Blue, Green, Black | Stationery
-27 | White Covers (Small) | For Vasakshep | Stationery
-28 | White Covers (Plain) | Large, 9×4 inch | Stationery
-29 | Canvas Cover | A4 Size, Green | Stationery
-30 | Foot Patti (Ruler) | Small | Stationery
-31 | Sancho | - | Stationery
-32 | Pencil | - | Stationery
-33 | Eraser | - | Stationery
-34 | Writing Pad | Transparent | Stationery
-35 | Zip Pouch | 10×4 inch | Stationery
-36 | Button Folder | A4 | Stationery
-37 | Pocket Diary | - | Stationery
-38 | Marker Pen | Black | Stationery
-39 | Highlighter | - | Stationery
-40 | Stapler | - | Stationery
-41 | Stapler Pins | 1 Box | Stationery
-42 | Fevi Stick | - | Stationery
-43 | Fevicol | 20 g | Stationery
+1 | Kapda Dhovano (Kaap Kadhva) Ahinsak Sabu | 100 Gram | General Vastuo
+2 | Lunana Kapda Dhova Mateno Sabu | Nano | General Vastuo
+3 | Aambalano Sabu (Sadhviji M.Sa. Mate) | | General Vastuo
+4 | Ahinsak Kapda Dhovano Powder | 500 Gram | General Vastuo
+5 | Makhi-Machcharni Jayna Palva Matenun Liquid | 100 ml | General Vastuo
+6 | Fodelo Chuno | 250 Gram | General Vastuo
+7 | Lochni Rakh | 100 Gram | General Vastuo
+8 | Loch Karvana Tota (Nang Mujab) | | General Vastuo
+9 | Dudhinu Tel (Loch Pachhi Thandak Mate) | 100 ml | General Vastuo
+10 | Naranginu Tel (Machcharthi Rakshan Mate) | 100 ml | General Vastuo
+11 | Nilgirinu Tel (Shardima Rahat Mate) | 10 ml | General Vastuo
+12 | Amrut Bindu (Va-Shardi Mate) | 08 ml | General Vastuo
+13 | Tulsi Drop (Shardi-Udharas Mate) | 20 ml | General Vastuo
+14 | Damarni Goli | 100 Gram | General Vastuo
+15 | Kapur (Kidini Jayna Mate) | 50 Gram | General Vastuo
+16 | Vasakshep | 100 Gram | General Vastuo
+17 | Navkar Vali Sutarau | Safed / Navpad | General Vastuo
+18 | Kapda Sukvavani Dori | 4 Meter | General Vastuo
+19 | Kapda Sukvavani Pin | Nani | General Vastuo
+20 | Tambana Ghada (Padi-Kathla Jeva Stand Sathe) | 3 Liter / 4 Liter | General Vastuo
+21 | Steelna Ghada (Vajanma Ekdam Halka) | 4 Liter | General Vastuo
+22 | Ahmedabadi Matina Ghada | | General Vastuo
+23 | Ghada Mukvana Stand | Plastic | General Vastuo
+24 | Vihar Bag (Waterproof Chain Vali) | 12 × 18 | General Vastuo
+25 | Matrupath Mate Aluminium Vadka | Plastic Dish Sathe | General Vastuo
+26 | Machchardani (Gol) | 10 Kali / 12 Kali | General Vastuo
+27 | Brown Theli (Shanni) | Moti | General Vastuo
 
-44 | Whitener | - | Medical
-45 | Scissors | Small (4.5 inch) | Medical
-46 | Cover Tape | Large Brown Packing Tape | Medical
-47 | Khakhi Cardboard Roll | Approx. 10 Books per Roll | Medical
-48 | Araldite | 9 g | Medical
-49 | Feviquick | Plain / 1 g Cap Type | Medical
-50 | M-Seal | For Repairing Pots | Medical
-51 | Radium Strip | Half Foot | Medical
-52 | D-Sona Tooth Powder | 100 g | Medical
-53 | Eno | Green, Orange, Blue | Medical
-54 | Inhaler Balm (Thailand Balm) | Sniffing Balm | Medical
-55 | Vicks Balm | Small Round / Medium | Medical
-56 | Iodex | Medium | Medical
-57 | Closip Powder | 100 g | Medical
-58 | Omnigel | 75 g | Medical
-59 | NEOTICA Tube | 60 g | Medical
-60 | Kaanavali Patti | For Pain Relief | Medical
-61 | Soframycin Tube | For Wounds | Medical
-62 | Cotton | 60 g | Medical
-63 | Dettol | Small | Medical
-64 | Adhesive Tape | 5 Foot Roll | Medical
-65 | Band-Aid | For Blisters/Wounds | Medical
-66 | Digene Tablets | Strip of 15 | Medical
-67 | Crocin Advance | Strip of 20 | Medical
-68 | Metacin | Strip of 15 | Medical
-69 | Okacet | Strip of 10 | Medical
-70 | Dolo 650 mg | Strip of 15 | Medical
-71 | Glucose Powder (Glucon-D) | 200 g | Medical
-72 | Thermometer | Normal / Digital | Medical
+## Stationery
 
-73 | Navkar Vati Tonic | 30 Tablets | Ayurvedic Medicines
-74 | Ghodavaj | 4-5 Pieces | Ayurvedic Medicines
-75 | Kushal Kanthil | Small Box | Ayurvedic Medicines
-76 | Triphala Tablets (Zandu) | 30 Tablets | Ayurvedic Medicines
-77 | Trishun Tablets (Zandu) | 30 Tablets | Ayurvedic Medicines
-78 | Sargava Powder (Drumstick Powder) | 100 g | Ayurvedic Medicines
+No. | Vastunu Naam | Prakar/Size | Category
 
+28 | Letter Pad (Side Ma Khulta Spiral Vala) | Nana (7×4 Inch) | Stationery
+29 | Ball Pen (Reusable) | Blue | Stationery
+30 | Gel Pen (Waterproof Ink) | Blue | Stationery
+31 | Safed Cover | Nana (Vasakshep Mate) | Stationery
+32 | Safed Cover - Sada | Mota (9×4 Inch) | Stationery
+33 | Canvas Cover | A4 Green | Stationery
+34 | Foot Patti | Nani | Stationery
+35 | Sancho | | Stationery
+36 | Pencil | | Stationery
+37 | Rubber | | Stationery
+38 | Writing Pad | Transparent | Stationery
+39 | Pouch (Zip Vala) | 10×4 Inch | Stationery
+40 | Button Vala Folder | A4 | Stationery
+41 | Pocket Diary | | Stationery
+42 | Marker Pen (Khokha, Kapda Par Lakhva Mate) | Black | Stationery
+43 | Highlighter | | Stationery
+44 | Stapler | | Stationery
+45 | Stapler Pin | 1 Box | Stationery
+46 | Fevi Stick | | Stationery
+47 | Fevicol | 20 Gram | Stationery
+48 | Whitener | | Stationery
+49 | Katar | Nani (4.5 Inch) | Stationery
+50 | Cover Tape (Khokhana Packing Mate) | Brown | Stationery
+51 | Khakhi Paththana Roll | Roll Mujab | Stationery
+52 | Araldite | 9 Gram | Stationery
+53 | Fevikwik | Sadi / Nani (1 gm) | Stationery
+54 | M-Seal | Kalo / Safed | Stationery
+55 | Radium Patti | Adho Foot | Stationery
 
+## Medical
 
+No. | Vastunu Naam | Prakar/Size | Category
+56 | D-Sona (Daante Ghasvano Powder) | 100 Gram | Medical
+57 | Eno (Gas Mate) | Green / Orange / Blue | Medical
+58 | Inhaler Balm (Thailased Balm) | Sughvano Balm | Medical
+59 | Vicks Balm | Nani Gol / Medium | Medical
+60 | Iodex | Medium | Medical
+61 | Closip Powder | 100 Gram | Medical
+62 | Omnigel | 75 Gram | Medical
+63 | NEOTICA Tube | 60 Gram | Medical
+64 | Kanavali Patti | | Medical
+65 | Soframycin Tube | | Medical
+66 | Cotton (Ru) | 60 Gram | Medical
+67 | Dettol | Nani | Medical
+68 | Adhesive Tape | 5 Foot Roll | Medical
+69 | Band-Aid | | Medical
+70 | Digene Tablets | 15 Tablets | Medical
+71 | Crocin Advance | 20 Tablets | Medical
+72 | Metacin | 15 Tablets | Medical
+73 | Okacet | 10 Tablets | Medical
+74 | Dolo 650 mg | 15 Tablets | Medical
+75 | Glucose Powder (Glucon-D) | 200 Gram | Medical
+76 | Thermometer | Simple / Digital | Medical
 
+## Ayurvedic Davao
 
+No. | Vastunu Naam | Prakar/Size | Category
+77 | Navkar Vati Tonic (Anahari) | 30 Goli | Ayurvedic Davao
+78 | Ghodavaj (Pustakoni Sachvani Mate) | 4-5 Nang | Ayurvedic Davao
+79 | Kushal Kanthil (Gala Tatha Udharas Mate) | Nani Dabbi | Ayurvedic Davao
+80 | Trifala Tablet (Zandu) | 30 Goli | Ayurvedic Davao
+81 | Trishun Tablet (Zandu) | 30 Goli | Ayurvedic Davao
+82 | Sargvano Powder (Shakti Mate) | 100 Gram | Ayurvedic Davao

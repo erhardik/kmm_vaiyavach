@@ -19,6 +19,8 @@
         </p>
       </div>
       <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-sm {% if lang == 'en' %}btn-primary{% else %}btn-outline-primary{% endif %}" href="?lang=en">English</a>
+        <a class="btn btn-sm {% if lang == 'gu' %}btn-primary{% else %}btn-outline-primary{% endif %}" href="?lang=gu">ગુજરાતી</a>
         {% if is_public_flow %}
           <a class="btn btn-outline-light" href="{% url 'public-landing' %}">{% if lang == "gu" %}હોમ{% else %}Home{% endif %}</a>
           <a class="btn btn-warning" href="{{ public_requests_url }}">{% if lang == "gu" %}ઓર્ડર સૂચિ{% else %}Order List{% endif %}</a>
@@ -45,6 +47,7 @@
 
 <form method="post" class="row g-4 collect-form-shell" data-collect-form data-draft-key="{{ draft_storage_key }}" data-editing-allowed="{% if editing_allowed %}1{% else %}0{% endif %}">
   {% csrf_token %}
+  <input type="hidden" name="lang" value="{{ lang }}">
   <div class="col-12" id="saved-order-summary-wrap">
     {% if header %}
       {% include "requirements/_saved_order_summary.html" %}
@@ -181,6 +184,9 @@
                       <td class="text-end col-qty" data-label="{% if lang == 'gu' %}જથ્થો{% else %}QTY Req{% endif %}">
                         <div class="d-flex flex-wrap align-items-center justify-content-end gap-1 qty-cell">
                           {{ row.form.required_qty }}
+                          {% if row.ask_qty %}
+                            <span class="badge text-bg-warning text-dark">ASK</span>
+                          {% endif %}
                           <div class="d-flex flex-wrap justify-content-end gap-1 qty-preset-group">
                             <button class="btn btn-sm qty-preset-btn" type="button" data-qty="1">1</button>
                             <button class="btn btn-sm qty-preset-btn" type="button" data-qty="2">2</button>

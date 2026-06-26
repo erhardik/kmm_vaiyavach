@@ -84,6 +84,13 @@ class EventManagerContactForm(BootstrapModelForm):
 
 
 class ItemForm(BootstrapModelForm):
+    add_to_current_form_immediately = forms.BooleanField(
+        required=False,
+        initial=True,
+        label="Add in Current event form immediately",
+        help_text="If checked, the item becomes active right away and appears at the end of the current event forms.",
+    )
+
     class Meta:
         model = Item
         fields = ["item_code", "item_name", "item_name_gu", "category", "unit", "default_size", "description", "estimated_rate"]

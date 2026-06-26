@@ -13,10 +13,12 @@ from apps.masters.models import Event, Item, ItemCategory
 SECTION_CATEGORY_MAP = {
     "general items": ItemCategory.GENERAL,
     "general utility items": ItemCategory.GENERAL,
+    "general vastuo": ItemCategory.GENERAL,
     "stationery": ItemCategory.STATIONERY,
     "medical": ItemCategory.MEDICAL,
     "medical items": ItemCategory.MEDICAL,
     "ayurvedic medicines": ItemCategory.AYURVEDIC,
+    "ayurvedic davao": ItemCategory.AYURVEDIC,
     "utensil coloring materials": ItemCategory.COLOR_MATERIAL,
     "utility items": ItemCategory.GENERAL,
     "other useful items": ItemCategory.GENERAL,
@@ -127,17 +129,36 @@ class Command(BaseCommand):
             guj_map = {row.number: row.name for row in guj_rows}
 
         event = self._resolve_event(options)
-        if options["replace"]:
-            Item.objects.filter(event=event).delete()
 
         created_count = 0
+        updated_count = 0
         counters = defaultdict(int)
         english_rows = parse_markdown_rows(source_path)
+        existing_items = {item.standard_serial: item for item in Item.objects.filter(event=event).order_by("standard_serial", "pk")}
+        imported_serials = set()
 
         for row in english_rows:
+            imported_serials.add(row.number)
             prefix = CATEGORY_PREFIX_MAP[row.category]
+            existing = existing_items.get(row.number)
+            if existing:
+                existing.item_name = row.name
+                existing.item_name_gu = guj_map.get(row.number, existing.item_name_gu)
+                existing.category = row.category
+                existing.unit = ""
+                existing.default_size = row.size
+                existing.description = f"Imported from {source_path.name}"
+                existing.is_active = True
+                existing.is_deleted = False
+                existing.save()
+                updated_count += 1
+                continue
+
             counters[prefix] += 1
             item_code = f"{prefix}{counters[prefix]:03d}"
+            while Item.objects.filter(event=event, item_code=item_code).exists():
+                counters[prefix] += 1
+                item_code = f"{prefix}{counters[prefix]:03d}"
 
             Item.objects.create(
                 event=event,
@@ -153,7 +174,10 @@ class Command(BaseCommand):
             )
             created_count += 1
 
-        self.stdout.write(self.style.SUCCESS(f"Imported {created_count} items for {event.name}."))
+        if options["replace"]:
+            Item.objects.filter(event=event).exclude(standard_serial__in=imported_serials).update(is_active=False)
+
+        self.stdout.write(self.style.SUCCESS(f"Imported {created_count} items, updated {updated_count} items for {event.name}."))
 
     def _resolve_event(self, options):
         event_slug = options.get("event_slug")

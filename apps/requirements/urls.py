@@ -4,6 +4,7 @@ from apps.requirements.views import (
     RequirementHeaderCreateView,
     RequirementHeaderDeleteView,
     RequirementCollectionDetailView,
+    RequirementHeaderExportView,
     RequirementHeaderListView,
     RequirementHeaderUpdateView,
     RequirementCollectByEventView,
@@ -22,6 +23,7 @@ app_name = "requirements"
 
 urlpatterns = [
     path("", RequirementHeaderListView.as_view(), name="header-list"),
+    path("export/", RequirementHeaderExportView.as_view(), name="header-export"),
     path("collect/", RequirementCollectByEventView.as_view(), name="collect"),
     path("collect/<int:pk>/", RequirementCollectByEventView.as_view(), name="collect-edit"),
     path("collect/<int:pk>/view/", RequirementCollectionDetailView.as_view(), name="header-detail"),

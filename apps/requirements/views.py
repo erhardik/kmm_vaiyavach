@@ -5,6 +5,7 @@ from xml.sax.saxutils import escape
 
 from django.contrib import messages
 from django.conf import settings
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.http import HttpResponse, JsonResponse
 from django.forms import formset_factory
@@ -24,6 +25,14 @@ from reportlab.pdfgen import canvas
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import Image, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment
+
+try:
+    from weasyprint import HTML, CSS
+except Exception:  # pragma: no cover - optional dependency
+    HTML = None
+    CSS = None
 
 from apps.common.views import EventScopedCreateView, EventScopedDeleteView, EventScopedListView, EventScopedUpdateView
 from apps.dashboard.services import build_public_item_preview
@@ -218,6 +227,156 @@ class RequirementHeaderListView(EventScopedListView):
         return rows
 
 
+class RequirementHeaderExportView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        event_id = request.GET.get("event")
+        event = Event.objects.filter(pk=event_id, is_active=True).first() if event_id else Event.objects.filter(is_current=True, is_active=True).first()
+        if event is None:
+            return HttpResponse("No active event found.", status=404)
+
+        headers = (
+            RequirementHeader.objects.filter(event=event)
+            .select_related("upashray")
+            .prefetch_related("lines__item")
+            .exclude(status=RequirementStatus.DRAFT)
+            .order_by("-updated_at", "-created_at")
+        )
+
+        workbook = Workbook()
+        ws_all = workbook.active
+        ws_all.title = "All Data"
+        ws_analysis = workbook.create_sheet("Item Analysis")
+        ws_summary = workbook.create_sheet("Order Summary")
+
+        header_fill = PatternFill("solid", fgColor="DCE9F5")
+        total_fill = PatternFill("solid", fgColor="FFF3BF")
+        bold_font = Font(bold=True, color="14324F")
+        center = Alignment(horizontal="center", vertical="center")
+        right = Alignment(horizontal="right", vertical="center")
+
+        all_headers = [
+            "Order No.",
+            "Requirement Date",
+            "Upashray",
+            "Status",
+            "Locked",
+            "Item Code",
+            "Item Name",
+            "Category",
+            "Qty Required",
+            "Remarks",
+        ]
+        ws_all.append(all_headers)
+        for cell in ws_all[1]:
+            cell.fill = header_fill
+            cell.font = bold_font
+            cell.alignment = center
+
+        item_totals = {}
+        order_totals = []
+        for header in headers:
+            order_qty = 0
+            lines = list(header.lines.select_related("item").all())
+            for line in lines:
+                display_name = line.item.item_name_gu or line.item.item_name
+                ws_all.append([
+                    header.order_number,
+                    header.requirement_date.strftime("%d-%b-%Y") if header.requirement_date else "",
+                    str(header.upashray),
+                    header.get_status_display(),
+                    "Yes" if header.is_locked else "No",
+                    line.item.item_code,
+                    display_name,
+                    line.item.get_category_display(),
+                    float(line.required_qty),
+                    line.remarks,
+                ])
+                item_totals.setdefault(
+                    line.item_id,
+                    {
+                        "Code": line.item.item_code,
+                        "Item": display_name,
+                        "Category": line.item.get_category_display(),
+                        "Total Qty": 0,
+                    },
+                )
+                item_totals[line.item_id]["Total Qty"] += float(line.required_qty)
+                order_qty += float(line.required_qty)
+            order_totals.append(
+                {
+                    "Order No.": header.order_number,
+                    "Requirement Date": header.requirement_date.strftime("%d-%b-%Y") if header.requirement_date else "",
+                    "Upashray": str(header.upashray),
+                    "Status": header.get_status_display(),
+                    "Lines": len(lines),
+                    "Total Qty": order_qty,
+                }
+            )
+
+        if ws_all.max_row > 1:
+            all_data_last_row = ws_all.max_row
+            ws_all.append(["TOTAL", "", "", "", "", "", "", "", f"=SUM(I2:I{all_data_last_row})", ""])
+            for cell in ws_all[ws_all.max_row]:
+                cell.fill = total_fill
+                cell.font = bold_font
+
+        analysis_headers = ["Item Code", "Item Name", "Category", "Total Qty"]
+        ws_analysis.append(analysis_headers)
+        for cell in ws_analysis[1]:
+            cell.fill = header_fill
+            cell.font = bold_font
+            cell.alignment = center
+        for row in sorted(item_totals.values(), key=lambda data: data["Code"]):
+            ws_analysis.append([row["Code"], row["Item"], row["Category"], row["Total Qty"]])
+        analysis_last_row = ws_analysis.max_row
+        ws_analysis.append(["TOTAL", "", "", f"=SUM(D2:D{analysis_last_row})"])
+        for cell in ws_analysis[ws_analysis.max_row]:
+            cell.fill = total_fill
+            cell.font = bold_font
+
+        summary_headers = ["Order No.", "Requirement Date", "Upashray", "Status", "Lines", "Total Qty"]
+        ws_summary.append(summary_headers)
+        for cell in ws_summary[1]:
+            cell.fill = header_fill
+            cell.font = bold_font
+            cell.alignment = center
+        for row in order_totals:
+            ws_summary.append([row[h] for h in summary_headers])
+        summary_last_row = ws_summary.max_row
+        ws_summary.append(["TOTAL", "", "", "", f"=SUM(E2:E{summary_last_row})", f"=SUM(F2:F{summary_last_row})"])
+        for cell in ws_summary[ws_summary.max_row]:
+            cell.fill = total_fill
+            cell.font = bold_font
+
+        for ws in (ws_all, ws_analysis, ws_summary):
+            ws.freeze_panes = "A2"
+            for column_cells in ws.columns:
+                max_len = 0
+                column_letter = column_cells[0].column_letter
+                for cell in column_cells:
+                    try:
+                        text = str(cell.value or "")
+                    except Exception:
+                        text = ""
+                    max_len = max(max_len, len(text))
+                ws.column_dimensions[column_letter].width = min(max_len + 2, 40)
+            for row in ws.iter_rows(min_row=2):
+                for cell in row:
+                    if cell.column in (1, 2, 3, 4, 5):
+                        cell.alignment = center
+                    elif cell.column in (9, 10):
+                        cell.alignment = right
+
+        buffer = BytesIO()
+        workbook.save(buffer)
+        response = HttpResponse(
+            buffer.getvalue(),
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        response["Content-Disposition"] = 'attachment; filename="requirements.xlsx"'
+        return response
+
+
 class RequirementCollectionView(View):
     template_name = "requirements/collect.html"
     confirm_required_fields = (
@@ -288,8 +447,9 @@ class RequirementCollectionView(View):
             )
         return collection_formset(data=data, initial=initial, prefix="items")
 
-    def _build_rows(self, items, formset, language_code):
+    def _build_rows(self, items, formset, language_code, existing_quantities=None):
         rows = []
+        existing_quantities = existing_quantities or {}
         for item, form in zip(items, formset.forms, strict=False):
             display_name = item.item_name_gu if language_code == "gu" and item.item_name_gu else item.item_name
             rows.append(
@@ -299,6 +459,7 @@ class RequirementCollectionView(View):
                     "form": form,
                     "display_name": display_name,
                     "category_class": CATEGORY_ROW_CLASSES.get(item.category, "cat-general"),
+                    "ask_qty": bool(existing_quantities and item.pk not in existing_quantities),
                 }
             )
         return rows
@@ -320,7 +481,7 @@ class RequirementCollectionView(View):
             current_group["rows"].append(row)
         return grouped
 
-    def _build_context(self, request, event, header, form, formset, items):
+    def _build_context(self, request, event, header, form, formset, items, existing_quantities=None):
         language_code = _lang_code(request)
         draft_key = f"kmm.requirements.collect.{event.pk if event else 'noevent'}.{header.pk if header else 'new'}"
         is_public_flow = self._is_public_flow()
@@ -331,7 +492,7 @@ class RequirementCollectionView(View):
             "header": header,
             "form": form,
             "formset": formset,
-            "item_groups": self._group_rows(self._build_rows(items, formset, language_code), language_code),
+            "item_groups": self._group_rows(self._build_rows(items, formset, language_code, existing_quantities), language_code),
             "language_code": language_code,
             "page_title": "જરૂરિયાતો એકત્ર કરો" if language_code == "gu" else "Collect Requirements",
             "page_subtitle": "જથ્થો ભરો. સાચવો અને પછી એક જ ઓર્ડર પર ફરીથી સંપાદિત કરો."
@@ -369,7 +530,7 @@ class RequirementCollectionView(View):
         existing_remarks = {line.item_id: line.remarks for line in header.lines.all()} if header else {}
         form = RequirementCollectionHeaderForm(instance=header, current_event=event)
         formset = self._build_formset(items, initial_quantities=existing_quantities, initial_remarks=existing_remarks)
-        return render(request, self.template_name, self._build_context(request, event, header, form, formset, items))
+        return render(request, self.template_name, self._build_context(request, event, header, form, formset, items, existing_quantities))
 
     @transaction.atomic
     def post(self, request, *args, **kwargs):
@@ -412,7 +573,7 @@ class RequirementCollectionView(View):
                         "errors": form.errors.get_json_data(),
                     }
                     return JsonResponse(payload, status=400)
-                return render(request, self.template_name, self._build_context(request, event, header, form, formset, items))
+                return render(request, self.template_name, self._build_context(request, event, header, form, formset, items, existing_quantities))
 
             header_obj = form.save(commit=False)
             header_obj.event = event
@@ -420,7 +581,7 @@ class RequirementCollectionView(View):
             header_obj.upashray = self._resolve_upashray(event, form.cleaned_data.get("upashray_name"))
             if header_obj.upashray is None:
                 form.add_error("upashray_name", "Upashray name is required.")
-                return render(request, self.template_name, self._build_context(request, event, header, form, formset, items))
+                return render(request, self.template_name, self._build_context(request, event, header, form, formset, items, existing_quantities))
 
             header_obj.status = header.status if header else RequirementStatus.DRAFT
             header_obj.order_number = header.order_number if header else None
@@ -459,7 +620,12 @@ class RequirementCollectionView(View):
                     },
                 )
             messages.success(request, "Basic details saved. You can continue filling items.")
-            return render(request, self.template_name, self._build_context(request, event, header_obj, form, formset, items))
+            saved_existing_quantities = {line.item_id: line.required_qty for line in header_obj.lines.all()}
+            return render(
+                request,
+                self.template_name,
+                self._build_context(request, event, header_obj, form, formset, items, saved_existing_quantities),
+            )
 
         if not form.is_valid() or not formset.is_valid():
             if request.headers.get("x-requested-with") == "XMLHttpRequest":
@@ -471,7 +637,7 @@ class RequirementCollectionView(View):
                 if not formset.is_valid():
                     payload["item_errors"] = formset.errors
                 return JsonResponse(payload, status=400)
-            return render(request, self.template_name, self._build_context(request, event, header, form, formset, items))
+            return render(request, self.template_name, self._build_context(request, event, header, form, formset, items, existing_quantities))
 
         header_obj = form.save(commit=False)
         header_obj.event = event
@@ -479,7 +645,7 @@ class RequirementCollectionView(View):
         header_obj.upashray = self._resolve_upashray(event, form.cleaned_data.get("upashray_name"))
         if header_obj.upashray is None:
             form.add_error("upashray_name", "Upashray name is required.")
-            return render(request, self.template_name, self._build_context(request, event, header, form, formset, items))
+            return render(request, self.template_name, self._build_context(request, event, header, form, formset, items, existing_quantities))
         if confirm_now:
             missing_fields = []
             for field_name in self.confirm_required_fields:
@@ -488,7 +654,11 @@ class RequirementCollectionView(View):
                     form.add_error(field_name, "This field is required.")
                     missing_fields.append(field_name)
             if missing_fields:
-                return render(request, self.template_name, self._build_context(request, event, header, form, formset, items))
+                return render(
+                    request,
+                    self.template_name,
+                    self._build_context(request, event, header, form, formset, items, existing_quantities),
+                )
             header_obj.status = RequirementStatus.SUBMITTED
         else:
             header_obj.status = header.status if header else RequirementStatus.DRAFT
@@ -518,7 +688,7 @@ class RequirementCollectionView(View):
                 return redirect(reverse("public-requests"))
             return redirect(reverse("requirements:header-list"))
         messages.success(request, "Data saved. Press Confirm to send Requirement to team.")
-        return render(request, self.template_name, self._build_context(request, event, header_obj, form, formset, items))
+        return render(request, self.template_name, self._build_context(request, event, header_obj, form, formset, items, existing_quantities))
 
 
 class RequirementCollectionPrintView(View):
@@ -538,7 +708,266 @@ class RequirementCollectionPrintView(View):
             .order_by("item__standard_serial", "item__pk")
         )
         language_code = _lang_code(request)
-        return self._render_pdf(header, items, language_code)
+        if HTML is not None and CSS is not None:
+            return self._render_pdf_gujarati_html(header, items)
+        return self._render_pdf_gujarati(header, items)
+
+    def _render_pdf_gujarati_html(self, header, lines):
+        item_rows = []
+        half = (len(lines) + 1) // 2
+        left_lines = lines[:half]
+        right_lines = lines[half:]
+        max_rows = max(len(left_lines), len(right_lines))
+
+        def cell_for(line):
+            if not line:
+                return ("", "", "", "")
+            item = line.item
+            display_name = item.item_name_gu or item.item_name
+            size = item.default_size or "-"
+            return (
+                str(item.standard_serial or item.pk),
+                display_name,
+                size,
+                _format_qty(line.required_qty),
+            )
+
+        for idx in range(max_rows):
+            left = cell_for(left_lines[idx] if idx < len(left_lines) else None)
+            right = cell_for(right_lines[idx] if idx < len(right_lines) else None)
+            item_rows.append((left, right))
+
+        html = render_to_string(
+            "requirements/gujarati_pdf.html",
+            {
+                "header": header,
+                "rows": item_rows,
+                "left_rows": [cell_for(line) for line in left_lines],
+                "right_rows": [cell_for(line) for line in right_lines],
+                "contact": _format_main_contact(header.event),
+                "order_number": header.order_number,
+                "logo_exists": (Path(settings.BASE_DIR) / "pdf_header.png").exists(),
+                "pdf_header_path": str((Path(settings.BASE_DIR) / "pdf_header.png").resolve()).replace("\\", "/"),
+            },
+        )
+        response = HttpResponse(content_type="application/pdf")
+        response["Content-Disposition"] = f'attachment; filename="{header.order_number or "requirement-order"}-gujarati.pdf"'
+        html_obj = HTML(string=html, base_url=str(settings.BASE_DIR))
+        styles = CSS(string="""
+            @page { size: A4; margin: 8mm 8mm 10mm 8mm; }
+            body { font-family: 'Noto Sans Gujarati', 'Shruti', sans-serif; color: #14324f; }
+        """)
+        response.write(html_obj.write_pdf(stylesheets=[styles]))
+        return response
+
+    def _render_pdf_gujarati(self, header, lines):
+        buffer = BytesIO()
+        pdf_font_name = PDF_GUJARATI_FONT_NAME
+        document = SimpleDocTemplate(
+            buffer,
+            pagesize=A4,
+            leftMargin=8 * mm,
+            rightMargin=8 * mm,
+            topMargin=8 * mm,
+            bottomMargin=10 * mm,
+        )
+
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            "KMMTitle",
+            parent=styles["Title"],
+            fontName=pdf_font_name,
+            fontSize=15,
+            leading=17,
+            textColor=colors.HexColor("#14324f"),
+            alignment=TA_LEFT,
+            spaceAfter=2,
+        )
+        heading_style = ParagraphStyle(
+            "KMMHeading",
+            parent=styles["Heading2"],
+            fontName=pdf_font_name,
+            fontSize=10,
+            leading=12,
+            textColor=colors.HexColor("#14324f"),
+            alignment=TA_LEFT,
+        )
+        body_style = ParagraphStyle(
+            "KMMBody",
+            parent=styles["BodyText"],
+            fontName=pdf_font_name,
+            fontSize=8,
+            leading=9.2,
+            alignment=TA_LEFT,
+        )
+        small_style = ParagraphStyle(
+            "KMMSmall",
+            parent=styles["BodyText"],
+            fontName=pdf_font_name,
+            fontSize=7.2,
+            leading=8.0,
+            alignment=TA_LEFT,
+        )
+
+        def p(text, style=body_style):
+            parts = [escape(part) for part in str(text or "-").splitlines() or ["-"]]
+            return Paragraph("<br/>".join(parts), style)
+
+        base_url = getattr(settings, "PUBLIC_SITE_URL", "").rstrip("/") or "http://127.0.0.1:8000"
+        qr_value = f"{base_url}{reverse('requirements:header-detail', kwargs={'pk': header.pk})}"
+        qr_drawing = createBarcodeDrawing("QR", value=qr_value, barBorder=0, width=22 * mm, height=22 * mm)
+
+        logo_path = Path(settings.BASE_DIR) / "pdf_header.png"
+        logo_image = Image(str(logo_path), width=94 * mm, height=28 * mm) if logo_path.exists() else None
+        brand_content = logo_image if logo_image else Paragraph("કલ્યાણ મિત્ર મંડળ", title_style)
+        brand_row = Table([[brand_content, qr_drawing]], colWidths=[156 * mm, 22 * mm])
+        brand_row.setStyle(
+            TableStyle(
+                [
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                    ("ALIGN", (1, 0), (1, 0), "RIGHT"),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+                    ("TOPPADDING", (0, 0), (-1, -1), 0),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+                ]
+            )
+        )
+
+        story = [
+            brand_row,
+            Spacer(1, 2),
+            Paragraph(f"વૈયાવચ્ચ લાભ નંબર: {header.order_number}", heading_style),
+            Spacer(1, 4),
+        ]
+
+        status_table = Table(
+            [[
+                p("[ ] બધી વસ્તુઓ પેક થઈ", small_style),
+                p("[ ] વિતરણ માટે તૈયાર", small_style),
+                p("ચેક કરનાર: ____________________", small_style),
+            ]],
+            colWidths=[54 * mm, 54 * mm, 76 * mm],
+        )
+        status_table.setStyle(
+            TableStyle(
+                [
+                    ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#14324f")),
+                    ("INNERGRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#9bb4c9")),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                    ("FONTNAME", (0, 0), (-1, -1), pdf_font_name),
+                    ("LEADING", (0, 0), (-1, -1), 8.5),
+                ]
+            )
+        )
+
+        basic_rows = [
+            [p("પૂજ્ય શ્રી", small_style), p(header.pujya_shri_name, body_style), p("વર્તમાન સરનામું", small_style), p(header.current_address, body_style)],
+            [p("થાણા", small_style), p(header.thana_count, body_style), p("વિસ્તાર", small_style), p(header.area, body_style)],
+            [p("ચાતુર્માસ સ્થળ સરનામું", small_style), p(header.chaturmas_place_address, body_style), p("ચાતુર્માસ પ્રવેશ તારીખ", small_style), p(_format_pdf_date(header.chaturmas_entry_date), body_style)],
+            [p("વોલન્ટિયર નામ", small_style), p(header.volunteer_name, body_style), p("રહેઠાણ પ્રકાર", small_style), p(header.get_stay_type_display(), body_style)],
+            [p("સંભાળનાર નામ", small_style), p(header.caretaker_name, body_style), p("સંભાળનાર સંપર્ક", small_style), p(header.caretaker_mobile, body_style)],
+            [p("ખાસ વિનંતી / નોંધ", small_style), p(header.remarks, body_style), p("", small_style), p("", body_style)],
+        ]
+        basic_table = Table(basic_rows, colWidths=[28 * mm, 64 * mm, 30 * mm, 62 * mm])
+        basic_table.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, -1), colors.whitesmoke),
+                    ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#14324f")),
+                    ("INNERGRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#9bb4c9")),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                    ("LEADING", (0, 0), (-1, -1), 8.5),
+                    ("FONTNAME", (0, 0), (-1, -1), pdf_font_name),
+                ]
+            )
+        )
+
+        story.extend([status_table, Spacer(1, 6), basic_table, Spacer(1, 6)])
+
+        paired_rows = []
+        half = (len(lines) + 1) // 2
+        left_lines = lines[:half]
+        right_lines = lines[half:]
+        max_rows = max(len(left_lines), len(right_lines))
+
+        paired_rows.append([
+            p("નં.", small_style), p("વસ્તુનું નામ", small_style), p("પ્રકાર/સાઈઝ", small_style), p("નંગ", small_style),
+            p("નં.", small_style), p("વસ્તુનું નામ", small_style), p("પ્રકાર/સાઈઝ", small_style), p("નંગ", small_style),
+        ])
+
+        def row_bits(line):
+            if not line:
+                return [p("", small_style), p("", small_style), p("", small_style), p("", small_style)]
+            item = line.item
+            display_name = item.item_name_gu or item.item_name
+            size = item.default_size or "-"
+            return [
+                p(item.standard_serial or item.pk, small_style),
+                p(display_name, body_style),
+                p(size, small_style),
+                p(_format_qty(line.required_qty), body_style),
+            ]
+
+        for idx in range(max_rows):
+            left = left_lines[idx] if idx < len(left_lines) else None
+            right = right_lines[idx] if idx < len(right_lines) else None
+            paired_rows.append(row_bits(left) + row_bits(right))
+
+        item_table = Table(paired_rows, colWidths=[10 * mm, 45 * mm, 30 * mm, 12 * mm, 10 * mm, 45 * mm, 30 * mm, 12 * mm], repeatRows=1)
+        item_table.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#dce9f5")),
+                    ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor("#14324f")),
+                    ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#14324f")),
+                    ("INNERGRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#9bb4c9")),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                    ("FONTNAME", (0, 0), (-1, -1), pdf_font_name),
+                    ("LEADING", (0, 0), (-1, -1), 8.5),
+                ]
+            )
+        )
+        story.append(item_table)
+
+        footer_contact = _format_main_contact(header.event)
+
+        class NumberedCanvas(canvas.Canvas):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+                self._saved_page_states = []
+
+            def showPage(self):
+                self._saved_page_states.append(dict(self.__dict__))
+                self._startPage()
+
+            def save(self):
+                page_count = len(self._saved_page_states)
+                for state in self._saved_page_states:
+                    self.__dict__.update(state)
+                    self.draw_footer(page_count)
+                    super().showPage()
+                super().save()
+
+            def draw_footer(self, page_count):
+                self.saveState()
+                self.setStrokeColor(colors.HexColor("#9bb4c9"))
+                self.setLineWidth(0.5)
+                self.line(8 * mm, 11 * mm, A4[0] - 8 * mm, 11 * mm)
+                self.setFont(pdf_font_name, 7.5)
+                self.setFillColor(colors.HexColor("#14324f"))
+                self.drawString(8 * mm, 5.2 * mm, footer_contact)
+                self.drawRightString(A4[0] - 8 * mm, 5.2 * mm, f"Page {self._pageNumber} of {page_count}")
+                self.restoreState()
+
+        document.build(story, canvasmaker=NumberedCanvas)
+        pdf_data = buffer.getvalue()
+        buffer.close()
+
+        response = HttpResponse(content_type="application/pdf")
+        response["Content-Disposition"] = f'attachment; filename="{header.order_number or "requirement-order"}-gujarati.pdf"'
+        response.write(pdf_data)
+        return response
 
     def _render_pdf(self, header, lines, language_code):
         buffer = BytesIO()

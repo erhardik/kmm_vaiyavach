@@ -3,6 +3,8 @@ from django.urls import reverse
 
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib import messages
+from django.db.models import Max
+from django.http import Http404
 from django.shortcuts import redirect
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 
@@ -326,6 +328,32 @@ class ItemCreateView(EventScopedCreateView):
         context["page_title"] = "Create Item"
         context["list_url"] = self.success_url
         return context
+
+    def form_valid(self, form):
+        event = self.get_current_event()
+        if event is None:
+            raise Http404("No active event found.")
+        obj = form.save(commit=False)
+        obj.event = event
+        next_serial = (Item.objects.filter(event=event).aggregate(max_serial=Max("standard_serial"))["max_serial"] or 0) + 1
+        if not obj.standard_serial:
+            obj.standard_serial = next_serial
+        obj.is_active = bool(form.cleaned_data.get("add_to_current_form_immediately"))
+        obj.save()
+        self.object = obj
+        if hasattr(form, "save_m2m"):
+            form.save_m2m()
+        log_activity(
+            user=self.request.user,
+            event=event,
+            action="created",
+            module=self.model._meta.label_lower,
+            record_id=obj.pk,
+            new_value=serialize_instance(obj),
+            request=self.request,
+        )
+        messages.success(self.request, "Record created successfully.")
+        return redirect(self.success_url)
 
 
 class ItemUpdateView(EventScopedUpdateView):
