@@ -285,72 +285,80 @@ def generate_gujarati_pdf_fpdf2(header, line_rows, contact_info, filename="requi
         pdf.cell(COL_W, CH, label, border=1, align="C")
         pdf.set_font(FONT, "", FS)
 
-    col1_y = draw_col_headers(grid_y)
-    col2_y = col1_y
-    cur = 1
-    prev_cat = None
+    def draw_column(rows, cx, start_y):
+        y = start_y
+        prev_cat = None
+        for idx, row in enumerate(rows):
+            sr, name, size, qty, category = row[:5]
+            if category != prev_cat:
+                prev_cat = category
+                cat_label = CATEGORY_LABELS_GU.get(category, category)
+                if y + CH + TH > page_bottom:
+                    return y, rows[idx:]
+                draw_cat(cx, y, cat_label)
+                y += CH
+            if y + TH > page_bottom:
+                return y, rows[idx:]
+            draw_row(cx, y, sr, name, size, qty)
+            y += TH
+        return y, []
 
-    def ensure(need):
-        nonlocal cur, col1_y, col2_y
-        cy = col1_y if cur == 1 else col2_y
-        if cy + need <= page_bottom:
-            return cy
-        if cur == 1:
-            cur = 2
-            cy = col2_y
-            if cy + need <= page_bottom:
-                return cy
-        pdf.add_page()
-        cur = 1
-        col1_y = col2_y = pdf._header_bottom
-        col1_y = draw_col_headers(col1_y)
-        col2_y = col1_y
-        return col1_y
+    # Extract remark lines
+    remark_lines = (header.remarks or "").splitlines()
+    has_remarks = any(line.strip() for line in remark_lines)
+    REMARKS_H = 28
 
-    for row in line_rows:
-        sr, name, size, qty, category = row[:5]
+    # Split rows evenly for balanced two-column layout
+    remaining_rows = line_rows
+    page_no = 0
 
-        if category != prev_cat:
-            prev_cat = category
-            cat_label = CATEGORY_LABELS_GU.get(category, category)
-            cy = ensure(CH)
-            cx = col1_x if cur == 1 else col2_x
-            draw_cat(cx, cy, cat_label)
-            cy += CH
-            if cur == 1:
-                col1_y = cy
-            else:
-                col2_y = cy
-
-        cy = ensure(TH)
-        cx = col1_x if cur == 1 else col2_x
-        draw_row(cx, cy, sr, name, size, qty)
-        cy += TH
-        if cur == 1:
-            col1_y = cy
+    while remaining_rows:
+        page_no += 1
+        if page_no > 1:
+            pdf.add_page()
+            col_start_y = draw_col_headers(pdf._header_bottom)
         else:
-            col2_y = cy
+            col_start_y = draw_col_headers(grid_y)
 
-    # === NOTES SECTION ===
-    ny = max(col1_y, col2_y) + 4
-    if ny > page_bottom - 25:
-        pdf.add_page()
-        ny = pdf._header_bottom + 4
+        half = (len(remaining_rows) + 1) // 2
+        left_batch = remaining_rows[:half]
+        right_batch = remaining_rows[half:]
 
-    pdf.set_font(FONT, "B", 9)
-    pdf.set_xy(M, ny)
-    pdf.cell(0, 7, "નોંધ:", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-    ny = pdf.get_y()
-    pdf.set_font(FONT, "", 7.2)
-    for note in (header.remarks or "").splitlines():
-        if note.strip():
-            pdf.set_xy(M + 2, ny)
-            pdf.multi_cell(page_w - 4, 5, f"• {note.strip()}")
-            ny = pdf.get_y()
-    ny = max(ny + 2, pdf.get_y() + 2)
-    pdf.rect(M, ny, page_w, 35)
-    pdf.set_xy(M + 2, ny + 2)
-    pdf.cell(page_w - 4, 5, "..............................................")
+        col1_bottom, left_overflow = draw_column(left_batch, col1_x, col_start_y)
+        col2_bottom, right_overflow = draw_column(right_batch, col2_x, col_start_y)
+
+        overflow = (left_overflow or []) + (right_overflow or [])
+        if overflow:
+            remaining_rows = overflow
+            continue
+
+        remaining_rows = None
+
+        # All items fit — position remarks
+        ny = max(col1_bottom, col2_bottom) + 4
+
+        if has_remarks and ny + REMARKS_H > page_bottom:
+            pdf.add_page()
+            ny = pdf._header_bottom + 4
+
+        if has_remarks:
+            pdf.rect(M, ny, page_w, REMARKS_H)
+            pdf.set_font(FONT, "B", 9)
+            pdf.set_xy(M + 3, ny + 2)
+            pdf.cell(page_w - 6, 6, "નોંધ:", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            pdf.set_font(FONT, "", 7.2)
+            y_in = pdf.get_y()
+            for note in remark_lines[:4]:
+                if note.strip():
+                    pdf.set_xy(M + 4, y_in)
+                    pdf.multi_cell(page_w - 8, 5, note.strip())
+                    y_in = pdf.get_y()
+                else:
+                    y_in += 5
+        else:
+            pdf.set_font(FONT, "", 7.2)
+            pdf.set_xy(M, ny)
+            pdf.cell(page_w, 5, "--")
 
     buffer = BytesIO()
     pdf.output(buffer)
