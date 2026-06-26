@@ -3,27 +3,73 @@
 <head>
   <meta charset="utf-8">
   <style>
-    @page { size: A4; margin: 8mm 8mm 10mm 8mm; }
+    @font-face {
+      font-family: "KMMGujarati";
+      src: url("file://{{ pdf_font_path }}") format("truetype");
+    }
+    @page { size: A4; margin: 5mm 5mm 7mm 5mm; }
     * { box-sizing: border-box; }
-    body { margin: 0; font-family: "Noto Sans Gujarati", "Shruti", sans-serif; color: #14324f; font-size: 8pt; line-height: 1.12; }
-    .brand { display: flex; justify-content: space-between; align-items: flex-start; gap: 6mm; margin-bottom: 2mm; }
-    .brand img { width: 156mm; height: 28mm; object-fit: contain; }
-    .brand-title { font-size: 14pt; font-weight: 700; }
-    .brand-sub { font-size: 9pt; font-weight: 700; margin-top: 1mm; }
+    body {
+      margin: 0;
+      font-family: "KMMGujarati", "Shruti", sans-serif;
+      color: #14324f;
+      font-size: 7pt;
+      line-height: 1.02;
+    }
+    .brand {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 4mm;
+      margin-bottom: 1.5mm;
+    }
+    .brand img {
+      width: 156mm;
+      height: 31mm;
+      object-fit: contain;
+    }
+    .brand-title {
+      font-size: 12pt;
+      font-weight: 700;
+      margin-top: 1mm;
+    }
+    .brand-sub {
+      font-size: 8pt;
+      font-weight: 700;
+      margin-top: 0.5mm;
+    }
     .status, .basic, .items { width: 100%; border-collapse: collapse; }
-    .status td, .basic td, .items th, .items td { border: 0.4pt solid #9bb4c9; padding: 1.2mm 1.5mm; vertical-align: top; }
+    .status td, .basic td, .items th, .items td {
+      border: 0.35pt solid #9bb4c9;
+      padding: 0.7mm 1.1mm;
+      vertical-align: top;
+    }
     .status td { width: 33.333%; font-weight: 700; }
-    .basic { margin-top: 1.5mm; }
+    .basic { margin-top: 1.2mm; }
     .basic td.label { width: 20%; background: #f4f7fa; font-weight: 700; }
     .basic td.value { width: 30%; }
-    .section-title { margin: 2mm 0 1mm; font-size: 10pt; font-weight: 700; }
-    .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 2mm; }
-    .items th { background: #dce9f5; text-align: left; font-weight: 700; }
-    .num { width: 10mm; }
+    .section-title { margin: 1.2mm 0 0.7mm; font-size: 8.5pt; font-weight: 700; }
+    .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1mm; }
+    .items th {
+      background: #dce9f5;
+      text-align: left;
+      font-weight: 700;
+    }
+    .num { width: 9mm; }
     .item { width: 45mm; }
     .size { width: 30mm; }
-    .qty { width: 12mm; text-align: center; }
-    .footer { position: fixed; left: 0; right: 0; bottom: 0; border-top: 0.4pt solid #9bb4c9; padding-top: 1.3mm; display: flex; justify-content: space-between; font-size: 7pt; }
+    .qty { width: 11mm; text-align: center; }
+    .footer {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-top: 0.35pt solid #9bb4c9;
+      padding-top: 0.8mm;
+      display: flex;
+      justify-content: space-between;
+      font-size: 6.4pt;
+    }
   </style>
 </head>
 <body>
@@ -49,23 +95,23 @@
   <table class="basic">
     <tr>
       <td class="label">પૂજ્ય શ્રી</td><td class="value">{{ header.pujya_shri_name|default:"-" }}</td>
-      <td class="label">વર્તમાન સરનામું</td><td class="value">{{ header.current_address|default:"-" }}</td>
+      <td class="label">હાલનું સરનામું</td><td class="value">{{ header.current_address|default:"-" }}</td>
     </tr>
     <tr>
-      <td class="label">થાણા</td><td class="value">{{ header.thana_count|default:"-" }}</td>
+      <td class="label">ઠાણા</td><td class="value">{{ header.thana_count|default:"-" }}</td>
       <td class="label">વિસ્તાર</td><td class="value">{{ header.area|default:"-" }}</td>
     </tr>
     <tr>
-      <td class="label">ચાતુર્માસ સ્થળ સરનામું</td><td class="value">{{ header.chaturmas_place_address|default:"-" }}</td>
+      <td class="label">ચાતુર્માસ સ્થળનું સરનામું</td><td class="value">{{ header.chaturmas_place_address|default:"-" }}</td>
       <td class="label">ચાતુર્માસ પ્રવેશ તારીખ</td><td class="value">{{ header.chaturmas_entry_date|date:"d-F-Y" }}</td>
     </tr>
     <tr>
-      <td class="label">વોલન્ટિયર નામ</td><td class="value">{{ header.volunteer_name|default:"-" }}</td>
-      <td class="label">રહેઠાણ પ્રકાર</td><td class="value">{{ header.get_stay_type_display|default:"-" }}</td>
+      <td class="label">જનારનું નામ</td><td class="value">{{ header.volunteer_name|default:"-" }}</td>
+      <td class="label">સંઘ ઉપાશ્રય / સ્થિરવાસ</td><td class="value">{{ header.get_stay_type_display|default:"-" }}</td>
     </tr>
     <tr>
-      <td class="label">સંભાળનાર નામ</td><td class="value">{{ header.caretaker_name|default:"-" }}</td>
-      <td class="label">સંભાળનાર સંપર્ક</td><td class="value">{{ header.caretaker_mobile|default:"-" }}</td>
+      <td class="label">પૂજ્ય શ્રી સંભાળ લેનારનું નામ અને મોબાઇલ નંબર</td><td class="value">{{ header.caretaker_name|default:"-" }} {{ header.caretaker_mobile|default:"" }}</td>
+      <td class="label">ફોર્મ તારીખ</td><td class="value">{{ header.requirement_date|date:"d-F-Y" }}</td>
     </tr>
     <tr>
       <td class="label">ખાસ વિનંતી / નોંધ</td><td class="value">{{ header.remarks|default:"-" }}</td>

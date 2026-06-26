@@ -88,6 +88,7 @@ CATEGORY_ROW_CLASSES = {
 
 PDF_FONT_NAME = "Helvetica"
 _pdf_font_candidates = [
+    Path(settings.BASE_DIR) / "assets/fonts/NotoSansGujarati-Regular.ttf",
     Path("C:/Windows/Fonts/shruti.ttf"),
     Path("C:/Windows/Fonts/Nirmala.ttc"),
     Path("/usr/share/fonts/truetype/noto/NotoSansGujarati-Regular.ttf"),
@@ -105,6 +106,7 @@ for candidate in _pdf_font_candidates:
 
 PDF_GUJARATI_FONT_NAME = PDF_FONT_NAME
 for candidate in [
+    Path(settings.BASE_DIR) / "assets/fonts/NotoSansGujarati-Regular.ttf",
     Path("C:/Windows/Fonts/shruti.ttf"),
     Path("C:/Windows/Fonts/shrutib.ttf"),
     Path("/usr/share/fonts/truetype/noto/NotoSansGujarati-Regular.ttf"),
@@ -126,7 +128,7 @@ def _lang_code(request):
         return "gu"
     if requested.startswith("en"):
         return "en"
-    return (getattr(request, "LANGUAGE_CODE", None) or "en")[:2]
+    return "gu"
 
 
 def _with_lang(url, language_code):
@@ -380,15 +382,27 @@ class RequirementHeaderExportView(LoginRequiredMixin, View):
 class RequirementCollectionView(View):
     template_name = "requirements/collect.html"
     confirm_required_fields = (
-        "volunteer_name",
         "pujya_shri_name",
-        "current_address",
         "thana_count",
         "area",
+        "current_address",
         "chaturmas_place_address",
+        "requirement_date",
         "chaturmas_entry_date",
+        "volunteer_name",
         "stay_type",
     )
+    confirm_required_field_labels = {
+        "pujya_shri_name": "પૂજ્ય શ્રી",
+        "thana_count": "ઠાણા",
+        "area": "વિસ્તાર",
+        "current_address": "હાલનું સરનામું",
+        "chaturmas_place_address": "ચાતુર્માસ સ્થળનું સરનામું",
+        "requirement_date": "ફોર્મ તારીખ",
+        "chaturmas_entry_date": "ચાતુર્માસ પ્રવેશ તારીખ",
+        "volunteer_name": "જનારનું નામ",
+        "stay_type": "સંઘ ઉપાશ્રય / સ્થિરવાસ",
+    }
 
     def _get_event(self):
         event_token = self.kwargs.get("event_token") or self.request.GET.get("event_token") or self.request.POST.get("event_token")
@@ -654,6 +668,11 @@ class RequirementCollectionView(View):
                     form.add_error(field_name, "This field is required.")
                     missing_fields.append(field_name)
             if missing_fields:
+                missing_labels = [self.confirm_required_field_labels.get(name, name) for name in missing_fields]
+                messages.error(
+                    request,
+                    "આ વિગતો જરૂરી છે: " + ", ".join(missing_labels) if language_code == "gu" else "Missing required details: " + ", ".join(missing_labels),
+                )
                 return render(
                     request,
                     self.template_name,
@@ -748,6 +767,7 @@ class RequirementCollectionPrintView(View):
                 "order_number": header.order_number,
                 "logo_exists": (Path(settings.BASE_DIR) / "pdf_header.png").exists(),
                 "pdf_header_path": str((Path(settings.BASE_DIR) / "pdf_header.png").resolve()).replace("\\", "/"),
+                "pdf_font_path": str((Path(settings.BASE_DIR) / "assets/fonts/NotoSansGujarati-Regular.ttf").resolve()).replace("\\", "/"),
             },
         )
         response = HttpResponse(content_type="application/pdf")
