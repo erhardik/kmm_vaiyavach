@@ -142,7 +142,7 @@ def _has_gujarati(text):
 
 def _auto_font(pdf, text, style="", size=8.4):
     if _has_gujarati(text):
-        pdf.set_font("Guj", style, size)
+        pdf.set_font("Gujarati", style, size)
     else:
         pdf.set_font("Helvetica", style, size)
 
@@ -153,7 +153,7 @@ def generate_gujarati_pdf_fpdf2(header, line_rows, contact_info, filename="requi
     from fpdf.table import TableBordersLayout as TBL
     from fpdf.fonts import FontFace
 
-    FONT_NAME = "Guj"
+    FONT_NAME = "Gujarati"
 
     class GujaratiPDF(FPDF):
         def header(self):
