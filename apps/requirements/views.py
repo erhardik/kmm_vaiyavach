@@ -22,8 +22,6 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.graphics.barcode import createBarcodeDrawing
 
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import Image, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
@@ -34,7 +32,11 @@ except Exception:  # pragma: no cover - optional dependency
     HTML = None
     CSS = None
 
-from apps.common.pdf_utils import generate_weasyprint_pdf, NumberedCanvas as SharedNumberedCanvas
+from apps.common.pdf_utils import (
+    GUJARATI_FONT_NAME as PDF_UTILS_GUJARATI_FONT,
+    generate_weasyprint_pdf,
+    NumberedCanvas as SharedNumberedCanvas,
+)
 
 from apps.common.views import EventScopedCreateView, EventScopedDeleteView, EventScopedListView, EventScopedUpdateView
 from apps.dashboard.services import build_public_item_preview
@@ -89,14 +91,7 @@ CATEGORY_ROW_CLASSES = {
 }
 
 PDF_FONT_NAME = "Helvetica"
-PDF_GUJARATI_FONT_NAME = "Helvetica"
-_config_font_path = Path(settings.GUJARATI_FONT_PATH)
-if _config_font_path.exists():
-    try:
-        pdfmetrics.registerFont(TTFont("NotoSansGujarati", str(_config_font_path)))
-        PDF_GUJARATI_FONT_NAME = "NotoSansGujarati"
-    except Exception:
-        pass
+PDF_GUJARATI_FONT_NAME = PDF_UTILS_GUJARATI_FONT
 if PDF_GUJARATI_FONT_NAME == "Helvetica":
     _fallback_candidates = [
         Path(settings.BASE_DIR) / "assets/fonts/NotoSansGujarati-Regular.ttf",
