@@ -1241,7 +1241,7 @@ class RequirementCollectionPrintView(View):
                 p("Volunteer Name" if language_code != "gu" else "àªµà«‹àª²àª¨à«àªŸàª¿àª¯àª° àª¨àª¾àª®", small_style),
                 p(header.volunteer_name, body_style),
                 p("Stay Type" if language_code != "gu" else "àª°àª¹à«‡àª àª¾àª£ àªªà«àª°àª•àª¾àª°", small_style),
-                p(header.stay_type, body_style),
+                p(header.get_stay_type_display(), body_style),
             ],
             [
                 p("Care Taker Name" if language_code != "gu" else "àª¸àª‚àª­àª¾àª³àª¨àª¾àª° àª¨àª¾àª®", small_style),
