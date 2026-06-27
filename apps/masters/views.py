@@ -383,8 +383,8 @@ class ItemDeleteView(EventScopedDeleteView):
 class UpashrayListView(EventScopedListView):
     model = Upashray
     template_name = "common/list.html"
-    row_fields = ("name", "area", "city", "contact_person", "mobile", "get_status_display")
-    headers = ["Name", "Area", "City", "Contact", "Mobile", "Status"]
+    row_fields = ("name", "display_sub_area", "city", "contact_person", "mobile", "get_status_display")
+    headers = ["Name", "Route", "City", "Contact", "Mobile", "Status"]
     search_fields = ["name", "area", "city", "mobile"]
     create_url_name = "masters:upashray-create"
     edit_url_name = "masters:upashray-update"

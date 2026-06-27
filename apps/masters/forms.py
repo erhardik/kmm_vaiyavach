@@ -99,7 +99,7 @@ class ItemForm(BootstrapModelForm):
 class UpashrayForm(BootstrapModelForm):
     class Meta:
         model = Upashray
-        fields = ["name", "area", "address", "city", "contact_person", "mobile", "maharaj_name", "entry_date", "status"]
+        fields = ["name", "area", "sub_area", "address", "city", "contact_person", "mobile", "maharaj_name", "entry_date", "status"]
         widgets = {"entry_date": forms.DateInput(attrs={"type": "date"})}
 
 

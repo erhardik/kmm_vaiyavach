@@ -48,6 +48,11 @@ class Event(TimeStampedModel):
     class Meta:
         ordering = ["-start_date", "name"]
 
+    def display_sub_area(self) -> str:
+        if self.sub_area:
+            return str(self.sub_area)
+        return self.area or "—"
+
     def __str__(self) -> str:
         return self.name
 
@@ -122,9 +127,40 @@ class Item(EventScopedModel):
         return self.item_name
 
 
+class RouteArea(models.Model):
+    name = models.CharField(max_length=200)
+    display_code = models.CharField(max_length=20, blank=True)
+    display_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["display_order", "name"]
+
+    def __str__(self) -> str:
+        if self.display_code:
+            return f"Area {self.display_code}: {self.name}"
+        return self.name
+
+
+class RouteSubArea(models.Model):
+    route_area = models.ForeignKey(RouteArea, on_delete=models.CASCADE, related_name="sub_areas")
+    name = models.CharField(max_length=200)
+    display_code = models.CharField(max_length=20, blank=True)
+    display_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["route_area__display_order", "display_order", "name"]
+
+    def __str__(self) -> str:
+        prefix = f"{self.route_area.display_code}{self.display_code}" if self.route_area.display_code and self.display_code else ""
+        if prefix:
+            return f"Area {prefix}: {self.name}"
+        return self.name
+
+
 class Upashray(EventScopedModel):
     name = models.CharField(max_length=200)
     area = models.CharField(max_length=120, blank=True)
+    sub_area = models.ForeignKey(RouteSubArea, null=True, blank=True, on_delete=models.SET_NULL, related_name="upashrays")
     address = models.TextField(blank=True)
     city = models.CharField(max_length=120, blank=True)
     contact_person = models.CharField(max_length=120, blank=True)
