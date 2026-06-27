@@ -213,8 +213,8 @@ def generate_gujarati_pdf_fpdf2(header, line_rows, contact_info, filename="requi
     M = pdf.l_margin
     page_w = pdf.w - M - pdf.r_margin
     page_bottom = pdf.h - pdf.b_margin - 20
-    ROW_H = 7
-    SM = 8
+    ROW_H = 5.5
+    SM = 6.5
 
     # === METADATA GRID ===
     grid_y = pdf._header_bottom
@@ -256,10 +256,10 @@ def generate_gujarati_pdf_fpdf2(header, line_rows, contact_info, filename="requi
     COL_GAP = 6
     col1_x = M
     col2_x = M + COL_W + COL_GAP
-    TH = 5
-    HH = 6
-    CH = 5
-    FS = 7
+    TH = 4
+    HH = 4.5
+    CH = 4
+    FS = 6.5
 
     def draw_col_headers(y):
         pdf.set_font(FONT, "B", FS)
@@ -342,7 +342,7 @@ def generate_gujarati_pdf_fpdf2(header, line_rows, contact_info, filename="requi
     # === NOTE: Extra Remarks ===
     remark_lines = (header.remarks or "").splitlines()
     has_remarks = any(line.strip() for line in remark_lines)
-    REMARKS_H = 28
+    REMARKS_H = 22
     ny = max(col1_end, col2_end) + 4
     pdf.set_font(FONT, "B", 9)
     pdf.set_xy(M, ny)

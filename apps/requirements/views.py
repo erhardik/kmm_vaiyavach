@@ -201,12 +201,68 @@ def _item_name_for_language(item, language_code):
     return item.item_name
 
 
+_SIZE_TRANSLATIONS_GU = {
+    "kg": "કિલો",
+    "gm": "ગ્રામ",
+    "g": "ગ્રામ",
+    "gram": "ગ્રામ",
+    "gr": "ગ્રામ",
+    "kilo": "કિલો",
+    "ml": "મિલી",
+    "l": "લિટર",
+    "litre": "લિટર",
+    "liter": "લિટર",
+    "pack": "પેક",
+    "box": "બોક્સ",
+    "bottle": "બોટલ",
+    "pkt": "પડીકી",
+    "packet": "પડીકી",
+    "tin": "ટીન",
+    "mtr": "મીટર",
+    "meter": "મીટર",
+    "cm": "સે.મી.",
+    "mm": "મિ.મી.",
+    "no": "નંગ",
+    "nos": "નંગ",
+    "pair": "જોડ",
+    "set": "સેટ",
+    "doz": "ડઝન",
+    "dozen": "ડઝન",
+    "bundle": "ગંડી",
+    "sheet": "શીટ",
+    "can": "કેન",
+    "jar": "જાર",
+    "roll": "રોલ",
+}
+
+
+def _translate_size_gujarati(size_text):
+    if not size_text or size_text == "-":
+        return size_text
+    text = size_text.strip()
+    words = text.split()
+    translated_words = []
+    for word in words:
+        stripped = word.strip(".,;:!?")
+        lower = stripped.lower()
+        if lower in _SIZE_TRANSLATIONS_GU:
+            punctuation = word[len(stripped):] if len(word) > len(stripped) else ""
+            translated_words.append(_SIZE_TRANSLATIONS_GU[lower] + punctuation)
+        else:
+            translated_words.append(word)
+    return " ".join(translated_words)
+
+
 def _item_size_for_language(item, language_code):
     if item.parent_item_id:
         if language_code == "gu":
-            return item.variant_name_gu or item.variant_name or item.default_size or "-"
+            raw = item.variant_name_gu or item.variant_name or item.default_size or "-"
+            return _translate_size_gujarati(raw)
         return item.variant_name or item.variant_name_gu or item.default_size or "-"
-    return item.default_size or "-"
+    raw = item.default_size or "-"
+    if language_code == "gu":
+        return _translate_size_gujarati(raw)
+    return raw
 
 
 def _variant_suffix(index):
