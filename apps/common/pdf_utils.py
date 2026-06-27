@@ -292,8 +292,21 @@ def generate_gujarati_pdf_fpdf2(header, line_rows, contact_info, filename="requi
     blank = ("", "", "", "", "EXTRA")
     line_rows = list(line_rows) + [blank] * 4
 
+    def _row_heights(rows):
+        prev_cat = None
+        heights = []
+        for sr, name, size, qty, cat in rows:
+            h = TH
+            if cat != prev_cat:
+                h += CH
+                prev_cat = cat
+            heights.append(h)
+        return heights
+
+    def _col_avail_h(start_y):
+        return page_bottom - start_y
+
     def count_fit(rows, start_y):
-        """How many rows (with category headers) fit in one column."""
         y = start_y
         prev_cat = None
         for i, row in enumerate(rows):
@@ -308,7 +321,6 @@ def generate_gujarati_pdf_fpdf2(header, line_rows, contact_info, filename="requi
         return len(rows)
 
     def draw_batch(rows, cx, start_y):
-        """Draw rows in one column, returns end y."""
         y = start_y
         prev_cat = None
         for sr, name, size, qty, cat in rows:
@@ -320,7 +332,33 @@ def generate_gujarati_pdf_fpdf2(header, line_rows, contact_info, filename="requi
             y += TH
         return y
 
-    # Batch-based drawing: left → right → new page → left → right
+    def balance_fill(rows, start_y):
+        heights = _row_heights(rows)
+        avail = _col_avail_h(start_y)
+        total_h = sum(heights)
+        left_h = 0
+        best_i = 0
+        best_diff = total_h
+        for i in range(len(rows)):
+            left_h += heights[i]
+            right_h = total_h - left_h
+            if left_h > avail * 2:
+                break
+            if i < len(rows) - 1 and rows[i][4] != rows[i + 1][4]:
+                diff = abs(left_h - right_h)
+                if diff < best_diff:
+                    best_diff = diff
+                    best_i = i + 1
+        if best_i == 0:
+            best_i = min(count_fit(rows, start_y), (len(rows) + 1) // 2) or 1
+        left_rows = rows[:best_i]
+        right_rows = rows[best_i:]
+        left_fit = count_fit(left_rows, start_y)
+        left_rows = left_rows[:left_fit]
+        right_fit = count_fit(right_rows, start_y) if right_rows else 0
+        right_rows = right_rows[:right_fit]
+        return left_rows, right_rows
+
     remaining = line_rows
     page_num = 0
     while remaining:
@@ -331,10 +369,9 @@ def generate_gujarati_pdf_fpdf2(header, line_rows, contact_info, filename="requi
             pdf.add_page()
             col_start = draw_col_headers(pdf._header_bottom)
 
-        per_col = count_fit(remaining, col_start)
-        left_rows = remaining[:per_col]
-        right_rows = remaining[per_col:per_col * 2]
-        remaining = remaining[per_col * 2:]
+        left_rows, right_rows = balance_fill(remaining, col_start)
+        fitted = len(left_rows) + len(right_rows)
+        remaining = remaining[fitted:]
 
         col1_end = draw_batch(left_rows, col1_x, col_start)
         col2_end = draw_batch(right_rows, col2_x, col_start) if right_rows else col_start
