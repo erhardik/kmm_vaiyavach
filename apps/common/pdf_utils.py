@@ -339,34 +339,24 @@ def generate_gujarati_pdf_fpdf2(header, line_rows, contact_info, filename="requi
         col1_end = draw_batch(left_rows, col1_x, col_start)
         col2_end = draw_batch(right_rows, col2_x, col_start) if right_rows else col_start
 
-    # === NOTE: Extra Remarks ===
+    # === Extra Remarks ===
     remark_lines = (header.remarks or "").splitlines()
     has_remarks = any(line.strip() for line in remark_lines)
-    REMARKS_H = 22
-    ny = max(col1_end, col2_end) + 4
-    pdf.set_font(FONT, "B", 9)
+    ny = max(col1_end, col2_end) + 2
+    pdf.set_font(FONT, "B", 8)
     pdf.set_xy(M, ny)
-    pdf.cell(page_w, 6, "Extra Remarks", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-    ny = pdf.get_y()
+    label = "Extra Remarks: "
+    pdf.cell(page_w, 5, label, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
+    pdf.set_font(FONT, "", 7.2)
     if has_remarks:
-        if ny + REMARKS_H > page_bottom:
-            pdf.add_page()
-            ny = pdf._header_bottom + 4
-        pdf.rect(M, ny, page_w, REMARKS_H)
-        pdf.set_font(FONT, "", 7.2)
-        y_in = ny + 2
         for note in remark_lines[:4]:
             if note.strip():
-                pdf.set_xy(M + 4, y_in)
-                pdf.multi_cell(page_w - 8, 5, note.strip())
-                y_in = pdf.get_y()
-            else:
-                y_in += 5
+                pdf.set_x(M + 2)
+                pdf.multi_cell(page_w - 4, 4.5, note.strip())
     else:
-        pdf.set_font(FONT, "", 7.2)
-        pdf.set_xy(M, ny)
-        pdf.cell(page_w, 5, "--")
+        pdf.set_x(M + 2)
+        pdf.cell(page_w - 4, 5, "--")
 
     buffer = BytesIO()
     pdf.output(buffer)
