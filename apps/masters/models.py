@@ -98,6 +98,7 @@ class Item(EventScopedModel):
     category = models.CharField(max_length=40, choices=ItemCategory.choices)
     unit = models.CharField(max_length=40, blank=True)
     default_size = models.CharField(max_length=80, blank=True)
+    default_size_gu = models.CharField(max_length=80, blank=True)
     description = models.TextField(blank=True)
     estimated_rate = models.DecimalField(max_digits=14, decimal_places=2, default=0)
 

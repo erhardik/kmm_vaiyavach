@@ -202,9 +202,11 @@ def _item_name_for_language(item, language_code):
 
 
 def _item_size_for_language(item, language_code):
+    if language_code == "gu":
+        if item.parent_item_id:
+            return item.variant_name_gu or item.variant_name or item.default_size_gu or item.default_size or "-"
+        return item.default_size_gu or item.default_size or "-"
     if item.parent_item_id:
-        if language_code == "gu":
-            return item.variant_name_gu or item.variant_name or item.default_size or "-"
         return item.variant_name or item.variant_name_gu or item.default_size or "-"
     return item.default_size or "-"
 
