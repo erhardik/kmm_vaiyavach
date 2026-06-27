@@ -233,6 +233,40 @@ _SIZE_TRANSLATIONS_GU = {
     "can": "કેન",
     "jar": "જાર",
     "roll": "રોલ",
+    "foot": "ફૂટ",
+    "feet": "ફૂટ",
+    "inch": "ઇંચ",
+    "inches": "ઇંચ",
+    "nano": "નાનો",
+    "nani": "નાની",
+    "nana": "નાના",
+    "mota": "મોટા",
+    "moti": "મોટી",
+    "gol": "ગોળ",
+    "kalo": "કાળો",
+    "kali": "કળી",
+    "safed": "સફેદ",
+    "navpad": "નવપદ",
+    "sadi": "સાડી",
+    "dabbi": "ડબ્બી",
+    "adho": "અડધો",
+    "simple": "સાદો",
+    "plastic": "પ્લાસ્ટિક",
+    "dish": "ડિશ",
+    "transparent": "પારદર્શક",
+    "digital": "ડિજિટલ",
+    "medium": "મધ્યમ",
+    "black": "કાળો",
+    "blue": "વાદળી",
+    "green": "લીલો",
+    "red": "લાલ",
+    "orange": "ભગવો",
+    "brown": "ભુરો",
+    "tablets": "ગોળી",
+    "goli": "ગોળી",
+    "nang": "નંગ",
+    "mujab": "મુજબ",
+    "sathe": "સાથે",
 }
 
 
@@ -243,11 +277,11 @@ def _translate_size_gujarati(size_text):
     words = text.split()
     translated_words = []
     for word in words:
-        stripped = word.strip(".,;:!?")
+        stripped = word.strip(".,;:!?()[]/\\\"'")
         lower = stripped.lower()
         if lower in _SIZE_TRANSLATIONS_GU:
-            punctuation = word[len(stripped):] if len(word) > len(stripped) else ""
-            translated_words.append(_SIZE_TRANSLATIONS_GU[lower] + punctuation)
+            punct_after = word[len(stripped):]
+            translated_words.append(_SIZE_TRANSLATIONS_GU[lower] + punct_after)
         else:
             translated_words.append(word)
     return " ".join(translated_words)
