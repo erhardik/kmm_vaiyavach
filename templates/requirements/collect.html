@@ -105,16 +105,24 @@
           {{ form.volunteer_name }}
         </div>
         <div class="col-12 col-md-4">
+          <label class="form-label small-label">{% if lang == "gu" %}જનારનું નંબર{% else %}Janar Number{% endif %} *</label>
+          {{ form.volunteer_mobile }}
+        </div>
+        <div class="col-12 col-md-4">
           <label class="form-label small-label">{% if lang == "gu" %}સંઘ ઉપાશ્રય / સ્થિરવાસ{% else %}Sangh Upashray / Sthirvas{% endif %} *</label>
           {{ form.stay_type }}
         </div>
         <div class="col-12 col-md-6">
-          <label class="form-label small-label">{% if lang == "gu" %}પૂજ્ય શ્રી સંભાળ લેનારનું નામ અને મોબાઇલ{% else %}Sambhaal Lenar Nu Naam Ane Number{% endif %}</label>
+          <label class="form-label small-label">{% if lang == "gu" %}પૂજ્ય શ્રી સંભાળ લેનારનું નામ{% else %}Sambhaal Lenar Nu Naam{% endif %}</label>
           {{ form.caretaker_name }}
         </div>
         <div class="col-12 col-md-6">
           <label class="form-label small-label">{% if lang == "gu" %}પૂજ્ય શ્રી સંભાળ લેનારનું નંબર{% else %}Sambhaal Lenar Mobile{% endif %}</label>
           {{ form.caretaker_mobile }}
+        </div>
+        <div class="col-12 col-md-6">
+          <label class="form-label small-label">{% if lang == "gu" %}રૂટ{% else %}Route{% endif %}</label>
+          {{ form.route_area }}
         </div>
       </div>
       <div class="d-flex justify-content-end mt-3">

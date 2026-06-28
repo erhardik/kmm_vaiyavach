@@ -31,12 +31,27 @@ class RequirementHeader(EventScopedModel):
         SANGH_UPASHRAY = "SANGH_UPASHRAY", "Sangh Upashray"
         STHIRVAS = "STHIRVAS", "Sthirvas"
 
+    class RouteAreaChoices(models.TextChoices):
+        A1 = "A1", "Area-1 City-ReliefRoad"
+        A2 = "A2", "Area-2 Shahpur-Usmanpura"
+        A3 = "A3", "Area-3 Naranpura-Thaltej"
+        A4 = "A4", "Area-4 Vadaj Subhashbridge"
+        A5 = "A5", "Area-5 KrishnaNagar-Naroda"
+        A6 = "A6", "Area-6 Jivrajpark-Satellite"
+        A7 = "A7", "Area-7 Vasna-New Vasna"
+        A8 = "A8", "Area-8 Paldi-ChandraNagar"
+        A9 = "A9", "Area-9 Shahibag"
+        A10 = "A10", "Area-10 Sabarmati-Chandkheda"
+        A11 = "A11", "Area-11 Other Areas"
+
     order_number = models.CharField(max_length=32, unique=False, editable=False, null=True, blank=True)
     public_view_token = models.UUIDField(default=None, null=True, blank=True, unique=True, editable=False)
     upashray = models.ForeignKey("masters.Upashray", on_delete=models.PROTECT, related_name="requirements")
     requirement_date = models.DateField(default=timezone.now)
     remarks = models.TextField(blank=True)
     volunteer_name = models.CharField(max_length=120, blank=True, default="")
+    volunteer_mobile = models.CharField(max_length=20, blank=True, default="")
+    route_area = models.CharField(max_length=20, blank=True, default="", choices=RouteAreaChoices.choices)
     pujya_shri_name = models.CharField(max_length=120, blank=True, default="")
     pujya_shri_mobile = models.CharField(max_length=20, blank=True, default="")
     current_address = models.TextField(blank=True, default="")
@@ -70,10 +85,12 @@ class RequirementHeader(EventScopedModel):
         if not self.public_view_token:
             self.public_view_token = uuid.uuid4()
         if not self.order_number and self.status == RequirementStatus.SUBMITTED:
+            area_prefix = (self.route_area or "").strip() or "A11"
+            area_num = int(area_prefix[1:])
             name_part = re.sub(r"[^A-Z0-9]", "", self.volunteer_name.strip().upper())[:10] or "UNKNOWN"
             date_part = timezone.localdate().strftime("%d%m%y")
             seq = RequirementHeader.objects.filter(event=self.event, status=RequirementStatus.SUBMITTED).count() + 1
-            self.order_number = f"{name_part}-{date_part}-{seq}"
+            self.order_number = f"A{area_num:02d}-{name_part}-{date_part}-{seq:03d}"
         super().save(*args, **kwargs)
 
 

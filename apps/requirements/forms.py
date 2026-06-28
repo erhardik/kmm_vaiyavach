@@ -100,6 +100,8 @@ class RequirementCollectionHeaderForm(BootstrapModelForm):
             "requirement_date",
             "remarks",
             "volunteer_name",
+            "volunteer_mobile",
+            "route_area",
             "pujya_shri_name",
             "pujya_shri_mobile",
             "current_address",
@@ -117,6 +119,8 @@ class RequirementCollectionHeaderForm(BootstrapModelForm):
             "current_address": forms.Textarea(attrs={"rows": 2}),
             "chaturmas_place_address": forms.Textarea(attrs={"rows": 2}),
             "remarks": forms.Textarea(attrs={"rows": 2}),
+            "volunteer_mobile": forms.NumberInput(attrs={"type": "tel", "inputmode": "numeric"}),
+            "caretaker_mobile": forms.NumberInput(attrs={"type": "tel", "inputmode": "numeric"}),
         }
 
 
