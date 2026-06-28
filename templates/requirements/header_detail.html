@@ -13,7 +13,7 @@
           <span class="badge fs-6 {% if header.status == 'SUBMITTED' %}text-bg-primary{% elif header.status == 'IN_PROGRESS' %}text-bg-warning text-dark{% elif header.status == 'CLOSED' %}text-bg-info text-dark{% elif header.status == 'RECEIVED_BY_MS' %}text-bg-success{% elif header.is_locked %}text-bg-success{% else %}text-bg-warning{% endif %}">
             {% if lang_code == "gu" %}
               {% if header.status == 'SUBMITTED' %}ફોર્મ પ્રાપ્ત (પેકિંગ બાકી)
-              {% elif header.status == 'IN_PROGRESS %}પેકિંગ થઈ ગયું (ડિલિવરી બાકી)
+              {% elif header.status == 'IN_PROGRESS' %}પેકિંગ થઈ ગયું (ડિલિવરી બાકી)
               {% elif header.status == 'CLOSED' %}ડિલિવરી થઈ ગઈ (રૂટ પર)
               {% elif header.status == 'RECEIVED_BY_MS' %}M.S. દ્વારા પ્રાપ્ત
               {% else %}{{ header.get_status_display }}{% endif %}
