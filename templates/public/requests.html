@@ -86,7 +86,7 @@
                 {% for header in headers %}
                   <tr>
                     <td>
-                      <a class="fw-semibold text-decoration-none" href="{% url 'requirements:public-detail' token=header.public_view_token %}">{{ header.order_number|default:"Draft" }}</a>
+                      <a class="fw-semibold text-decoration-none" href="{% url 'requirements:public-detail' token=header.public_view_token %}">{{ header.form_number|default:header.order_number|default:"Draft" }}</a>
                       <div class="small text-body-secondary">{{ header.requirement_date }}</div>
                     </td>
                     <td>{{ header.pujya_shri_name|default:"-" }}</td>

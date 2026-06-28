@@ -109,7 +109,8 @@ class RequirementHeader(EventScopedModel):
         choices.append(("NOT_IN_LIST", "NOT IN LIST"))
         return choices
 
-    order_number = models.CharField(max_length=32, unique=False, editable=False, null=True, blank=True)
+    order_number = models.CharField(max_length=32, unique=False, editable=False, null=True, blank=True, verbose_name="Order ID")
+    form_number = models.CharField(max_length=32, blank=True, default="", verbose_name="Form No.")
     public_view_token = models.UUIDField(default=None, null=True, blank=True, unique=True, editable=False)
     upashray = models.ForeignKey("masters.Upashray", on_delete=models.PROTECT, related_name="requirements")
     requirement_date = models.DateField(default=timezone.now)

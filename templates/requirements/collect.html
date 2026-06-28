@@ -44,7 +44,7 @@
     </div>
     {% if order_number %}
       <div class="mt-2 small">
-        {% if lang == "gu" %}ઓર્ડર નં.{% else %}Order No.{% endif %} {{ order_number }}
+        {% if lang == "gu" %}ઓર્ડર ID{% else %}Order ID{% endif %}: {{ order_number }}
       </div>
     {% endif %}
   </div>
@@ -81,7 +81,11 @@
           <label class="form-label small-label">{% if lang == "gu" %}ઉપ-રૂટ{% else %}Sub Route{% endif %}</label>
           {{ form.route_sub_area }}
         </div>
-        <div class="col-12 col-md-4">
+        <div class="col-12 col-md-3">
+          <label class="form-label small-label">{% if lang == "gu" %}ફોર્મ નં.{% else %}Form No.{% endif %}</label>
+          {{ form.form_number }}
+        </div>
+        <div class="col-12 col-md-3">
           <label class="form-label small-label">{% if lang == "gu" %}પૂજ્ય શ્રી{% else %}Pujya Shri{% endif %} *</label>
           {{ form.pujya_shri_name }}
         </div>

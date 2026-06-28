@@ -7,7 +7,8 @@
           <div>
             <h5 class="mb-1">{% if lang_code == "gu" %}ઓર્ડર વિગતો{% else %}Order Details{% endif %}</h5>
             <div class="text-body-secondary small">
-              {% if lang_code == "gu" %}ઓર્ડર નં.{% else %}Order No.{% endif %} {{ header.order_number|default:"-" }}
+              {% if lang_code == "gu" %}ફોર્મ નં.{% else %}Form No.{% endif %} {{ header.form_number|default:"-" }}
+              {% if header.order_number %} | {% if lang_code == "gu" %}ઓર્ડર ID{% else %}Order ID{% endif %}: {{ header.order_number }}{% endif %}
             </div>
           </div>
           <span class="badge fs-6 {% if header.status == 'SUBMITTED' %}text-bg-primary{% elif header.status == 'IN_PROGRESS' %}text-bg-warning text-dark{% elif header.status == 'CLOSED' %}text-bg-info text-dark{% elif header.status == 'RECEIVED_BY_MS' %}text-bg-success{% elif header.is_locked %}text-bg-success{% else %}text-bg-warning{% endif %}">

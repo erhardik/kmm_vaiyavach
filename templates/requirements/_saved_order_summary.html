@@ -6,8 +6,10 @@
       <div>
         <h2 class="h5 mb-1">{% if lang_code == "gu" %}સાચવેલ ઓર્ડર{% else %}Saved Order{% endif %}</h2>
         <p class="text-body-secondary mb-0">
-          {% if header.order_number %}
-            {% if lang_code == "gu" %}ઓર્ડર નં.{% else %}Order No.{% endif %} {{ header.order_number }}
+          {% if header.form_number %}
+            {% if lang_code == "gu" %}ફોર્મ નં.{% else %}Form No.{% endif %} {{ header.form_number }}
+          {% elif header.order_number %}
+            {% if lang_code == "gu" %}ઓર્ડર ID{% else %}Order ID{% endif %} {{ header.order_number }}
           {% else %}
             {% if lang_code == "gu" %}ડ્રાફ્ટ{% else %}Draft{% endif %}
           {% endif %}

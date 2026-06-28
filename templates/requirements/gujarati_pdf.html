@@ -121,7 +121,7 @@
 </head>
 <body>
   <div class="top">
-    <div class="form-number">ફોર્મ નંબર - {{ header.order_number|default:"________" }}</div>
+    <div class="form-number">ફોર્મ નંબર - {{ header.form_number|default:header.order_number|default:"________" }}</div>
     {% if logo_exists %}
       <img class="logo" src="file://{{ pdf_header_path }}" alt="Kalyan Mitra Mandal">
     {% endif %}

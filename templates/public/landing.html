@@ -166,7 +166,7 @@
                 {% for header in headers %}
                   <tr>
                     <td>
-                      <div class="fw-semibold">{{ header.order_number|default:"Draft" }}</div>
+                      <div class="fw-semibold">{{ header.form_number|default:header.order_number|default:"Draft" }}</div>
                       <div class="small text-body-secondary">{{ header.public_view_token }}</div>
                     </td>
                     <td>{{ header.upashray }}</td>

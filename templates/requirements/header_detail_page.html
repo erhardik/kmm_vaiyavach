@@ -3,7 +3,7 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
   <div>
     <h1 class="h3 mb-1">Order Details</h1>
-    <p class="text-body-secondary mb-0">Order No. {{ header.order_number|default:"-" }}</p>
+    <p class="text-body-secondary mb-0">Form No. {{ header.form_number|default:"-" }}{% if header.order_number %} | Order ID: {{ header.order_number }}{% endif %}</p>
   </div>
   <div class="d-flex gap-2">
     <a class="btn btn-outline-secondary" href="{% if user.is_authenticated %}{% url 'requirements:header-list' %}{% else %}{% url 'public-requests' %}{% endif %}">Back</a>

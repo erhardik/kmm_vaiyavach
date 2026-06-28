@@ -102,6 +102,7 @@ class RequirementCollectionHeaderForm(BootstrapModelForm):
         fields = [
             "route_area",
             "route_sub_area",
+            "form_number",
             "requirement_date",
             "remarks",
             "volunteer_name",

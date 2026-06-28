@@ -294,9 +294,9 @@ def _requirement_pdf_rows(lines, language_code="gu", filter_zero=True):
 class RequirementHeaderListView(EventScopedListView):
     model = RequirementHeader
     template_name = "requirements/header_list.html"
-    row_fields = ("order_number", "requirement_date", "volunteer_name", "get_route_area_display", "current_address", "chaturmas_place_address", "get_status_display")
-    headers = ["Order No.", "Filled Date", "Janaar name", "Route", "હાલનું સરનામું", "ચાતુર્માસ સ્થળનું સરનામું", "Status"]
-    search_fields = ["order_number", "volunteer_name", "current_address", "chaturmas_place_address", "remarks"]
+    row_fields = ("form_number", "requirement_date", "volunteer_name", "get_route_area_display", "current_address", "chaturmas_place_address", "get_status_display")
+    headers = ["Form No.", "Filled Date", "Janaar name", "Route", "હાલનું સરનામું", "ચાતુર્માસ સ્થળનું સરનામું", "Status"]
+    search_fields = ["form_number", "order_number", "volunteer_name", "current_address", "chaturmas_place_address", "remarks"]
     create_url_name = "requirements:collect"
     edit_url_name = "requirements:collect-edit"
     delete_url_name = "requirements:header-delete"
@@ -365,7 +365,8 @@ class RequirementHeaderExportView(LoginRequiredMixin, View):
         right = Alignment(horizontal="right", vertical="center")
 
         all_headers = [
-            "Order No.",
+            "Form No.",
+            "Order ID",
             "Requirement Date",
             "Upashray",
             "Status",
@@ -390,7 +391,8 @@ class RequirementHeaderExportView(LoginRequiredMixin, View):
             for line in lines:
                 display_name = line.item.item_name_gu or line.item.item_name
                 ws_all.append([
-                    header.order_number,
+                    header.form_number or "",
+                    header.order_number or "",
                     header.requirement_date.strftime("%d-%b-%Y") if header.requirement_date else "",
                     str(header.upashray),
                     header.get_status_display(),
@@ -414,7 +416,8 @@ class RequirementHeaderExportView(LoginRequiredMixin, View):
                 order_qty += float(line.required_qty)
             order_totals.append(
                 {
-                    "Order No.": header.order_number,
+                    "Form No.": header.form_number or "",
+                    "Order ID": header.order_number or "",
                     "Requirement Date": header.requirement_date.strftime("%d-%b-%Y") if header.requirement_date else "",
                     "Upashray": str(header.upashray),
                     "Status": header.get_status_display(),
@@ -444,7 +447,7 @@ class RequirementHeaderExportView(LoginRequiredMixin, View):
             cell.fill = total_fill
             cell.font = bold_font
 
-        summary_headers = ["Order No.", "Requirement Date", "Upashray", "Status", "Lines", "Total Qty"]
+        summary_headers = ["Form No.", "Order ID", "Requirement Date", "Upashray", "Status", "Lines", "Total Qty"]
         ws_summary.append(summary_headers)
         for cell in ws_summary[1]:
             cell.fill = header_fill
@@ -453,7 +456,7 @@ class RequirementHeaderExportView(LoginRequiredMixin, View):
         for row in order_totals:
             ws_summary.append([row[h] for h in summary_headers])
         summary_last_row = ws_summary.max_row
-        ws_summary.append(["TOTAL", "", "", "", f"=SUM(E2:E{summary_last_row})", f"=SUM(F2:F{summary_last_row})"])
+        ws_summary.append(["TOTAL", "", "", "", "", f"=SUM(F2:F{summary_last_row})", f"=SUM(G2:G{summary_last_row})"])
         for cell in ws_summary[ws_summary.max_row]:
             cell.fill = total_fill
             cell.font = bold_font
@@ -853,7 +856,8 @@ class RequirementCollectionView(View):
             )
 
         if confirm_now:
-            messages.success(request, f"Requirement sent to team. Order No: {header_obj.order_number}")
+            form_label = header_obj.form_number or header_obj.order_number or "-"
+            messages.success(request, f"Requirement sent to team. Form No: {form_label}")
             if self._is_public_flow():
                 return redirect(reverse("public-requests"))
             return redirect(reverse("requirements:header-list"))
@@ -1033,7 +1037,7 @@ class RequirementCollectionPrintView(View):
         story = [
             brand_row,
             Spacer(1, 2),
-            Paragraph(f"વૈયાવચ્ચ લાભ નંબર: {header.order_number}", heading_style),
+            Paragraph(f"વૈયાવચ્ચ લાભ નંબર: {header.form_number or header.order_number}", heading_style),
             Spacer(1, 4),
         ]
 
@@ -1217,7 +1221,7 @@ class RequirementCollectionPrintView(View):
                 [
                     [
                         Paragraph("Requirement Order" if language_code != "gu" else "Ã ÂªÅ“Ã ÂªÂ°Ã Â«â€šÃ ÂªÂ°Ã ÂªÂ¿Ã ÂªÂ¯Ã ÂªÂ¾Ã ÂªÂ¤ Ã Âªâ€œÃ ÂªÂ°Ã Â«ÂÃ ÂªÂ¡Ã ÂªÂ°", title_style),
-                        Paragraph(f"Order No.: {header.order_number}", heading_style),
+            Paragraph(f"Form No.: {header.form_number or header.order_number}", heading_style),
                     ],
                     qr_drawing,
                 ]
@@ -1242,7 +1246,8 @@ class RequirementCollectionPrintView(View):
             fontName=PDF_GUJARATI_FONT_NAME,
         )
         brand_title = Paragraph("àª•àª²à«àª¯àª¾àª£ àª®àª¿àª¤à«àª° àª®àª‚àª¡àª³", gujarati_title_style)
-        order_label_text = f"Vaiyavachch laabh number: {header.order_number}" if language_code != "gu" else f"àªµà«ˆàª¯àª¾àªµàªšà«àªš àª²àª¾àª­ àª¨àª‚àª¬àª°: {header.order_number}"
+        display_no = header.form_number or header.order_number or "-"
+        order_label_text = f"Vaiyavachch laabh number: {display_no}" if language_code != "gu" else f"àªµà«ˆàª¯àª¾àªµàªšà«àªš àª²àª¾àª­ àª¨àª‚àª¬àª°: {display_no}"
         order_label = Paragraph(order_label_text, heading_style)
         if logo_image:
             brand_row = Table([[logo_image, qr_drawing]], colWidths=[150 * mm, 26 * mm])
