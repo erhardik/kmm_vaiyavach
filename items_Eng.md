@@ -1,4 +1,4 @@
-# Chaturmas Vaiyavach Yadi 2026
+# Chaturmas Vaiyavachch Yadi 2026
 
 **Kalyan Mitra Mandal – 2026, Vikram Samvat 2082**
 

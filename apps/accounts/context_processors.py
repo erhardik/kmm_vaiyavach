@@ -152,7 +152,7 @@ def portal_navigation(request):
         "portal_nav_items": visible_items,
         "sidebar_events": sidebar_events,
         "sidebar_selected_event": selected_event,
-        "sidebar_headline": "Chaturmas Vaiyavach",
+        "sidebar_headline": "Chaturmas Vaiyavachch",
         "current_role_label": role_label,
         "menu_badges": badge_map,
         "page_live_badge": current_badge,
