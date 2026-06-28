@@ -104,7 +104,7 @@ class ItemForm(BootstrapModelForm):
 
     class Meta:
         model = Item
-        fields = ["item_code", "item_name", "item_name_gu", "category", "unit", "default_size", "description", "estimated_rate", "is_active"]
+        fields = ["item_code", "item_name", "item_name_gu", "category", "unit", "default_size", "default_size_gu", "description", "estimated_rate", "is_active"]
 
 
 class UpashrayForm(BootstrapModelForm):
