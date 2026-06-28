@@ -1,3 +1,4 @@
+import math
 from io import BytesIO
 from pathlib import Path
 
@@ -179,7 +180,7 @@ def generate_gujarati_pdf_fpdf2(header, line_rows, contact_info, filename="requi
                 self.set_xy(M + page_w - 55, self.t_margin)
                 self.cell(55, 8, f"ફોર્મ નંબર - {header.order_number or '________'}", align="R")
                 y = self.t_margin + 23
-                self.set_font(FONT, "", 7.2)
+                self.set_font(FONT, "", 8.5)
                 self.set_xy(M, y)
                 self.cell(55, 5, "[ ] બધી વસ્તુઓ પેક થઈ")
                 self.set_xy(M + 55, y)
@@ -189,17 +190,17 @@ def generate_gujarati_pdf_fpdf2(header, line_rows, contact_info, filename="requi
                 self.line(M, y + 6, M + page_w, y + 6)
                 self._header_bottom = y + 10
             else:
-                self.set_font(FONT, "", 9)
+                self.set_font(FONT, "", 11)
                 self.set_xy(M, self.t_margin)
-                self.cell(page_w, 6, f"ફોર્મ નંબર - {header.order_number or '________'}")
+                self.cell(page_w, 7, f"ફોર્મ નંબર - {header.order_number or '________'}")
                 self.line(M, self.t_margin + 7, M + page_w, self.t_margin + 7)
                 self._header_bottom = self.t_margin + 12
 
         def footer(self):
             self.set_y(-15)
-            self.set_font(FONT, "", 7.2)
-            self.cell(self.w / 2 - self.l_margin, 4, contact_info or "", new_x=XPos.RIGHT, new_y=YPos.LAST)
-            self.cell(self.w / 2 - self.r_margin, 4, f"પાનું {self.page_no()}", align="R")
+            self.set_font(FONT, "", 8.5)
+            self.cell(self.w / 2 - self.l_margin, 5, contact_info or "", new_x=XPos.RIGHT, new_y=YPos.LAST)
+            self.cell(self.w / 2 - self.r_margin, 5, f"પાનું {self.page_no()}", align="R")
 
     pdf = GujaratiPDF(orientation="P", unit="mm", format="A4")
     pdf.set_margins(left=15, top=15, right=15)
@@ -213,8 +214,8 @@ def generate_gujarati_pdf_fpdf2(header, line_rows, contact_info, filename="requi
     M = pdf.l_margin
     page_w = pdf.w - M - pdf.r_margin
     page_bottom = pdf.h - pdf.b_margin - 20
-    ROW_H = 5.5
-    SM = 6.5
+    ROW_H = 7
+    SM = 8.5
 
     # === METADATA GRID ===
     grid_y = pdf._header_bottom
@@ -256,10 +257,10 @@ def generate_gujarati_pdf_fpdf2(header, line_rows, contact_info, filename="requi
     COL_GAP = 6
     col1_x = M
     col2_x = M + COL_W + COL_GAP
-    TH = 4
-    HH = 4.5
-    CH = 4
-    FS = 6.5
+    TH = 5.5
+    HH = 6
+    CH = 5.5
+    FS = 8.5
 
     def draw_col_headers(y):
         pdf.set_font(FONT, "B", FS)
@@ -278,15 +279,37 @@ def generate_gujarati_pdf_fpdf2(header, line_rows, contact_info, filename="requi
         pdf.cell(COL_W, CH, label, border=1, align="C")
         pdf.set_font(FONT, "", FS)
 
+    def _name_row_height(name):
+        name_w = COL_W - 6 - 18 - 10
+        lh = FS * 0.353 * 1.5
+        pdf.set_font(FONT, "", FS)
+        str_w = pdf.get_string_width(name or "")
+        lines = max(1, math.ceil(str_w / name_w))
+        return max(TH, lines * lh)
+
     def draw_row(cx, cy, sr, name, size, qty):
+        name_w = COL_W - 6 - 18 - 10
+        lh = FS * 0.353 * 1.5
         pdf.set_font(FONT, "", FS)
+        str_w = pdf.get_string_width(name or "")
+        lines = max(1, math.ceil(str_w / name_w))
+        row_h = max(TH, lines * lh)
+        pdf.set_draw_color(0, 0, 0)
+        pdf.rect(cx, cy, COL_W, row_h)
+        pdf.line(cx + 6, cy, cx + 6, cy + row_h)
+        pdf.line(cx + 6 + name_w, cy, cx + 6 + name_w, cy + row_h)
+        pdf.line(cx + 6 + name_w + 18, cy, cx + 6 + name_w + 18, cy + row_h)
         pdf.set_xy(cx, cy)
-        pdf.cell(6, TH, str(sr), border=1, align="C")
+        pdf.cell(6, row_h, str(sr), border=0, align="C")
         pdf.set_font(FONT, "B" if qty and str(qty) != "--" else "", FS)
-        pdf.cell(COL_W - 6 - 18 - 10, TH, name, border=1)
+        pdf.set_xy(cx + 6, cy)
+        pdf.multi_cell(name_w, lh, name, border=0)
         pdf.set_font(FONT, "", FS)
-        pdf.cell(18, TH, size, border=1, align="C")
-        pdf.cell(10, TH, str(qty), border=1, align="C")
+        pdf.set_xy(cx + 6 + name_w, cy + (row_h - lh) / 2)
+        pdf.cell(18, lh, size, border=0, align="C")
+        pdf.set_xy(cx + 6 + name_w + 18, cy + (row_h - lh) / 2)
+        pdf.cell(10, lh, str(qty), border=0, align="C")
+        pdf.set_y(cy + row_h)
 
     # Append 4 blank extra rows
     blank = ("", "", "", "", "EXTRA")
@@ -296,7 +319,7 @@ def generate_gujarati_pdf_fpdf2(header, line_rows, contact_info, filename="requi
         prev_cat = None
         heights = []
         for sr, name, size, qty, cat in rows:
-            h = TH
+            h = _name_row_height(name)
             if cat != prev_cat:
                 h += CH
                 prev_cat = cat
@@ -311,7 +334,7 @@ def generate_gujarati_pdf_fpdf2(header, line_rows, contact_info, filename="requi
         prev_cat = None
         for i, row in enumerate(rows):
             sr, name, size, qty, cat = row[:5]
-            need = TH
+            need = _name_row_height(name)
             if cat != prev_cat:
                 need += CH
                 prev_cat = cat
@@ -329,7 +352,7 @@ def generate_gujarati_pdf_fpdf2(header, line_rows, contact_info, filename="requi
                 draw_cat(cx, y, CATEGORY_LABELS_GU.get(cat, cat))
                 y += CH
             draw_row(cx, y, sr, name, size, qty)
-            y += TH
+            y += _name_row_height(name)
         return y
 
     def balance_fill(rows, start_y):
@@ -380,20 +403,20 @@ def generate_gujarati_pdf_fpdf2(header, line_rows, contact_info, filename="requi
     remark_lines = (header.remarks or "").splitlines()
     has_remarks = any(line.strip() for line in remark_lines)
     ny = max(col1_end, col2_end) + 2
-    pdf.set_font(FONT, "B", 8)
+    pdf.set_font(FONT, "B", 9)
     pdf.set_xy(M, ny)
     label = "Extra Remarks: "
-    pdf.cell(page_w, 5, label, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.cell(page_w, 6, label, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
-    pdf.set_font(FONT, "", 7.2)
+    pdf.set_font(FONT, "", 8.5)
     if has_remarks:
         for note in remark_lines[:4]:
             if note.strip():
                 pdf.set_x(M + 2)
-                pdf.multi_cell(page_w - 4, 4.5, note.strip())
+                pdf.multi_cell(page_w - 4, 5.5, note.strip())
     else:
         pdf.set_x(M + 2)
-        pdf.cell(page_w - 4, 5, "--")
+        pdf.cell(page_w - 4, 6, "--")
 
     buffer = BytesIO()
     pdf.output(buffer)
