@@ -1,4 +1,10 @@
+from django.contrib import messages
+from django.db import transaction
+from django.http import HttpResponseRedirect
+from django.shortcuts import redirect
 from django.urls import reverse_lazy
+from django.utils import timezone
+from django.views import View
 from django.views.generic import ListView
 
 from apps.common.views import EventScopedCreateView, EventScopedDeleteView, EventScopedListView, EventScopedUpdateView
@@ -8,7 +14,7 @@ from apps.inventory.models import InventoryBalance, InventoryTransaction
 
 class InventoryTransactionListView(EventScopedListView):
     model = InventoryTransaction
-    template_name = "common/list.html"
+    template_name = "inventory/transaction_list.html"
     row_fields = ("item", "transaction_type", "qty", "source_module", "reference_id", "created_at")
     headers = ["Item", "Type", "Qty", "Source", "Reference", "Created"]
     search_fields = ["item__item_name", "source_module", "reference_id", "remarks"]
@@ -68,6 +74,17 @@ class InventoryTransactionDeleteView(EventScopedDeleteView):
         context = super().get_context_data(**kwargs)
         context["list_url"] = self.success_url
         return context
+
+
+class InventoryTransactionDeleteAllView(View):
+    def post(self, request):
+        if not request.user.is_superuser:
+            messages.error(request, "Only superadmin can delete all transactions.")
+            return redirect("inventory:transaction-list")
+        count = InventoryTransaction.objects.count()
+        InventoryTransaction.objects.all().delete()
+        messages.success(request, f"Deleted {count} transaction(s). Items and balances unchanged.")
+        return redirect("inventory:transaction-list")
 
 
 class InventoryBalanceListView(EventScopedListView):
