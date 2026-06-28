@@ -1,4 +1,7 @@
+import getpass
+
 from django.core.management.base import BaseCommand
+from django.utils.translation import gettext as _
 
 from apps.accounts.services import bootstrap_default_users, ensure_role_groups
 
@@ -15,13 +18,18 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         ensure_role_groups()
+        passwords = {
+            "systemadmin": options.get("systemadmin_password"),
+            "admin": options.get("admin_password"),
+            "viewer": options.get("viewer_password"),
+            "manager": options.get("manager_password"),
+        }
+        for key in passwords:
+            if not passwords[key]:
+                prompt = _("Enter password for {role}").format(role=key)
+                passwords[key] = getpass.getpass(f"{prompt}: ")
         created = bootstrap_default_users(
-            passwords={
-                "systemadmin": options.get("systemadmin_password"),
-                "admin": options.get("admin_password"),
-                "viewer": options.get("viewer_password"),
-                "manager": options.get("manager_password"),
-            },
+            passwords=passwords,
             reset_passwords=options["reset_passwords"],
         )
         for row in created:
