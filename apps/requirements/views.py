@@ -300,7 +300,6 @@ class RequirementHeaderListView(EventScopedListView):
     edit_url_name = "requirements:collect-edit"
     delete_url_name = "requirements:header-delete"
     detail_url_name = "requirements:header-detail"
-    pdf_url_name = "requirements:collect-print"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -330,7 +329,6 @@ class RequirementHeaderListView(EventScopedListView):
                         for field in self.row_fields
                     ],
                     "view_url": reverse(self.detail_url_name, kwargs=row_kwargs) if self.detail_url_name else "",
-                    "pdf_url": reverse(self.pdf_url_name, kwargs=row_kwargs) if self.pdf_url_name else "",
                     "edit_url": reverse(self.edit_url_name, kwargs=row_kwargs) if self.edit_url_name else "",
                     "delete_url": reverse(self.delete_url_name, kwargs=row_kwargs) if self.delete_url_name else "",
                 }
@@ -665,9 +663,6 @@ class RequirementCollectionView(View):
             "can_save": bool(event),
             "order_number": header.order_number if header else None,
             "public_collect_url": reverse("requirements:public-collect", kwargs={"event_token": event.public_form_token}) if event else None,
-            "public_pdf_url": reverse("requirements:public-print", kwargs={"token": header.public_view_token}) if header and header.order_number else None,
-            "public_pdf_en_url": f"{reverse('requirements:public-print', kwargs={'token': header.public_view_token})}?lang=gu&type=full" if header and header.order_number else None,
-            "public_pdf_gu_url": _with_lang(reverse("requirements:public-print", kwargs={"token": header.public_view_token}), "gu") if header and header.order_number else None,
             "editing_allowed": self._editing_allowed(event, header, request.user),
             "event_requires_lock": bool(event and not event.allow_requirement_edit_after_confirm),
             "draft_storage_key": draft_key,
@@ -680,9 +675,6 @@ class RequirementCollectionView(View):
                 "request": request,
                 "header": header,
                 "lang": _lang_code(request),
-                "public_pdf_url": reverse("requirements:public-print", kwargs={"token": header.public_view_token}) if header and header.order_number else None,
-            "public_pdf_en_url": f"{reverse('requirements:public-print', kwargs={'token': header.public_view_token})}?lang=gu&type=full" if header and header.order_number else None,
-                "public_pdf_gu_url": _with_lang(reverse("requirements:public-print", kwargs={"token": header.public_view_token}), "gu") if header and header.order_number else None,
             },
         )
 
@@ -1442,9 +1434,6 @@ class RequirementCollectionDetailView(View):
                 "grouped_lines": _group_requirement_lines(lines),
                 "lang": _lang_code(request),
                 "is_admin": is_admin,
-                "public_pdf_url": reverse("requirements:public-print", kwargs={"token": header.public_view_token}) if header.order_number else None,
-                "public_pdf_en_url": f"{reverse('requirements:public-print', kwargs={'token': header.public_view_token})}?lang=gu&type=full" if header.order_number else None,
-                "public_pdf_gu_url": _with_lang(reverse("requirements:public-print", kwargs={"token": header.public_view_token}), "gu") if header.order_number else None,
             },
         )
 

@@ -21,7 +21,7 @@
 <div class="row g-3 mb-3">
   <div class="col-6 col-lg-3"><div class="metric-card"><div class="label">Orders</div><div class="value">{{ summary.orders|default:0 }}</div></div></div>
   <div class="col-6 col-lg-3"><div class="metric-card"><div class="label">Rows</div><div class="value">{{ summary.items|default:0 }}</div></div></div>
-  <div class="col-6 col-lg-3"><div class="metric-card"><div class="label">Qty Total</div><div class="value">{{ summary.qty_total|default:0|floatformat }}</div></div></div>
+    <div class="col-6 col-lg-3"><div class="metric-card"><div class="label">Qty Total</div><div class="value">{{ summary.qty_total|default:0|floatformat:0 }}</div></div></div>
   <div class="col-6 col-lg-3"><div class="metric-card"><div class="label">Current Event</div><div class="value">{{ event_queryset|length }}</div></div></div>
 </div>
 
@@ -76,10 +76,6 @@
                   {% if row.view_url %}
                     <a class="btn btn-sm btn-outline-primary js-order-view" href="{{ row.view_url }}" data-detail-url="{{ row.view_url }}" data-order-label="{{ row.object.order_number|default:row.object.volunteer_name }}">View</a>
                   {% endif %}
-                  {% if row.pdf_url %}
-                    <a class="btn btn-sm btn-outline-secondary" href="{{ row.pdf_url }}?lang=gu&type=full" target="_blank" rel="noopener">Full PDF</a>
-                    <a class="btn btn-sm btn-warning" href="{{ row.pdf_url }}?lang=gu" target="_blank" rel="noopener">Gujarati PDF</a>
-                  {% endif %}
                   {% if can_change and row.edit_url %}
                     <a class="btn btn-sm btn-outline-secondary" href="{{ row.edit_url }}">Edit</a>
                   {% endif %}
@@ -108,7 +104,7 @@
             <td>-</td>
             <td>-</td>
             <td>-</td>
-            <td>{{ summary.qty_total|default:0|floatformat }} qty</td>
+            <td>{{ summary.qty_total|default:0|floatformat:0 }} qty</td>
             <td class="text-end">{{ summary.items|default:0 }} rows</td>
           </tr>
         </tfoot>
