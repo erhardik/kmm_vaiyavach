@@ -90,6 +90,9 @@ class RequirementCollectionHeaderForm(BootstrapModelForm):
         super().__init__(*args, current_event=current_event, **kwargs)
         if self.instance and getattr(self.instance, "pk", None) and self.instance.upashray_id:
             self.fields["upashray_name"].initial = self.instance.upashray.name
+        self.fields["route_sub_area"].widget = forms.Select(
+            choices=[("", "---")] + RequirementHeader.get_all_sub_route_choices()
+        )
         for field_name in self.fields:
             if field_name != "upashray_name":
                 self.fields[field_name].required = False
@@ -97,12 +100,12 @@ class RequirementCollectionHeaderForm(BootstrapModelForm):
     class Meta:
         model = RequirementHeader
         fields = [
+            "route_area",
+            "route_sub_area",
             "requirement_date",
             "remarks",
             "volunteer_name",
             "volunteer_mobile",
-            "route_area",
-            "route_sub_area",
             "pujya_shri_name",
             "pujya_shri_mobile",
             "current_address",
@@ -122,7 +125,6 @@ class RequirementCollectionHeaderForm(BootstrapModelForm):
             "remarks": forms.Textarea(attrs={"rows": 2}),
             "volunteer_mobile": forms.NumberInput(attrs={"type": "tel", "inputmode": "numeric"}),
             "caretaker_mobile": forms.NumberInput(attrs={"type": "tel", "inputmode": "numeric"}),
-            "route_sub_area": forms.Select(choices=[]),
         }
 
 

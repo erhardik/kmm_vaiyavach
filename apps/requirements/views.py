@@ -490,6 +490,7 @@ class RequirementHeaderExportView(LoginRequiredMixin, View):
 class RequirementCollectionView(View):
     template_name = "requirements/collect.html"
     confirm_required_fields = (
+        "route_area",
         "pujya_shri_name",
         "thana_count",
         "area",
@@ -499,7 +500,6 @@ class RequirementCollectionView(View):
         "chaturmas_entry_date",
         "volunteer_name",
         "volunteer_mobile",
-        "route_area",
         "stay_type",
     )
     confirm_required_field_labels = {
@@ -667,7 +667,6 @@ class RequirementCollectionView(View):
             "editing_allowed": self._editing_allowed(event, header, request.user),
             "event_requires_lock": bool(event and not event.allow_requirement_edit_after_confirm),
             "draft_storage_key": draft_key,
-            "sub_route_data": json.dumps(RequirementHeader.SUB_ROUTE_CHOICES),
         }
 
     def _render_summary_html(self, request, header):

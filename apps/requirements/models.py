@@ -43,6 +43,7 @@ class RequirementHeader(EventScopedModel):
         A9 = "A9", "Area-9 Shahibag"
         A10 = "A10", "Area-10 Sabarmati-Chandkheda"
         A11 = "A11", "Area-11 Other Areas"
+        NOT_IN_LIST = "NOT_IN_LIST", "NOT IN LIST"
 
     SUB_ROUTE_CHOICES = {
         "A1": [
@@ -100,6 +101,14 @@ class RequirementHeader(EventScopedModel):
         ],
     }
 
+    @classmethod
+    def get_all_sub_route_choices(cls):
+        choices = []
+        for area_choices in cls.SUB_ROUTE_CHOICES.values():
+            choices.extend(area_choices)
+        choices.append(("NOT_IN_LIST", "NOT IN LIST"))
+        return choices
+
     order_number = models.CharField(max_length=32, unique=False, editable=False, null=True, blank=True)
     public_view_token = models.UUIDField(default=None, null=True, blank=True, unique=True, editable=False)
     upashray = models.ForeignKey("masters.Upashray", on_delete=models.PROTECT, related_name="requirements")
@@ -142,8 +151,10 @@ class RequirementHeader(EventScopedModel):
         if not self.public_view_token:
             self.public_view_token = uuid.uuid4()
         if not self.order_number and self.status == RequirementStatus.SUBMITTED:
-            area_prefix = (self.route_area or "").strip() or "A11"
-            area_num = int(area_prefix[1:])
+            raw_area = (self.route_area or "").strip()
+            if raw_area == "NOT_IN_LIST" or not raw_area:
+                raw_area = "A11"
+            area_num = int(raw_area[1:])
             name_part = re.sub(r"[^A-Z0-9]", "", self.volunteer_name.strip().upper())[:10] or "UNKNOWN"
             date_part = timezone.localdate().strftime("%d%m%y")
             seq = RequirementHeader.objects.filter(event=self.event, status=RequirementStatus.SUBMITTED).count() + 1
