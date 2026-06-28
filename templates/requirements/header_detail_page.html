@@ -13,7 +13,7 @@
         <a class="btn btn-warning" href="{{ public_pdf_gu_url }}" target="_blank" rel="noopener">ગુજરાતી PDF</a>
       {% endif %}
     {% endif %}
-    <a class="btn btn-outline-secondary" href="{% url 'requirements:header-list' %}">Back</a>
+    <a class="btn btn-outline-secondary" href="{% if user.is_authenticated %}{% url 'requirements:header-list' %}{% else %}{% url 'public-requests' %}{% endif %}">Back</a>
   </div>
 </div>
 {% include "requirements/header_detail.html" %}
