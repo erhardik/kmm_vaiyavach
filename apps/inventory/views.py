@@ -29,6 +29,11 @@ class InventoryTransactionCreateView(EventScopedCreateView):
     template_name = "common/form.html"
     success_url = reverse_lazy("inventory:transaction-list")
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["page_title"] = "Create Inventory Transaction"
@@ -41,6 +46,11 @@ class InventoryTransactionUpdateView(EventScopedUpdateView):
     form_class = InventoryTransactionForm
     template_name = "common/form.html"
     success_url = reverse_lazy("inventory:transaction-list")
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

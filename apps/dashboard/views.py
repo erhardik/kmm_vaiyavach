@@ -1,6 +1,10 @@
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView
+
+from apps.accounts.permissions import is_manager
 
 from apps.dashboard.forms import ItemControlFilterForm
 from apps.dashboard.services import (
@@ -31,6 +35,12 @@ class PublicLandingView(TemplateView):
 class DashboardHomeView(LoginRequiredMixin, TemplateView):
     template_name = "dashboard/home.html"
 
+    def dispatch(self, request, *args, **kwargs):
+        if is_manager(request.user):
+            messages.warning(request, "You do not have access to the Dashboard.")
+            return redirect("masters:item-list")
+        return super().dispatch(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         event = Event.objects.filter(is_active=True).order_by("-is_current", "-start_date").first()
@@ -42,6 +52,12 @@ class DashboardHomeView(LoginRequiredMixin, TemplateView):
 
 class ItemControlCenterView(LoginRequiredMixin, TemplateView):
     template_name = "dashboard/item_control_center.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        if is_manager(request.user):
+            messages.warning(request, "You do not have access to the Item Control Center.")
+            return redirect("masters:item-list")
+        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

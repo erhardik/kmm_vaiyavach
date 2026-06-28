@@ -10,6 +10,7 @@ class Command(BaseCommand):
         parser.add_argument("--systemadmin-password")
         parser.add_argument("--admin-password")
         parser.add_argument("--viewer-password")
+        parser.add_argument("--manager-password")
         parser.add_argument("--reset-passwords", action="store_true")
 
     def handle(self, *args, **options):
@@ -19,6 +20,7 @@ class Command(BaseCommand):
                 "systemadmin": options.get("systemadmin_password"),
                 "admin": options.get("admin_password"),
                 "viewer": options.get("viewer_password"),
+                "manager": options.get("manager_password"),
             },
             reset_passwords=options["reset_passwords"],
         )

@@ -19,6 +19,7 @@ from apps.accounts.models import EventMembership, UserProfile
 ROLE_GROUPS = {
     "admin": "KMM Admin",
     "viewer": "KMM Viewer",
+    "manager": "KMM Manager",
 }
 
 MODEL_CLASSES = [
@@ -48,6 +49,14 @@ MODEL_CLASSES = [
     EventMembership,
 ]
 
+FINANCIAL_MODEL_CLASSES = [
+    Donation,
+    FundTransaction,
+    VendorQuote,
+    PurchaseOrder,
+    PurchaseOrderLine,
+]
+
 
 def _all_permissions_for_model(model_cls):
     content_type = ContentType.objects.get_for_model(model_cls)
@@ -57,25 +66,32 @@ def _all_permissions_for_model(model_cls):
 def ensure_role_groups():
     admin_group, _ = Group.objects.get_or_create(name=ROLE_GROUPS["admin"])
     viewer_group, _ = Group.objects.get_or_create(name=ROLE_GROUPS["viewer"])
+    manager_group, _ = Group.objects.get_or_create(name=ROLE_GROUPS["manager"])
 
     admin_permissions = Permission.objects.none()
     viewer_permissions = Permission.objects.none()
+    manager_permissions = Permission.objects.none()
+
+    financial_model_classes = FINANCIAL_MODEL_CLASSES
 
     for model_cls in MODEL_CLASSES:
         permissions = _all_permissions_for_model(model_cls)
         admin_permissions = admin_permissions | permissions
         viewer_permissions = viewer_permissions | permissions.filter(codename__startswith="view_")
+        if model_cls not in financial_model_classes:
+            manager_permissions = manager_permissions | permissions
 
     admin_group.permissions.set(admin_permissions.distinct())
     viewer_group.permissions.set(viewer_permissions.distinct())
+    manager_group.permissions.set(manager_permissions.distinct())
 
-    return admin_group, viewer_group
+    return admin_group, viewer_group, manager_group
 
 
 def bootstrap_default_users(passwords=None, reset_passwords=False):
     User = get_user_model()
     passwords = passwords or {}
-    admin_group, viewer_group = ensure_role_groups()
+    admin_group, viewer_group, manager_group = ensure_role_groups()
 
     user_specs = [
         {
@@ -98,6 +114,13 @@ def bootstrap_default_users(passwords=None, reset_passwords=False):
             "is_superuser": False,
             "is_staff": False,
             "groups": [viewer_group],
+        },
+        {
+            "username": "manager",
+            "email": "manager@example.com",
+            "is_superuser": False,
+            "is_staff": False,
+            "groups": [manager_group],
         },
     ]
 

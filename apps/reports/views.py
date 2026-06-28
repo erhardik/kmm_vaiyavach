@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
+from django.shortcuts import redirect
 from django.urls import reverse
 from django.views import View
 from django.views.generic import TemplateView
+
+from apps.accounts.permissions import is_manager
 
 from apps.dashboard.forms import ItemControlFilterForm
 from apps.dashboard.services import get_dashboard_event_queryset
@@ -27,6 +31,12 @@ from apps.reports.services import (
 
 class ReportHomeView(LoginRequiredMixin, TemplateView):
     template_name = "reports/home.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        if is_manager(request.user):
+            messages.warning(request, "You do not have access to Reports.")
+            return redirect("masters:item-list")
+        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -56,6 +66,12 @@ class ReportHomeView(LoginRequiredMixin, TemplateView):
 class AnalyticsView(LoginRequiredMixin, TemplateView):
     template_name = "reports/analytics.html"
 
+    def dispatch(self, request, *args, **kwargs):
+        if is_manager(request.user):
+            messages.warning(request, "You do not have access to Analytics.")
+            return redirect("masters:item-list")
+        return super().dispatch(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         event_queryset = get_dashboard_event_queryset()
@@ -71,6 +87,11 @@ class AnalyticsView(LoginRequiredMixin, TemplateView):
 
 
 class ItemControlExportView(LoginRequiredMixin, View):
+    def dispatch(self, request, *args, **kwargs):
+        if is_manager(request.user):
+            return HttpResponse("Access denied.", status=403)
+        return super().dispatch(request, *args, **kwargs)
+
     def get(self, request, *args, **kwargs):
         event_queryset = get_dashboard_event_queryset()
         form = ItemControlFilterForm(request.GET or None, event_queryset=event_queryset)
@@ -123,6 +144,11 @@ class ItemControlExportView(LoginRequiredMixin, View):
 
 
 class InventoryLedgerExportView(LoginRequiredMixin, View):
+    def dispatch(self, request, *args, **kwargs):
+        if is_manager(request.user):
+            return HttpResponse("Access denied.", status=403)
+        return super().dispatch(request, *args, **kwargs)
+
     def get(self, request, *args, **kwargs):
         event = get_default_event()
         event_id = request.GET.get("event")
@@ -149,6 +175,11 @@ class InventoryLedgerExportView(LoginRequiredMixin, View):
 
 
 class FundLedgerExportView(LoginRequiredMixin, View):
+    def dispatch(self, request, *args, **kwargs):
+        if is_manager(request.user):
+            return HttpResponse("Access denied.", status=403)
+        return super().dispatch(request, *args, **kwargs)
+
     def get(self, request, *args, **kwargs):
         event = get_default_event()
         event_id = request.GET.get("event")

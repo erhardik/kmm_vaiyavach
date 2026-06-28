@@ -91,6 +91,11 @@ class ItemForm(BootstrapModelForm):
         help_text="If checked, the item becomes active right away and appears at the end of the current event forms.",
     )
 
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if user and user.is_authenticated and user.groups.filter(name="KMM Manager").exists():
+            self.fields.pop("estimated_rate", None)
+
     class Meta:
         model = Item
         fields = ["item_code", "item_name", "item_name_gu", "category", "unit", "default_size", "description", "estimated_rate"]

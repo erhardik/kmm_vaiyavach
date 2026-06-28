@@ -18,10 +18,12 @@ class BootstrapModelForm(forms.ModelForm):
 
 
 class InventoryTransactionForm(BootstrapModelForm):
-    def __init__(self, *args, current_event=None, **kwargs):
+    def __init__(self, *args, current_event=None, user=None, **kwargs):
         super().__init__(*args, current_event=current_event, **kwargs)
         if current_event is not None:
             self.fields["item"].queryset = Item.objects.filter(event=current_event, is_active=True)
+        if user and user.is_authenticated and user.groups.filter(name="KMM Manager").exists():
+            self.fields.pop("unit_rate", None)
 
     class Meta:
         model = InventoryTransaction

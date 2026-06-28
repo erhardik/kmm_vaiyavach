@@ -12,6 +12,9 @@ def is_admin(user) -> bool:
 def is_viewer(user) -> bool:
     return bool(user and user.is_authenticated and (user.is_superuser or user.groups.filter(name="KMM Admin").exists() or user.groups.filter(name="KMM Viewer").exists()))
 
+def is_manager(user) -> bool:
+    return bool(user and user.is_authenticated and user.groups.filter(name="KMM Manager").exists())
+
 
 class RoleRequiredMixin(AccessMixin):
     allowed_roles = ()

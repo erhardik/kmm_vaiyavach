@@ -12,23 +12,26 @@ from apps.requirements.models import RequirementHeader
 from apps.sponsorship.models import SponsorshipCommitment
 
 
+MANAGER_GROUP_NAME = "KMM Manager"
+
 EVENT_MENU_ITEMS = [
     {"label": "Collect Requirements", "url_name": "requirements:collect", "permission": None, "icon": "clipboard-check"},
     {"label": "Requirement Orders", "url_name": "requirements:header-list", "permission": "requirements.view_requirementheader", "icon": "list-check"},
-    {"label": "Item Master", "url_name": "dashboard:item_control_center", "permission": None, "icon": "boxes"},
+    {"label": "Item Master", "url_name": "dashboard:item_control_center", "permission": None, "icon": "boxes", "manager_exclude": True},
+    {"label": "Items", "url_name": "masters:item-list", "permission": "masters.view_item", "icon": "boxes", "manager_only": True},
     {"label": "Sponsorship", "url_name": "sponsorship:commitment-list", "permission": "sponsorship.view_sponsorshipcommitment", "icon": "heart"},
     {"label": "Vendors", "url_name": "vendors:quote-list", "permission": "vendors.view_vendorquote", "icon": "truck"},
     {"label": "Procurement", "url_name": "procurement:po-list", "permission": "procurement.view_purchaseorder", "icon": "cart"},
     {"label": "Inventory", "url_name": "inventory:transaction-list", "permission": "inventory.view_inventorytransaction", "icon": "archive"},
     {"label": "Distribution", "url_name": "distribution:batch-list", "permission": "distribution.view_distributionbatch", "icon": "arrow-left-right"},
     {"label": "Funds", "url_name": "funds:donation-list", "permission": "funds.view_donation", "icon": "wallet2"},
-    {"label": "Reports", "url_name": "reports:report-home", "permission": None, "icon": "graph-up"},
-    {"label": "Analytics", "url_name": "reports:analytics", "permission": None, "icon": "bar-chart"},
+    {"label": "Reports", "url_name": "reports:report-home", "permission": None, "icon": "graph-up", "manager_exclude": True},
+    {"label": "Analytics", "url_name": "reports:analytics", "permission": None, "icon": "bar-chart", "manager_exclude": True},
     {"label": "Activity Log", "url_name": "auditlog:activity-list", "permission": "auditlog.view_activitylog", "icon": "journal-text"},
 ]
 
 UTILITY_LINKS = [
-    {"label": "Dashboard", "url_name": "dashboard:home", "permission": None, "icon": "house"},
+    {"label": "Dashboard", "url_name": "dashboard:home", "permission": None, "icon": "house", "manager_exclude": True},
     {"label": "Events", "url_name": "masters:event-list", "permission": "masters.view_event", "icon": "calendar-event"},
     {"label": "User Management", "url_name": "accounts:user-list", "permission": None, "icon": "people-gear", "superadmin_only": True},
 ]
@@ -36,12 +39,17 @@ UTILITY_LINKS = [
 
 def _visible_links(request, links, event=None):
     visible = []
+    is_manager = request.user.is_authenticated and request.user.groups.filter(name=MANAGER_GROUP_NAME).exists()
     for item in links:
         if item.get("superadmin_only") and not request.user.is_authenticated:
             continue
         if item.get("superadmin_only") and not request.user.is_superuser:
             continue
         if item["permission"] is not None and not request.user.has_perm(item["permission"]):
+            continue
+        if item.get("manager_exclude") and is_manager:
+            continue
+        if item.get("manager_only") and not is_manager:
             continue
         url = reverse(item["url_name"])
         if event is not None and item["url_name"] not in {"dashboard:home", "masters:event-list"}:
@@ -129,6 +137,8 @@ def portal_navigation(request):
             role_label = "systemadmin"
         elif request.user.groups.filter(name="KMM Admin").exists():
             role_label = "admin"
+        elif request.user.groups.filter(name=MANAGER_GROUP_NAME).exists():
+            role_label = "manager"
         elif request.user.groups.filter(name="KMM Viewer").exists():
             role_label = "viewer"
         else:
