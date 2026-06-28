@@ -44,6 +44,62 @@ class RequirementHeader(EventScopedModel):
         A10 = "A10", "Area-10 Sabarmati-Chandkheda"
         A11 = "A11", "Area-11 Other Areas"
 
+    SUB_ROUTE_CHOICES = {
+        "A1": [
+            ("1-A", "1-A - આસ્ટોડિયા / માણેકચોક"),
+            ("1-B", "1-B - ગાંધી રોડ / રિલીફ રોડ"),
+        ],
+        "A2": [
+            ("2-A", "2-A - શાહપુર / ખાનપુર"),
+            ("2-B", "2-B - ઉસ્માનપુરા / શાંતિનગર / નવરંગપુરા"),
+        ],
+        "A3": [
+            ("3-A", "3-A - નહેરુનગર / દાદાસાહેબ પગલા"),
+            ("3-B", "3-B - દેવકીનંદન / મીરાંબિકા / અંકુર / વિજયનગર"),
+            ("3-C", "3-C - ઝવેરી પાર્ક / નારણપુરા"),
+            ("3-D", "3-D - પારસનગર / ચિત્રકૂટ / પ્રગતિનગર / પારુલનગર"),
+            ("3-E", "3-E - નિર્ણયનગર / ચાણક્યપુરી / ઘાટલોડિયા / સત્તાધાર / થલતેજ / ગુરુકુળ"),
+        ],
+        "A4": [
+            ("4-A", "4-A - નવા-જુના વાડજ / નંદનવન / તુલસીશ્યામ / સુભાષ બ્રિજ"),
+        ],
+        "A5": [
+            ("5-A", "5-A - કૃષ્ણનગર / નરોડા"),
+            ("5-B", "5-B - મહાસુખનગર / બાપુનગર / સરસપુર"),
+            ("5-C", "5-C - ઓઢવ / નિકોલ / જનતાનગર / ઇસનપુર"),
+        ],
+        "A6": [
+            ("6-A", "6-A - સેટેલાઈટ / જીવરાજપાર્ક / વેજલપુર"),
+            ("6-B", "6-B - વસ્ત્રાપુર / S.G. Highway / પ્રેરણાતીર્થ"),
+        ],
+        "A7": [
+            ("7-A", "7-A - ગોદાવરી / આયોજનનગર"),
+            ("7-B", "7-B - વાસણા / નવકાર / ન્યૂ વાસણા"),
+            ("7-C", "7-C - શાંતિવન / રંગસાગર"),
+            ("7-D", "7-D - જૈન મર્ચન્ટ / લક્ષ્મીવિહાર"),
+        ],
+        "A8": [
+            ("8-A", "8-A - ઓપેરા"),
+            ("8-B", "8-B - વસંતકુંજ / જૈનનગર / પરિમલ"),
+            ("8-C", "8-C - વિકાસગૃહ રોડ"),
+            ("8-D", "8-D - દશાપોરવાડ"),
+            ("8-E", "8-E - જૈન સોસાયટી / કુંથુનાથ"),
+            ("8-F", "8-F - પંકજ / રાજનગર"),
+        ],
+        "A9": [
+            ("9-A", "9-A - શાહીબાગ / ગિરધરનગર / હઠીસિંહની વાડી"),
+        ],
+        "A10": [
+            ("10-A", "10-A - સાબરમતી / રાણીપ / ચાંદખેડા / રામોલ"),
+        ],
+        "A11": [
+            ("11-A", "11-A - મણીનગર / કાંકરિયા"),
+            ("11-B", "11-B - બોપલ / ગોતા / અદાણી શાંતિગ્રામ"),
+            ("11-C", "11-C - સરખેજ / સાણંદ"),
+            ("11-D", "11-D - બરોડા"),
+        ],
+    }
+
     order_number = models.CharField(max_length=32, unique=False, editable=False, null=True, blank=True)
     public_view_token = models.UUIDField(default=None, null=True, blank=True, unique=True, editable=False)
     upashray = models.ForeignKey("masters.Upashray", on_delete=models.PROTECT, related_name="requirements")
@@ -52,6 +108,7 @@ class RequirementHeader(EventScopedModel):
     volunteer_name = models.CharField(max_length=120, blank=True, default="")
     volunteer_mobile = models.CharField(max_length=20, blank=True, default="")
     route_area = models.CharField(max_length=20, blank=True, default="", choices=RouteAreaChoices.choices)
+    route_sub_area = models.CharField(max_length=80, blank=True, default="")
     pujya_shri_name = models.CharField(max_length=120, blank=True, default="")
     pujya_shri_mobile = models.CharField(max_length=20, blank=True, default="")
     current_address = models.TextField(blank=True, default="")

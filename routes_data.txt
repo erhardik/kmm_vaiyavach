@@ -859,7 +859,7 @@ Below is the extracted text from **"Vaiyavachchi Upashray Route Allocation.pdf"*
 
 | Area          | Route                                                 | Upashray | Vaiyavachchi                                                                   |
 | ------------- | ------------------------------------------------------| -------: | ------------------------------------------------------------------------------ |
-| **Area 1-A**  | માણેકચોક થી આસ્ટોડિયા                                 			          	|       28 | Maulin                                                                         |
+| **Area 1-A**  | માણેકચોક થી આસ્ટોડિયા                                 			       	|       28 | Maulin                                                                         |
 | **Area 1-B**  | ગાંધી રોડ / રિલીફ રોડ                                           				|       36 | Rahil / Umang                                                                  |
 | **Area 2-A**  | શાહપુર / ખાનપુર                                                 					|       19 | Darshil                                                                        |
 | **Area 2-B**  | ઉસ્માનપુરા / શાંતિનગર / નવરંગપુરા                               			|       24 | Ajit / Bhavik Sound                                                            |

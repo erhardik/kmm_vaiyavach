@@ -102,6 +102,7 @@ class RequirementCollectionHeaderForm(BootstrapModelForm):
             "volunteer_name",
             "volunteer_mobile",
             "route_area",
+            "route_sub_area",
             "pujya_shri_name",
             "pujya_shri_mobile",
             "current_address",
@@ -121,6 +122,7 @@ class RequirementCollectionHeaderForm(BootstrapModelForm):
             "remarks": forms.Textarea(attrs={"rows": 2}),
             "volunteer_mobile": forms.NumberInput(attrs={"type": "tel", "inputmode": "numeric"}),
             "caretaker_mobile": forms.NumberInput(attrs={"type": "tel", "inputmode": "numeric"}),
+            "route_sub_area": forms.Select(choices=[]),
         }
 
 

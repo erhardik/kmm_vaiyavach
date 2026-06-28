@@ -1,3 +1,4 @@
+import json
 from collections import defaultdict
 from io import BytesIO
 from pathlib import Path
@@ -666,6 +667,7 @@ class RequirementCollectionView(View):
             "editing_allowed": self._editing_allowed(event, header, request.user),
             "event_requires_lock": bool(event and not event.allow_requirement_edit_after_confirm),
             "draft_storage_key": draft_key,
+            "sub_route_data": json.dumps(RequirementHeader.SUB_ROUTE_CHOICES),
         }
 
     def _render_summary_html(self, request, header):

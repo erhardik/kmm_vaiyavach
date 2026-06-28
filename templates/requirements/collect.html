@@ -125,6 +125,12 @@
           <label class="form-label small-label">{% if lang == "gu" %}રૂટ{% else %}Route{% endif %}</label>
           {{ form.route_area }}
         </div>
+        <div class="col-12 col-md-6">
+          <label class="form-label small-label">{% if lang == "gu" %}ઉપ-રૂટ{% else %}Sub Route{% endif %}</label>
+          <select name="route_sub_area" id="id_route_sub_area" class="form-select" data-current="{{ form.route_sub_area.value|default:'' }}">
+            <option value="">{% if lang == "gu" %}-- પસંદ કરો --{% else %}-- Select --{% endif %}</option>
+          </select>
+        </div>
       </div>
       <div class="d-flex justify-content-end mt-3">
         <button class="btn btn-warning text-white fw-semibold px-4" type="button" id="save-details-btn" {% if not editing_allowed %}disabled{% endif %}>{% if lang == "gu" %}સેવ વિગતો{% else %}Save Details{% endif %}</button>
@@ -202,6 +208,29 @@
 
 <script>
 (function() {
+  const subRouteData = {{ sub_route_data|safe }};
+  const routeSelect = document.querySelector('[name="route_area"]');
+  const subRouteSelect = document.getElementById('id_route_sub_area');
+  if (routeSelect && subRouteSelect) {
+    function updateSubRoutes() {
+      const area = routeSelect.value;
+      const currentVal = subRouteSelect.getAttribute('data-current') || subRouteSelect.value;
+      subRouteSelect.innerHTML = '<option value="">{% if lang == "gu" %}-- પસંદ કરો --{% else %}-- Select --{% endif %}</option>';
+      if (area && subRouteData[area]) {
+        subRouteData[area].forEach(function(option) {
+          const opt = document.createElement('option');
+          opt.value = option[0];
+          opt.textContent = option[1];
+          if (opt.value === currentVal) opt.selected = true;
+          subRouteSelect.appendChild(opt);
+        });
+      }
+      subRouteSelect.removeAttribute('data-current');
+    }
+    routeSelect.addEventListener('change', updateSubRoutes);
+    updateSubRoutes();
+  }
+
   const form = document.querySelector('[data-collect-form]');
   if (!form) return;
   const saveButton = document.getElementById('save-details-btn');
