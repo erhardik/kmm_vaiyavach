@@ -9,6 +9,7 @@ from apps.requirements.views import (
     RequirementHeaderUpdateView,
     RequirementCollectByEventView,
     RequirementCollectionPrintView,
+    RequirementStatusTransitionView,
     RequirementLineCreateView,
     RequirementLineDeleteView,
     RequirementLineListView,
@@ -42,5 +43,6 @@ urlpatterns = [
     path("special/add/", SpecialRequirementCreateView.as_view(), name="special-create"),
     path("special/<int:pk>/edit/", SpecialRequirementUpdateView.as_view(), name="special-update"),
     path("special/<int:pk>/delete/", SpecialRequirementDeleteView.as_view(), name="special-delete"),
+    path("collect/<int:pk>/transition/", RequirementStatusTransitionView.as_view(), name="status-transition"),
 ]
 

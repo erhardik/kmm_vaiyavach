@@ -85,6 +85,22 @@
                   {% if can_change and row.edit_url %}
                     <a class="btn btn-sm btn-outline-secondary" href="{{ row.edit_url }}">Edit</a>
                   {% endif %}
+                  {% if row.object.status == 'SUBMITTED' %}
+                    <form method="post" action="{% url 'requirements:status-transition' pk=row.object.pk %}" class="d-inline">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-sm btn-success">Packing Done</button>
+                    </form>
+                  {% elif row.object.status == 'IN_PROGRESS' %}
+                    <form method="post" action="{% url 'requirements:status-transition' pk=row.object.pk %}" class="d-inline">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-sm btn-primary">Delivery Done</button>
+                    </form>
+                  {% elif row.object.status == 'CLOSED' %}
+                    <form method="post" action="{% url 'requirements:status-transition' pk=row.object.pk %}" class="d-inline">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-sm btn-info text-white">M.S. Received</button>
+                    </form>
+                  {% endif %}
                   {% if can_delete and row.delete_url %}
                     <a class="btn btn-sm btn-outline-danger" href="{{ row.delete_url }}">Delete</a>
                   {% endif %}

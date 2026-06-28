@@ -9,7 +9,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.http import HttpResponse, JsonResponse
 from django.forms import formset_factory
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse, reverse_lazy
 from django.views import View
@@ -499,6 +499,8 @@ class RequirementCollectionView(View):
         "requirement_date",
         "chaturmas_entry_date",
         "volunteer_name",
+        "volunteer_mobile",
+        "route_area",
         "stay_type",
     )
     confirm_required_field_labels = {
@@ -510,6 +512,8 @@ class RequirementCollectionView(View):
         "requirement_date": "ફોર્મ તારીખ",
         "chaturmas_entry_date": "ચાતુર્માસ પ્રવેશ તારીખ",
         "volunteer_name": "જનારનું નામ",
+        "volunteer_mobile": "જનારનું નંબર",
+        "route_area": "રૂટ",
         "stay_type": "સંઘ ઉપાશ્રય / સ્થિરવાસ",
     }
 
@@ -535,9 +539,15 @@ class RequirementCollectionView(View):
         return RequirementHeader.objects.filter(pk=pk, event=event).first()
 
     def _editing_allowed(self, event, header, user):
-        if header and header.status == RequirementStatus.SUBMITTED:
-            if event and not event.allow_requirement_edit_after_confirm and not user.is_superuser:
-                return False
+        if header and header.status in (
+            RequirementStatus.IN_PROGRESS,
+            RequirementStatus.CLOSED,
+            RequirementStatus.CANCELLED,
+            RequirementStatus.RETURN_REQUESTED,
+            RequirementStatus.RETURN_DONE,
+            RequirementStatus.RECEIVED_BY_MS,
+        ):
+            return False
         return True
 
     def _get_items(self, event):
@@ -1435,6 +1445,38 @@ class RequirementCollectionDetailView(View):
                 "public_pdf_gu_url": _with_lang(reverse("requirements:public-print", kwargs={"token": header.public_view_token}), "gu") if header.order_number else None,
             },
         )
+
+
+class RequirementStatusTransitionView(LoginRequiredMixin, View):
+    ALLOWED_TRANSITIONS = {
+        RequirementStatus.SUBMITTED: {
+            "next_status": RequirementStatus.IN_PROGRESS,
+            "button_label": "Packing Done",
+        },
+        RequirementStatus.IN_PROGRESS: {
+            "next_status": RequirementStatus.CLOSED,
+            "button_label": "Delivery Done",
+        },
+        RequirementStatus.CLOSED: {
+            "next_status": RequirementStatus.RECEIVED_BY_MS,
+            "button_label": "Received by M.S.",
+        },
+    }
+
+    def post(self, request, pk):
+        header = get_object_or_404(RequirementHeader, pk=pk)
+        transition = self.ALLOWED_TRANSITIONS.get(header.status)
+        if not transition:
+            messages.error(request, "Status transition not allowed from current state.")
+            return redirect("requirements:header-detail", pk=pk)
+        header.status = transition["next_status"]
+        if header.status == RequirementStatus.IN_PROGRESS:
+            header.is_locked = True
+            header.locked_at = timezone.now()
+        header.updated_at = timezone.now()
+        header.save(update_fields=["status", "is_locked", "locked_at", "updated_at"])
+        messages.success(request, f"Status updated to {header.get_status_display()}.")
+        return redirect("requirements:header-detail", pk=pk)
 
 
 class RequirementCollectByEventView(RequirementCollectionView):
