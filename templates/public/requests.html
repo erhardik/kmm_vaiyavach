@@ -34,7 +34,7 @@
         </div>
 
         <div class="row g-3">
-          <div class="col-6 col-md-3"><div class="metric-card metric-card-light"><div class="label">કુલ ફોર્મ</div><div class="value">{{ status_summary.total_requests|default:0 }}</div></div></div>
+          <div class="col-6 col-md-3"><div class="metric-card metric-card-light"><div class="label">કુલ ફોર્મ</div><div class="value">{{ requests_count|default:0 }}</div></div></div>
           <div class="col-6 col-md-3"><div class="metric-card metric-card-light"><div class="label">કુલ વસ્તુઓ</div><div class="value">{{ total_items|default:0 }}</div></div></div>
           <div class="col-6 col-md-6 d-flex gap-2 align-items-center flex-wrap">
             <a class="btn btn-success btn-sm" href="tel:+919879635446"><i class="bi bi-telephone-fill"></i> Bhumit Shah</a>
