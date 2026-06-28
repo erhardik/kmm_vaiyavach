@@ -293,9 +293,9 @@ def _requirement_pdf_rows(lines, language_code="gu", filter_zero=True):
 class RequirementHeaderListView(EventScopedListView):
     model = RequirementHeader
     template_name = "requirements/header_list.html"
-    row_fields = ("order_number", "upashray", "requirement_date", "get_status_display", "is_locked", "remarks")
-    headers = ["Order No.", "Upashray", "Date", "Status", "Locked", "Special Request / Note"]
-    search_fields = ["order_number", "upashray__name", "remarks"]
+    row_fields = ("order_number", "requirement_date", "volunteer_name", "get_route_area_display", "current_address", "chaturmas_place_address", "get_status_display")
+    headers = ["Order No.", "Filled Date", "Janaar name", "Route", "હાલનું સરનામું", "ચાતુર્માસ સ્થળનું સરનામું", "Status"]
+    search_fields = ["order_number", "volunteer_name", "current_address", "chaturmas_place_address", "remarks"]
     create_url_name = "requirements:collect"
     edit_url_name = "requirements:collect-edit"
     delete_url_name = "requirements:header-delete"
@@ -316,7 +316,7 @@ class RequirementHeaderListView(EventScopedListView):
         return context
 
     def get_queryset(self):
-        return super().get_queryset().select_related("upashray")
+        return super().get_queryset()
 
     def get_table_rows(self):
         rows = []
@@ -1432,6 +1432,7 @@ class RequirementCollectionDetailView(View):
             .select_related("item")
             .order_by("item__parent_item__standard_serial", "item__standard_serial", "item__pk")
         )
+        is_admin = request.user.is_superuser or request.user.groups.filter(name="KMM Admin").exists()
         return render(
             request,
             "requirements/header_detail.html" if request.headers.get("x-requested-with") == "XMLHttpRequest" else "requirements/header_detail_page.html",
@@ -1440,6 +1441,7 @@ class RequirementCollectionDetailView(View):
                 "lines": lines,
                 "grouped_lines": _group_requirement_lines(lines),
                 "lang": _lang_code(request),
+                "is_admin": is_admin,
                 "public_pdf_url": reverse("requirements:public-print", kwargs={"token": header.public_view_token}) if header.order_number else None,
                 "public_pdf_en_url": f"{reverse('requirements:public-print', kwargs={'token': header.public_view_token})}?lang=gu&type=full" if header.order_number else None,
                 "public_pdf_gu_url": _with_lang(reverse("requirements:public-print", kwargs={"token": header.public_view_token}), "gu") if header.order_number else None,
@@ -1476,6 +1478,34 @@ class RequirementStatusTransitionView(LoginRequiredMixin, View):
         header.updated_at = timezone.now()
         header.save(update_fields=["status", "is_locked", "locked_at", "updated_at"])
         messages.success(request, f"Status updated to {header.get_status_display()}.")
+        return redirect("requirements:header-detail", pk=pk)
+
+
+class RequirementUnlockView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        if not request.user.is_superuser and not request.user.groups.filter(name="KMM Admin").exists():
+            messages.error(request, "Only admin/manager can unlock/lock forms.")
+            return redirect("requirements:header-detail", pk=pk)
+        header = get_object_or_404(RequirementHeader, pk=pk)
+        header.is_locked = False
+        header.locked_at = None
+        header.updated_at = timezone.now()
+        header.save(update_fields=["is_locked", "locked_at", "updated_at"])
+        messages.success(request, "Form unlocked. Edit and lock again after updating.")
+        return redirect("requirements:header-detail", pk=pk)
+
+
+class RequirementLockView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        if not request.user.is_superuser and not request.user.groups.filter(name="KMM Admin").exists():
+            messages.error(request, "Only admin/manager can unlock/lock forms.")
+            return redirect("requirements:header-detail", pk=pk)
+        header = get_object_or_404(RequirementHeader, pk=pk)
+        header.is_locked = True
+        header.locked_at = timezone.now()
+        header.updated_at = timezone.now()
+        header.save(update_fields=["is_locked", "locked_at", "updated_at"])
+        messages.success(request, "Form locked.")
         return redirect("requirements:header-detail", pk=pk)
 
 

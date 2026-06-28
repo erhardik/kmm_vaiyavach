@@ -28,30 +28,27 @@
 <div class="card border-0 shadow-sm">
   <div class="card-body">
     <div class="row g-2 align-items-end mb-3">
-      <div class="col-12 col-xl-5">
-        <label class="form-label mb-1" for="requirementsLiveSearch">Live search</label>
-        <input type="search" id="requirementsLiveSearch" class="form-control" placeholder="Search by order, upashray, date, status or note">
+      <div class="col-12 col-md-4">
+        <label class="form-label small">Search</label>
+        <input type="text" class="form-control form-control-sm" id="requirementsLiveSearch" placeholder="Type to filter..." autocomplete="off">
       </div>
-      <div class="col-12 col-xl-3">
-        <label class="form-label mb-1" for="requirementsEventFilter">Event</label>
-        <select id="requirementsEventFilter" name="event" class="form-select">
-          <option value="">Current Event</option>
+      <div class="col-12 col-md-3">
+        <label class="form-label small">Event</label>
+        <select class="form-select form-select-sm" id="requirementsEventFilter">
+          <option value="">All Events</option>
           {% for event in event_queryset %}
-            <option value="{{ event.pk }}" {% if request.GET.event == event.pk|stringformat:'s' %}selected{% endif %}>{{ event.name }}</option>
+            <option value="{{ event.pk }}" {% if request.GET.event == event.pk|slugify %}selected{% endif %}>{{ event.name }}</option>
           {% endfor %}
         </select>
       </div>
-      <div class="col-12 col-xl-2">
-        <button class="btn btn-outline-primary w-100" type="submit" form="requirementsFilterForm">Filter</button>
-      </div>
-      <div class="col-12 col-xl-2">
-        <a class="btn btn-outline-secondary w-100" href="{% url 'requirements:header-list' %}">Reset</a>
+      <div class="col-12 col-md-2 d-grid">
+        <button type="submit" class="btn btn-sm btn-outline-secondary" form="requirementsFilterForm">Apply</button>
       </div>
     </div>
 
-    <form id="requirementsFilterForm" method="get" class="d-none">
-      <input type="hidden" name="q" id="requirementsFilterQ" value="{{ request.GET.q }}">
-      <input type="hidden" name="event" id="requirementsFilterEvent" value="{{ request.GET.event }}">
+    <form id="requirementsFilterForm" method="get">
+      <input type="hidden" name="q" id="requirementsFilterQ" value="{{ request.GET.q|default:'' }}">
+      <input type="hidden" name="event" id="requirementsFilterEvent" value="{{ request.GET.event|default:'' }}">
     </form>
 
     <div class="table-responsive sheet-table-wrap">
@@ -59,24 +56,25 @@
         <thead class="table-light sticky-top">
           <tr>
             <th><button class="sheet-sort-btn" type="button" data-sort-key="0">Order No. <span class="sheet-sort-icon">↕</span></button></th>
-            <th><button class="sheet-sort-btn" type="button" data-sort-key="1">Upashray <span class="sheet-sort-icon">↕</span></button></th>
-            <th><button class="sheet-sort-btn" type="button" data-sort-key="2">Date <span class="sheet-sort-icon">↕</span></button></th>
-            <th><button class="sheet-sort-btn" type="button" data-sort-key="3">Status <span class="sheet-sort-icon">↕</span></button></th>
-            <th><button class="sheet-sort-btn" type="button" data-sort-key="4">Locked <span class="sheet-sort-icon">↕</span></button></th>
-            <th><button class="sheet-sort-btn" type="button" data-sort-key="5">Special Request / Note <span class="sheet-sort-icon">↕</span></button></th>
+            <th><button class="sheet-sort-btn" type="button" data-sort-key="1">Filled Date <span class="sheet-sort-icon">↕</span></button></th>
+            <th><button class="sheet-sort-btn" type="button" data-sort-key="2">Janaar name <span class="sheet-sort-icon">↕</span></button></th>
+            <th><button class="sheet-sort-btn" type="button" data-sort-key="3">Route <span class="sheet-sort-icon">↕</span></button></th>
+            <th><button class="sheet-sort-btn" type="button" data-sort-key="4">હાલનું સરનામું <span class="sheet-sort-icon">↕</span></button></th>
+            <th><button class="sheet-sort-btn" type="button" data-sort-key="5">ચાતુર્માસ સ્થળનું સરનામું <span class="sheet-sort-icon">↕</span></button></th>
+            <th><button class="sheet-sort-btn" type="button" data-sort-key="6">Status <span class="sheet-sort-icon">↕</span></button></th>
             <th class="text-end">Actions</th>
           </tr>
         </thead>
         <tbody>
           {% for row in table_rows %}
-            <tr data-sheet-row data-search="{{ row.object.order_number }} {{ row.object.upashray }} {{ row.object.requirement_date }} {{ row.object.get_status_display }} {{ row.object.remarks }} {{ row.object.lines.count }}">
+            <tr data-sheet-row data-search="{{ row.object.order_number }} {{ row.object.volunteer_name }} {{ row.object.get_route_area_display }} {{ row.object.current_address }} {{ row.object.chaturmas_place_address }} {{ row.object.get_status_display }} {{ row.object.remarks }}">
               {% for value in row.cells %}
                 <td>{{ value }}</td>
               {% endfor %}
               <td class="text-end">
                 <div class="d-inline-flex flex-wrap gap-2 justify-content-end">
                   {% if row.view_url %}
-                    <a class="btn btn-sm btn-outline-primary js-order-view" href="{{ row.view_url }}" data-detail-url="{{ row.view_url }}" data-order-label="{{ row.object.order_number|default:row.object.upashray }}">View</a>
+                    <a class="btn btn-sm btn-outline-primary js-order-view" href="{{ row.view_url }}" data-detail-url="{{ row.view_url }}" data-order-label="{{ row.object.order_number|default:row.object.volunteer_name }}">View</a>
                   {% endif %}
                   {% if row.pdf_url %}
                     <a class="btn btn-sm btn-outline-secondary" href="{{ row.pdf_url }}?lang=gu&type=full" target="_blank" rel="noopener">Full PDF</a>
@@ -86,20 +84,11 @@
                     <a class="btn btn-sm btn-outline-secondary" href="{{ row.edit_url }}">Edit</a>
                   {% endif %}
                   {% if row.object.status == 'SUBMITTED' %}
-                    <form method="post" action="{% url 'requirements:status-transition' pk=row.object.pk %}" class="d-inline">
-                      {% csrf_token %}
-                      <button type="submit" class="btn btn-sm btn-success">Packing Done</button>
-                    </form>
+                    <button type="button" class="btn btn-sm btn-success js-status-btn" data-url="{% url 'requirements:status-transition' pk=row.object.pk %}" data-action="packing">Packing Done</button>
                   {% elif row.object.status == 'IN_PROGRESS' %}
-                    <form method="post" action="{% url 'requirements:status-transition' pk=row.object.pk %}" class="d-inline">
-                      {% csrf_token %}
-                      <button type="submit" class="btn btn-sm btn-primary">Delivery Done</button>
-                    </form>
+                    <button type="button" class="btn btn-sm btn-primary js-status-btn" data-url="{% url 'requirements:status-transition' pk=row.object.pk %}" data-action="delivery">Delivery Done</button>
                   {% elif row.object.status == 'CLOSED' %}
-                    <form method="post" action="{% url 'requirements:status-transition' pk=row.object.pk %}" class="d-inline">
-                      {% csrf_token %}
-                      <button type="submit" class="btn btn-sm btn-info text-white">M.S. Received</button>
-                    </form>
+                    <button type="button" class="btn btn-sm btn-info text-white js-status-btn" data-url="{% url 'requirements:status-transition' pk=row.object.pk %}" data-action="received">M.S. Received</button>
                   {% endif %}
                   {% if can_delete and row.delete_url %}
                     <a class="btn btn-sm btn-outline-danger" href="{{ row.delete_url }}">Delete</a>
@@ -108,13 +97,14 @@
               </td>
             </tr>
           {% empty %}
-            <tr><td colspan="7" class="text-center py-4 text-body-secondary">No records found.</td></tr>
+            <tr><td colspan="8" class="text-center py-4 text-body-secondary">No records found.</td></tr>
           {% endfor %}
         </tbody>
         <tfoot class="table-group-divider">
           <tr class="fw-semibold">
             <td>Total</td>
             <td>{{ summary.orders|default:0 }} orders</td>
+            <td>-</td>
             <td>-</td>
             <td>-</td>
             <td>-</td>
@@ -139,6 +129,25 @@
       </div>
       <div class="modal-body" id="orderDetailModalBody">
         <div class="text-center py-5 text-body-secondary">Select View to load the order details.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="statusConfirmModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirm Status Change</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="statusConfirmBody"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <form method="post" id="statusConfirmForm" style="display:inline">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-success" id="statusConfirmBtn">Confirm</button>
+        </form>
       </div>
     </div>
   </div>
@@ -176,7 +185,7 @@
         if (!marker) {
           marker = document.createElement('tr');
           marker.id = 'requirementsSheetEmptyRow';
-          marker.innerHTML = `<td colspan="7" class="text-center py-4 text-body-secondary">${emptyText}</td>`;
+          marker.innerHTML = `<td colspan="8" class="text-center py-4 text-body-secondary">${emptyText}</td>`;
           table.querySelector('tbody').appendChild(marker);
         }
       } else if (marker) {
@@ -247,6 +256,39 @@
       } catch (error) {
         modalBody.innerHTML = '<div class="alert alert-danger mb-0">Unable to load the order details.</div>';
       }
+    });
+  })();
+
+  (function() {
+    const confirmModalEl = document.getElementById('statusConfirmModal');
+    if (!confirmModalEl) return;
+    const confirmModal = window.bootstrap ? new bootstrap.Modal(confirmModalEl) : null;
+    const confirmBody = document.getElementById('statusConfirmBody');
+    const confirmForm = document.getElementById('statusConfirmForm');
+    const confirmBtn = document.getElementById('statusConfirmBtn');
+
+    document.addEventListener('click', function(event) {
+      const btn = event.target.closest('.js-status-btn');
+      if (!btn) return;
+      event.preventDefault();
+      const url = btn.getAttribute('data-url');
+      const action = btn.getAttribute('data-action');
+      if (!url || !confirmModal || !confirmBody || !confirmForm || !confirmBtn) return;
+      confirmForm.action = url;
+      if (action === 'packing') {
+        confirmBody.innerHTML = '<p>Are you sure you want to mark this form as <strong>Packing Done</strong>?</p><p class="text-danger mb-0">Once updated, the form can no longer be edited.</p>';
+        confirmBtn.className = 'btn btn-success';
+        confirmBtn.textContent = 'Packing Done';
+      } else if (action === 'delivery') {
+        confirmBody.innerHTML = '<p>Are you sure you want to mark this order as <strong>Delivery Done</strong>?</p><p class="text-muted mb-0">Once updated, this cannot be changed back.</p>';
+        confirmBtn.className = 'btn btn-primary';
+        confirmBtn.textContent = 'Delivery Done';
+      } else if (action === 'received') {
+        confirmBody.innerHTML = '<p>Are you sure you want to mark this order as <strong>Received by M.S.</strong>?</p><p class="text-muted mb-0">Once updated, this cannot be changed back.</p>';
+        confirmBtn.className = 'btn btn-info text-white';
+        confirmBtn.textContent = 'M.S. Received';
+      }
+      confirmModal.show();
     });
   })();
 </script>

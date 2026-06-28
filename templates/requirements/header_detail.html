@@ -94,22 +94,46 @@
         <div class="card-body">
           <div class="d-flex flex-wrap gap-2">
             {% if header.status == 'SUBMITTED' %}
-              <form method="post" action="{% url 'requirements:status-transition' pk=header.pk %}">
+              <form method="post" action="{% url 'requirements:status-transition' pk=header.pk %}" class="d-inline">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-success">{% if lang_code == "gu" %}પેકિંગ થઈ ગયું{% else %}Packing Done{% endif %}</button>
               </form>
             {% elif header.status == 'IN_PROGRESS' %}
-              <form method="post" action="{% url 'requirements:status-transition' pk=header.pk %}">
+              <form method="post" action="{% url 'requirements:status-transition' pk=header.pk %}" class="d-inline">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-primary">{% if lang_code == "gu" %}ડિલિવરી થઈ ગઈ{% else %}Delivery Done{% endif %}</button>
               </form>
             {% elif header.status == 'CLOSED' %}
-              <form method="post" action="{% url 'requirements:status-transition' pk=header.pk %}">
+              <form method="post" action="{% url 'requirements:status-transition' pk=header.pk %}" class="d-inline">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-info text-white">{% if lang_code == "gu" %}M.S. દ્વારા પ્રાપ્ત{% else %}Received by M.S.{% endif %}</button>
               </form>
             {% endif %}
           </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+  {% if is_admin and header.is_locked %}
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <form method="post" action="{% url 'requirements:header-unlock' pk=header.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-warning">{% if lang_code == "gu" %}અનલૉક કરો{% else %}Unlock for Editing{% endif %}</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+  {% if is_admin and not header.is_locked and header.status != 'DRAFT' %}
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <form method="post" action="{% url 'requirements:header-lock' pk=header.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-secondary">{% if lang_code == "gu" %}લૉક કરો{% else %}Lock Form{% endif %}</button>
+          </form>
         </div>
       </div>
     </div>

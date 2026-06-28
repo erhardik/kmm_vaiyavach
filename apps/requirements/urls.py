@@ -10,6 +10,8 @@ from apps.requirements.views import (
     RequirementCollectByEventView,
     RequirementCollectionPrintView,
     RequirementStatusTransitionView,
+    RequirementUnlockView,
+    RequirementLockView,
     RequirementLineCreateView,
     RequirementLineDeleteView,
     RequirementLineListView,
@@ -44,5 +46,7 @@ urlpatterns = [
     path("special/<int:pk>/edit/", SpecialRequirementUpdateView.as_view(), name="special-update"),
     path("special/<int:pk>/delete/", SpecialRequirementDeleteView.as_view(), name="special-delete"),
     path("collect/<int:pk>/transition/", RequirementStatusTransitionView.as_view(), name="status-transition"),
+    path("collect/<int:pk>/unlock/", RequirementUnlockView.as_view(), name="header-unlock"),
+    path("collect/<int:pk>/lock/", RequirementLockView.as_view(), name="header-lock"),
 ]
 
