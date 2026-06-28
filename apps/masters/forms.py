@@ -93,12 +93,18 @@ class ItemForm(BootstrapModelForm):
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            self.fields.pop("add_to_current_form_immediately", None)
+            self.fields["is_active"].label = "Active"
+            self.fields["is_active"].help_text = "If deactivated, item will be hidden from requirement forms."
+        else:
+            self.fields.pop("is_active")
         if user and user.is_authenticated and user.groups.filter(name="KMM Manager").exists():
             self.fields.pop("estimated_rate", None)
 
     class Meta:
         model = Item
-        fields = ["item_code", "item_name", "item_name_gu", "category", "unit", "default_size", "description", "estimated_rate"]
+        fields = ["item_code", "item_name", "item_name_gu", "category", "unit", "default_size", "description", "estimated_rate", "is_active"]
 
 
 class UpashrayForm(BootstrapModelForm):

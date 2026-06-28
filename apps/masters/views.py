@@ -391,6 +391,27 @@ class ItemUpdateView(EventScopedUpdateView):
         context["list_url"] = self.success_url
         return context
 
+    def form_valid(self, form):
+        before = serialize_instance(self.get_object())
+        obj = form.save(commit=False)
+        obj.updated_by = self.request.user
+        if "is_active" in form.cleaned_data:
+            obj.is_active = form.cleaned_data["is_active"]
+        obj.save()
+        self.object = obj
+        log_activity(
+            user=self.request.user,
+            event=obj.event,
+            action="updated",
+            module=self.model._meta.label_lower,
+            record_id=obj.pk,
+            old_value=before,
+            new_value=serialize_instance(obj),
+            request=self.request,
+        )
+        messages.success(self.request, "Record updated successfully.")
+        return redirect(self.success_url)
+
 
 class ItemDeleteView(EventScopedDeleteView):
     model = Item
