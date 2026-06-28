@@ -583,7 +583,7 @@ class RequirementCollectionView(View):
             initial.append(
                 {
                     "item_id": item.pk,
-                    "required_qty": initial_quantities.get(item.pk, 0),
+                    "required_qty": initial_quantities.get(item.pk),
                 }
             )
         return collection_formset(data=data, initial=initial, prefix="items")

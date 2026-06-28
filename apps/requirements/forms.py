@@ -128,7 +128,6 @@ class RequirementCollectionItemForm(forms.Form):
     item_id = forms.IntegerField(required=False, widget=forms.HiddenInput())
     required_qty = forms.DecimalField(
         required=False,
-        initial=Decimal("0"),
         max_digits=12,
         decimal_places=0,
         widget=forms.NumberInput(attrs={"class": "form-control form-control-sm item-qty-input", "min": "0", "placeholder": "0"}),

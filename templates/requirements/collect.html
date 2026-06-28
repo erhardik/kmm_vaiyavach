@@ -277,8 +277,8 @@
   });
   if (resetButton) {
     resetButton.addEventListener('click', () => {
+      form.querySelectorAll('input[name$="-required_qty"]').forEach((field) => { field.value = ''; });
       form.reset();
-      form.querySelectorAll('input[name$="-required_qty"]').forEach((field) => { field.value = '0'; });
       syncAllRows();
       writeDraft();
       setStatus('{% if lang == "gu" %}ફોર્મ રીસેટ થયું.{% else %}Form reset.{% endif %}', 'info');
