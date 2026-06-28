@@ -31,9 +31,8 @@
   <div class="card-body p-3 p-lg-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
       <div>
-        <div class="text-uppercase small fw-semibold mb-1">{% if lang == "gu" %}કલેક્શન ફોર્મ{% else %}Collection Form{% endif %}</div>
-        <h1 class="h4 mb-1">{% if lang == "gu" %}વૈયાવચ ફોર્મ ભરોઃ{% else %}Collect Requirements{% endif %}</h1>
-        <div class="small opacity-75">{% if lang == "gu" %}એક ભાષા પસંદ કરો અને માત્ર એ જ ભાષામાં ફોર્મ ભરો.{% else %}Choose one language and fill only that language on screen.{% endif %}</div>
+        <h1 class="h4 mb-1">{% if lang == "gu" %}{{ event.name }} ફોર્મ{% else %}{{ event.name }} Form{% endif %}</h1>
+        <div class="small opacity-75">{% if lang == "gu" %}રિક્વેસ્ટ ફોર્મ ભરો - સેવ કરો - વેરીફાઈ કરો - કન્ફર્મ કરો - રિક્વેસ્ટ લિસ્ટ માં જુઓ{% else %}Fill form - Save - Verify - Confirm - View in Order List{% endif %}</div>
       </div>
       <div class="d-flex flex-wrap gap-2">
         <a class="btn btn-sm {% if lang == 'en' %}btn-light{% else %}btn-outline-light{% endif %}" href="?lang=en">English</a>
