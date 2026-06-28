@@ -1612,6 +1612,7 @@ class PublicRequirementListView(View):
     def get(self, request, token=None):
         event = self._get_event(token)
         headers = self._get_rows(event) if event else []
+        total_items = sum(h.lines.count() for h in headers) if headers else 0
         return render(
             request,
             self.template_name,
@@ -1620,6 +1621,7 @@ class PublicRequirementListView(View):
                 "headers": headers,
                 "status_choices": PUBLIC_STATUS_CHOICES,
                 "status_summary": self._status_summary(headers),
+                "total_items": total_items,
                 "public_collect_url": reverse("requirements:public-collect", kwargs={"event_token": event.public_form_token}) if event else None,
                 "public_landing_url": reverse("public-landing"),
                 "public_items": build_public_item_preview(event) if event else [],

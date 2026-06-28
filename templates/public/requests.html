@@ -34,10 +34,13 @@
         </div>
 
         <div class="row g-3">
-          <div class="col-6 col-md-3"><div class="metric-card metric-card-light"><div class="label">કુલ</div><div class="value">{{ status_summary.total_requests|default:0 }}</div></div></div>
-          <div class="col-6 col-md-3"><div class="metric-card metric-card-light"><div class="label">ઓપન</div><div class="value">{{ status_summary.open_requests|default:0 }}</div></div></div>
-          <div class="col-6 col-md-3"><div class="metric-card metric-card-light"><div class="label">પેન્ડિંગ</div><div class="value">{{ status_summary.status_SUBMITTED|default:0 }}</div></div></div>
-          <div class="col-6 col-md-3"><div class="metric-card metric-card-light"><div class="label">પેકિંગ</div><div class="value">{{ status_summary.packing_requests|default:0 }}</div></div></div>
+          <div class="col-6 col-md-3"><div class="metric-card metric-card-light"><div class="label">કુલ ફોર્મ</div><div class="value">{{ status_summary.total_requests|default:0 }}</div></div></div>
+          <div class="col-6 col-md-3"><div class="metric-card metric-card-light"><div class="label">કુલ વસ્તુઓ</div><div class="value">{{ total_items|default:0 }}</div></div></div>
+          <div class="col-6 col-md-6 d-flex gap-2 align-items-center flex-wrap">
+            <a class="btn btn-success btn-sm" href="tel:+919879635446"><i class="bi bi-telephone-fill"></i> Bhumit Shah</a>
+            <a class="btn btn-success btn-sm" href="tel:+919427333136"><i class="bi bi-telephone-fill"></i> Bhavik Vora</a>
+            <a class="btn btn-outline-light btn-sm" href="{% static 'assets/blank-form.pdf' %}" target="_blank"><i class="bi bi-filetype-pdf"></i> Blank Form PDF</a>
+          </div>
         </div>
       </div>
     </header>
