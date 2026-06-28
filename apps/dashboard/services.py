@@ -265,9 +265,14 @@ def build_public_status_summary(event):
     return summary
 
 
+def _item_size_gu(item):
+    if item.parent_item_id:
+        return item.variant_name_gu or item.variant_name or item.default_size_gu or item.default_size or "-"
+    return item.default_size_gu or item.default_size or "-"
+
+
 def build_public_item_preview(event):
     rows = []
-    balances = {balance.item_id: balance for balance in InventoryBalance.objects.filter(event=event).select_related("item")}
     def variant_suffix(index):
         alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         return alphabet[index] if index < len(alphabet) else f"X{index + 1}"
@@ -276,25 +281,21 @@ def build_public_item_preview(event):
         variants = list(item.variants.filter(is_active=True).order_by("variant_name", "pk"))
         if variants:
             for index, variant in enumerate(variants):
-                balance = balances.get(variant.pk)
                 rows.append(
                     {
                         "item": variant,
                         "serial": f"{item.standard_serial or item.pk}-{variant_suffix(index)}",
-                        "stock": balance.current_stock if balance else Decimal("0"),
-                        "category": item.get_category_display(),
+                        "size_display": _item_size_gu(variant),
                         "is_active": variant.is_active,
                         "variant": variant,
                     }
                 )
         else:
-            balance = balances.get(item.pk)
             rows.append(
                 {
                     "item": item,
                     "serial": item.standard_serial or item.pk,
-                    "stock": balance.current_stock if balance else Decimal("0"),
-                    "category": item.get_category_display(),
+                    "size_display": _item_size_gu(item),
                     "is_active": item.is_active,
                     "variant": None,
                 }

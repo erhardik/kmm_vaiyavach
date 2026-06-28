@@ -205,8 +205,8 @@
           <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
             <div>
               <div class="section-band mb-3">Public Stock</div>
-              <h2 class="public-section-title mb-1">વસ્તુ સ્ટોક</h2>
-              <p class="text-body-secondary mb-0">માત્ર વસ્તુ, પ્રકાર અને વર્તમાન સ્ટોક. કોઈ કિંમત અથવા નાણાકીય ડેટા નથી.</p>
+              <h2 class="public-section-title mb-1">વસ્તુ સ્ટોક પૂર્વદર્શન</h2>
+              <p class="text-body-secondary mb-0">માત્ર વસ્તુ અને પ્રકાર/સાઈઝ. કોઈ કિંમત અથવા નાણાકીય ડેટા નથી.</p>
             </div>
           </div>
           <div class="row g-2 align-items-center mb-3">
@@ -221,13 +221,12 @@
                 <tr>
                   <th>કોડ</th>
                   <th>વસ્તુ</th>
-                  <th>પ્રકાર</th>
-                  <th class="text-end">વર્તમાન સ્ટોક</th>
+                  <th>પ્રકાર/સાઈઝ</th>
                 </tr>
               </thead>
               <tbody>
                 {% for row in public_item_preview %}
-                  <tr data-item-row data-search="{{ row.item.item_code }} {{ row.item.item_name }} {{ row.item.item_name_gu }} {{ row.category }}">
+                  <tr data-item-row data-search="{{ row.item.item_code }} {{ row.item.item_name }} {{ row.item.item_name_gu }} {{ row.size_display }}">
                     <td>
                       <div class="fw-semibold">{{ row.item.item_code }}</div>
                       <div class="small text-body-secondary">#{{ row.serial|stringformat:"02d" }}</div>
@@ -236,11 +235,10 @@
                       <div class="fw-semibold">{{ row.item.item_name }}</div>
                       <div class="small text-body-secondary">{{ row.item.item_name_gu|default:row.item.default_size }}</div>
                     </td>
-                    <td>{{ row.category }}</td>
-                    <td class="text-end">{{ row.stock }}</td>
+                    <td>{{ row.size_display }}</td>
                   </tr>
                 {% empty %}
-                  <tr><td colspan="4" class="text-center py-4 text-body-secondary">વસ્તુઓ મળી નથી.</td></tr>
+                  <tr><td colspan="3" class="text-center py-4 text-body-secondary">વસ્તુઓ મળી નથી.</td></tr>
                 {% endfor %}
               </tbody>
             </table>

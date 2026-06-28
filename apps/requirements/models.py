@@ -1,3 +1,4 @@
+import re
 import uuid
 
 from django.conf import settings
@@ -30,7 +31,7 @@ class RequirementHeader(EventScopedModel):
         SANGH_UPASHRAY = "SANGH_UPASHRAY", "Sangh Upashray"
         STHIRVAS = "STHIRVAS", "Sthirvas"
 
-    order_number = models.CharField(max_length=24, unique=True, editable=False, null=True, blank=True)
+    order_number = models.CharField(max_length=32, unique=False, editable=False, null=True, blank=True)
     public_view_token = models.UUIDField(default=None, null=True, blank=True, unique=True, editable=False)
     upashray = models.ForeignKey("masters.Upashray", on_delete=models.PROTECT, related_name="requirements")
     requirement_date = models.DateField(default=timezone.now)
@@ -56,6 +57,9 @@ class RequirementHeader(EventScopedModel):
 
     class Meta:
         ordering = ["-updated_at", "-created_at"]
+        constraints = [
+            models.UniqueConstraint(fields=["event", "order_number"], name="unique_event_order_number"),
+        ]
 
     def __str__(self) -> str:
         if self.order_number:
@@ -66,13 +70,10 @@ class RequirementHeader(EventScopedModel):
         if not self.public_view_token:
             self.public_view_token = uuid.uuid4()
         if not self.order_number and self.status == RequirementStatus.SUBMITTED:
-            token = uuid.uuid4().hex[:8].upper()
-            date_token = timezone.localdate().strftime("%Y%m%d")
-            base_number = f"REQ-{date_token}-{token}"
-            while RequirementHeader.objects.filter(order_number=base_number).exists():
-                token = uuid.uuid4().hex[:8].upper()
-                base_number = f"REQ-{date_token}-{token}"
-            self.order_number = base_number
+            name_part = re.sub(r"[^A-Z0-9]", "", self.volunteer_name.strip().upper())[:10] or "UNKNOWN"
+            date_part = timezone.localdate().strftime("%d%m%y")
+            seq = RequirementHeader.objects.filter(event=self.event, status=RequirementStatus.SUBMITTED).count() + 1
+            self.order_number = f"{name_part}-{date_part}-{seq}"
         super().save(*args, **kwargs)
 
 
