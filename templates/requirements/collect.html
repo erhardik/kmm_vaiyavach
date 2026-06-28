@@ -10,10 +10,7 @@
   .item-table thead th { background: #dce9f5; color: #14324f; white-space: nowrap; }
   .item-table td, .item-table th { border-color: #c4d5e3; }
   .qty-box { min-width: 5rem; }
-  .qty-preset-btn, .nr-btn { border: 1px solid #d7c66c; background: #fff7bf; color: #4a3d00; font-weight: 600; padding: 1px 8px !important; font-size: .75rem; line-height: 1.3; }
-  .qty-preset-btn.qty-active { background: #2f9e44; border-color: #2f9e44; color: #fff; }
-  .nr-btn { border-color: #dc3545; background: #ffd6d6; color: #8c1f2d; }
-  .nr-btn.qty-active { background: #2f9e44; border-color: #2f9e44; color: #fff; }
+
   .row-active { background: #f3fff3; }
   .variant-row { background: #fff9ec; }
   .item-table td { padding: .2rem .25rem !important; vertical-align: middle; }
@@ -148,7 +145,7 @@
                   <th style="width:72px;">{% if lang == "gu" %}નં.{% else %}Sr. No.{% endif %}</th>
                   <th>{% if lang == "gu" %}વસ્તુનું નામ{% else %}Name of Item{% endif %}</th>
                   <th style="width:170px;">{% if lang == "gu" %}પ્રકાર/સાઈઝ{% else %}Type/Size{% endif %}</th>
-                  <th style="width:320px;">{% if lang == "gu" %}નંગ{% else %}Qty{% endif %}</th>
+                  <th style="width:100px;">{% if lang == "gu" %}નંગ{% else %}Qty{% endif %}</th>
                 </tr>
               </thead>
               <tbody>
@@ -161,20 +158,8 @@
                     </td>
                     <td>{{ row.item_size }}</td>
                     <td>
-                      <div class="d-flex flex-wrap gap-1 align-items-center">
+                      <div class="d-flex align-items-center gap-1">
                         {{ row.form.required_qty }}
-                        {% if row.ask_qty %}
-                          <span class="badge text-bg-warning text-dark">{% if lang == "gu" %}ASK{% else %}ASK{% endif %}</span>
-                        {% endif %}
-                        <div class="d-flex flex-wrap gap-1">
-                          <button class="btn btn-sm qty-preset-btn" type="button" data-qty="1">1</button>
-                          <button class="btn btn-sm qty-preset-btn" type="button" data-qty="2">2</button>
-                          <button class="btn btn-sm qty-preset-btn" type="button" data-qty="3">3</button>
-                          <button class="btn btn-sm qty-preset-btn" type="button" data-qty="5">5</button>
-                          <button class="btn btn-sm qty-preset-btn" type="button" data-qty="10">10</button>
-                          <button class="btn btn-sm qty-preset-btn" type="button" data-qty="15">15</button>
-                          <button class="btn btn-sm nr-btn" type="button">NR</button>
-                        </div>
                       </div>
                     </td>
                   </tr>
@@ -263,25 +248,17 @@
     });
   }
   function updateRowState(row) {
-    const qty = row.querySelector('select[name$="-required_qty"]');
-    const active = qty && qty.value && qty.value !== '0';
+    const qty = row.querySelector('input[name$="-required_qty"]');
+    const active = qty && qty.value && parseFloat(qty.value) > 0;
     row.classList.toggle('row-active', Boolean(active));
-    row.querySelectorAll('.qty-preset-btn').forEach((btn) => btn.classList.toggle('qty-active', qty && btn.dataset.qty === qty.value));
-    row.querySelectorAll('.nr-btn').forEach((btn) => btn.classList.toggle('qty-active', qty && qty.value === '0'));
   }
   function syncAllRows() { form.querySelectorAll('tr[data-item-row]').forEach(updateRowState); }
-  function applyQty(btn, value) {
-    const row = btn.closest('tr');
-    const qty = row && row.querySelector('select[name$="-required_qty"]');
-    if (!qty) return;
-    qty.value = String(value);
-    qty.dispatchEvent(new Event('change', { bubbles: true }));
-  }
 
   applyDraft(readDraft());
   syncAllRows();
 
-  form.querySelectorAll('select[name$="-required_qty"]').forEach((field) => {
+  form.querySelectorAll('input[name$="-required_qty"]').forEach((field) => {
+    field.addEventListener('input', () => { updateRowState(field.closest('tr')); writeDraft(); });
     field.addEventListener('change', () => { updateRowState(field.closest('tr')); writeDraft(); });
   });
   form.querySelectorAll('input[name], select[name], textarea[name]').forEach((field) => {
@@ -289,12 +266,10 @@
     field.addEventListener('input', writeDraft);
     field.addEventListener('change', writeDraft);
   });
-  form.querySelectorAll('.qty-preset-btn').forEach((btn) => btn.addEventListener('click', () => applyQty(btn, btn.dataset.qty || '0')));
-  form.querySelectorAll('.nr-btn').forEach((btn) => btn.addEventListener('click', () => applyQty(btn, 0)));
   if (resetButton) {
     resetButton.addEventListener('click', () => {
       form.reset();
-      form.querySelectorAll('select[name$="-required_qty"]').forEach((field) => { field.value = '0'; });
+      form.querySelectorAll('input[name$="-required_qty"]').forEach((field) => { field.value = '0'; });
       syncAllRows();
       writeDraft();
       setStatus('{% if lang == "gu" %}ફોર્મ રીસેટ થયું.{% else %}Form reset.{% endif %}', 'info');

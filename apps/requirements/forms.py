@@ -122,13 +122,12 @@ class RequirementCollectionHeaderForm(BootstrapModelForm):
 
 class RequirementCollectionItemForm(forms.Form):
     item_id = forms.IntegerField(required=False, widget=forms.HiddenInput())
-    quantity_choices = [(str(index), str(index)) for index in range(0, 101)]
-    required_qty = forms.TypedChoiceField(
-        choices=quantity_choices,
-        coerce=Decimal,
+    required_qty = forms.DecimalField(
         required=False,
         initial=Decimal("0"),
-        widget=forms.Select(attrs={"class": "form-select form-select-sm item-qty-select"}),
+        max_digits=12,
+        decimal_places=0,
+        widget=forms.NumberInput(attrs={"class": "form-control form-control-sm item-qty-input", "min": "0", "placeholder": "0"}),
     )
 
 
