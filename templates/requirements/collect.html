@@ -206,6 +206,35 @@
 
 <script>
 (function() {
+  const subRouteData = {{ sub_route_data|safe }};
+  const routeSelect = document.querySelector('[name="route_area"]');
+  const subRouteSelect = document.querySelector('[name="route_sub_area"]');
+  if (routeSelect && subRouteSelect) {
+    var allSubOptions = Array.from(subRouteSelect.options).filter(function(o) { return o.value; });
+    function updateSubRoutes() {
+      var area = routeSelect.value;
+      var currentVal = subRouteSelect.value;
+      subRouteSelect.innerHTML = '<option value="">---</option>';
+      var allowed = [];
+      if (!area || area === 'NOT_IN_LIST') {
+        allowed = allSubOptions;
+      } else if (subRouteData[area]) {
+        allowed = subRouteData[area];
+      }
+      allowed.forEach(function(item) {
+        var opt = document.createElement('option');
+        var val = item[0] || item.value;
+        var label = item[1] || item.label || item.textContent || val;
+        opt.value = val;
+        opt.textContent = label;
+        if (val === currentVal) opt.selected = true;
+        subRouteSelect.appendChild(opt);
+      });
+    }
+    routeSelect.addEventListener('change', updateSubRoutes);
+    updateSubRoutes();
+  }
+
   const form = document.querySelector('[data-collect-form]');
   if (!form) return;
   const saveButton = document.getElementById('save-details-btn');
