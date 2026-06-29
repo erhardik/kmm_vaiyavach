@@ -237,8 +237,76 @@
   </div>
 {% endif %}
 
+<style>
+.confirm-appreciation-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.7); z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+}
+.confirm-appreciation-box {
+  background: #fff; border-radius: 1.5rem; padding: 2.5rem 2rem;
+  max-width: 480px; width: 90%; text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.confirm-appreciation-icon { font-size: 3rem; margin-bottom: 1rem; }
+.confirm-appreciation-message {
+  font-size: 1.1rem; line-height: 1.7; color: #14324f;
+  margin-bottom: 1.5rem;
+}
+.confirm-appreciation-countdown {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 60px; height: 60px; border-radius: 50%;
+  background: #14324f; color: #fff; font-size: 1.5rem; font-weight: 700;
+}
+</style>
+
+<div id="confirmAppreciationOverlay" class="confirm-appreciation-overlay" style="display:none;">
+  <div class="confirm-appreciation-box">
+    <div class="confirm-appreciation-icon">🙏</div>
+    <div class="confirm-appreciation-message" id="confirmAppreciationMessage"></div>
+    <div class="confirm-appreciation-countdown" id="confirmAppreciationCountdown">5</div>
+  </div>
+</div>
+
 <script>
 (function() {
+  const APPRECIATION_MESSAGES = [
+    "ગુરુ ભગવંતોની વૈયાવચ્યમાં દિન-રાત એક કરવા બદલ આપનો ખૂબ ખૂબ આભાર!\nઆપના અહોભાવ અને અથાક પરિશ્રમને શત-શત વંદન.\nકલ્યાણ મિત્ર મંડળ આપનું આભારી રહેશે!",
+    "ચાતુર્માસમાં ગુરુદેવની સેવાનો આ અવસર આપના સમર્પણથી સફળ થયો છે!\nઆપના જેવા નિઃસ્વાર્થ સેવકો જ જિનશાસનની સાચી શાન છે.\nકલ્યાણ મિત્ર મંડળ આપનું આભારી રહેશે!",
+    "ગુરુ ચરણોની અવિરત સેવા કાજે થાકને પણ થકવી દે એવો આપનો ઉત્સાહ છે!\nઆપની આ પરમ ભક્તિની હૃદયપૂર્વક અનુમોદના.\nકલ્યાણ મિત્ર મંડળ આપનું આભારી રહેશે!",
+    "પરમ પૂજ્ય ગુરુ ભગવંતોની સાતા ઉપજાવવી એજ સૌથી મોટી તપસ્યા છે!\nસેવાના આ પવિત્ર કાર્યમાં આપ સહભાગી બન્યા તે બદલ ધન્યવાદ.\nકલ્યાણ મિત્ર મંડળ આપનું આભારી રહેશે!",
+    "રાત-દિવસ જોયા વગર ગુરુસેવામાં વહેતો આપનો પરસેવો એજ સાચું પુણ્ય છે!\nઆપની આ અણમોલ આરાધનાને કોટિ-કોટિ વંદન.\nકલ્યાણ મિત્ર મંડળ આપનું આભારી રહેશે!",
+    "આપ માત્ર વોલેન્ટિયર નથી, ગુરુદેવની સાધનાના પરમ રક્ષક છો!\nઆપના આ અદભુત સમર્પણને હૃદયપૂર્વક પ્રણામ.\nકલ્યાણ મિત્ર મંડળ આપનું આભારી રહેશે!",
+    "ગુરુ ભક્તિના આ મહા મહોત્સવને આપના અથાક શ્રમે દીપાવી દીધો છે!\nઆપની ઉત્કૃષ્ટ સેવાની ખૂબ ખૂબ અનુમોદના.\nકલ્યાણ મિત્ર મંડળ આપનું આભારી રહેશે!",
+    "ગુરુદેવના એક-એક શ્વાસની સાતા માટે આપનું યોગદાન અમૂલ્ય છે!\nઆ પવિત્ર ચાતુર્માસ ભક્તિમાં જોડાવા બદલ ખૂબ આભાર.\nકલ્યાણ મિત્ર મંડળ આપનું આભારી રહેશે!",
+    "ગુરુવૈયાવચ્યનું આ અણમોલ ભાગ્ય આપના પ્રબળ પુણ્યથી જ મળ્યું છે!\nઆપની આ નિઃસ્વાર્થ ભક્તિ ભાવનાને વંદન.\nકલ્યાણ મિત્ર મંડળ આપનું આભારી રહેશે!",
+    "ગુરુ ભક્તિનો આ માર્ગ આપના સમર્પણ અને ઉત્સાહથી શોભી ઉઠ્યો છે!\nઆપની સેવાની ત્રણેય ભુવનમાં અનુમોદના થાય છે.\nકલ્યાણ મિત્ર મંડળ આપનું આભારી રહેશે!",
+  ];
+
+  function showAppreciation(targetUrl) {
+    var msg = APPRECIATION_MESSAGES[Math.floor(Math.random() * APPRECIATION_MESSAGES.length)];
+    document.getElementById('confirmAppreciationMessage').textContent = msg;
+    document.getElementById('confirmAppreciationCountdown').textContent = '5';
+    document.getElementById('confirmAppreciationOverlay').style.display = 'flex';
+    var seconds = 5;
+    var timer = setInterval(function() {
+      seconds--;
+      if (seconds <= 0) {
+        clearInterval(timer);
+        window.location.href = targetUrl;
+      } else {
+        document.getElementById('confirmAppreciationCountdown').textContent = seconds;
+      }
+    }, 1000);
+  }
+
+  function getRedirectUrl(response) {
+    if (response.redirected) return response.url;
+    var loc = response.headers.get('Location');
+    if (loc) return loc;
+    return null;
+  }
+
   const subRouteData = {{ sub_route_data|safe }};
   const routeSelect = document.querySelector('[name="route_area"]');
   const subRouteSelect = document.querySelector('[name="route_sub_area"]');
@@ -372,26 +440,17 @@
         headers: { 'X-Requested-With': 'XMLHttpRequest' },
         body: formData,
       });
-      if (response.redirected) {
-        window.location.href = response.url;
-        return;
-      }
-      if (response.redirected) {
-        window.location.href = response.url;
-        return;
-      }
-      if (response.status === 302) {
-        const loc = response.headers.get('Location');
-        if (loc) { window.location.href = loc; return; }
-      }
+      const url = getRedirectUrl(response);
+      var listUrl = '{% if is_public_flow %}{% url "public-requests" %}{% else %}{% url "requirements:header-list" %}{% endif %}';
+      if (url) { showAppreciation(url); return; }
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.ok) {
         showErrors(data.errors || {});
         setStatus(data.message || 'Confirm failed', 'danger');
         return;
       }
-      if (data.redirect_url) { window.location.href = data.redirect_url; return; }
-      window.location.reload();
+      if (data.redirect_url) { showAppreciation(data.redirect_url); return; }
+      showAppreciation(listUrl);
     } catch (err) {
       console.error('[CONFIRM ERROR]', err);
       setStatus('Confirm failed. Please try again.', 'danger');
