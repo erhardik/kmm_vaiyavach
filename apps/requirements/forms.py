@@ -91,7 +91,8 @@ class RequirementCollectionHeaderForm(BootstrapModelForm):
         if self.instance and getattr(self.instance, "pk", None) and self.instance.upashray_id:
             self.fields["upashray_name"].initial = self.instance.upashray.name
         self.fields["route_sub_area"].widget = forms.Select(
-            choices=[("", "---")] + RequirementHeader.get_all_sub_route_choices()
+            choices=[("", "---")] + RequirementHeader.get_all_sub_route_choices(),
+            attrs={"class": "form-select"},
         )
         for field_name in self.fields:
             if field_name != "upashray_name":
