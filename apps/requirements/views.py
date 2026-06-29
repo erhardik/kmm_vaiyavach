@@ -13,6 +13,8 @@ from django.forms import formset_factory
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse, reverse_lazy
+
+from .services import send_form_backup_email
 from django.views import View
 from django.utils import timezone
 
@@ -856,6 +858,7 @@ class RequirementCollectionView(View):
             )
 
         if confirm_now:
+            send_form_backup_email(header_obj)
             form_label = header_obj.form_number or header_obj.order_number or "-"
             messages.success(request, f"Requirement sent to team. Form No: {form_label}")
             if self._is_public_flow():
