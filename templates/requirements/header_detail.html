@@ -97,38 +97,75 @@
       </div>
     </div>
   {% endif %}
-  {% if header.status == 'CONFIRMED' or header.status == 'PACKED' or header.status == 'SUBMITTED' or header.status == 'IN_PROGRESS' or header.status == 'CLOSED' %}
+  {% if header.status == 'CONFIRMED' %}
+    <div class="col-12">
+      <div class="card border-0 shadow-sm border-warning">
+        <div class="card-body">
+          <div class="fw-semibold mb-2">{% if lang_code == "gu" %}ફેરફારની વિનંતી{% else %}Request Edit{% endif %}</div>
+          <p class="small text-body-secondary mb-2">
+            {% if lang_code == "gu" %}
+              ફોર્મ કન્ફર્મ થઈ ગયું છે. જો તમારે કોઈ ફેરફાર કરવો હોય તો નીચે વિનંતી મોકલો. ૨૪ કલાક માં એડમિન અપડેટ કરી દેશે.
+            {% else %}
+              Form is confirmed. If you need to make changes, send a request below. Admin will update within 24 hours.
+            {% endif %}
+          </p>
+          <form method="post" action="{% if not is_admin %}{% url 'requirements:public-edit-request' token=header.public_view_token %}{% else %}{% url 'requirements:edit-request' pk=header.pk %}{% endif %}" class="mb-3">
+            {% csrf_token %}
+            <textarea class="form-control mb-2" name="message" rows="2" placeholder="{% if lang_code == 'gu' %}કૃપા કરીને ફેરફાર વિશે વિગત આપો...{% else %}Please describe the changes needed...{% endif %}" required></textarea>
+            <button class="btn btn-primary btn-sm" type="submit">{% if lang_code == "gu" %}વિનંતી મોકલો{% else %}Send Request{% endif %}</button>
+          </form>
+          <form method="post" action="{% url 'requirements:status-transition' pk=header.pk %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success">{% if lang_code == "gu" %}પેકિંગ થઈ ગયું{% else %}Packing Done{% endif %}</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+  {% if header.status == 'PACKED' %}
     <div class="col-12">
       <div class="card border-0 shadow-sm">
         <div class="card-body">
-          <div class="d-flex flex-wrap gap-2">
-            {% if header.status == 'CONFIRMED' %}
-              <form method="post" action="{% url 'requirements:status-transition' pk=header.pk %}" class="d-inline">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-success">{% if lang_code == "gu" %}પેકિંગ થઈ ગયું{% else %}Packing Done{% endif %}</button>
-              </form>
-            {% elif header.status == 'PACKED' %}
-              <form method="post" action="{% url 'requirements:status-transition' pk=header.pk %}" class="d-inline">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-primary">{% if lang_code == "gu" %}ડિલિવરી થઈ ગઈ{% else %}Delivery Done{% endif %}</button>
-              </form>
-            {% elif header.status == 'SUBMITTED' %}
-              <form method="post" action="{% url 'requirements:status-transition' pk=header.pk %}" class="d-inline">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-success">{% if lang_code == "gu" %}પેકિંગ થઈ ગયું{% else %}Packing Done{% endif %}</button>
-              </form>
-            {% elif header.status == 'IN_PROGRESS' %}
-              <form method="post" action="{% url 'requirements:status-transition' pk=header.pk %}" class="d-inline">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-primary">{% if lang_code == "gu" %}ડિલિવરી થઈ ગઈ{% else %}Delivery Done{% endif %}</button>
-              </form>
-            {% elif header.status == 'CLOSED' %}
-              <form method="post" action="{% url 'requirements:status-transition' pk=header.pk %}" class="d-inline">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-info text-white">{% if lang_code == "gu" %}M.S. દ્વારા પ્રાપ્ત{% else %}Received by M.S.{% endif %}</button>
-              </form>
-            {% endif %}
-          </div>
+          <form method="post" action="{% url 'requirements:status-transition' pk=header.pk %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">{% if lang_code == "gu" %}ડિલિવરી થઈ ગઈ{% else %}Delivery Done{% endif %}</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+  {% if header.status == 'SUBMITTED' %}
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <form method="post" action="{% url 'requirements:status-transition' pk=header.pk %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success">{% if lang_code == "gu" %}પેકિંગ થઈ ગયું{% else %}Packing Done{% endif %}</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+  {% if header.status == 'IN_PROGRESS' %}
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <form method="post" action="{% url 'requirements:status-transition' pk=header.pk %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">{% if lang_code == "gu" %}ડિલિવરી થઈ ગઈ{% else %}Delivery Done{% endif %}</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+  {% if header.status == 'CLOSED' %}
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <form method="post" action="{% url 'requirements:status-transition' pk=header.pk %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-info text-white">{% if lang_code == "gu" %}M.S. દ્વારા પ્રાપ્ત{% else %}Received by M.S.{% endif %}</button>
+          </form>
         </div>
       </div>
     </div>

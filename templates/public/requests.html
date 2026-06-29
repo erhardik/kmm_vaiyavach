@@ -69,8 +69,11 @@
             </div>
           </div>
 
+          <div class="mb-3">
+            <input type="text" class="form-control" id="requestSearch" placeholder="{% if lang == 'gu' %}શોધો... ફોર્મ નં., પૂજ્ય શ્રી, સરનામું, વિસ્તાર વગેરે{% else %}Search... form no., pujya shri, address, area etc.{% endif %}" autocomplete="off">
+          </div>
           <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0" id="requestTable">
               <thead class="table-light">
                 <tr>
                   <th>ફોર્મ નંબર</th>
@@ -84,7 +87,7 @@
               </thead>
               <tbody>
                 {% for header in headers %}
-                  <tr>
+                  <tr data-search="{{ header.form_number }} {{ header.order_number }} {{ header.pujya_shri_name }} {{ header.area }} {{ header.volunteer_name }} {{ header.current_address }} {{ header.chaturmas_place_address }} {{ header.get_status_display }}">
                     <td>
                       <a class="fw-semibold text-decoration-none" href="{% url 'requirements:public-detail' token=header.public_view_token %}">{{ header.form_number|default:header.order_number|default:"Draft" }}</a>
                       <div class="small text-body-secondary">{{ header.requirement_date }}</div>
@@ -157,6 +160,20 @@
     </main>
   </div>
 
-
+  <script>
+    (function() {
+      var search = document.getElementById('requestSearch');
+      var table = document.getElementById('requestTable');
+      if (!search || !table) return;
+      var rows = Array.from(table.querySelectorAll('tbody tr[data-search]'));
+      search.addEventListener('input', function() {
+        var q = search.value.trim().toLowerCase();
+        rows.forEach(function(row) {
+          var haystack = (row.getAttribute('data-search') || row.textContent || '').toLowerCase();
+          row.style.display = !q || haystack.indexOf(q) !== -1 ? '' : 'none';
+        });
+      });
+    })();
+  </script>
 </body>
 </html>
