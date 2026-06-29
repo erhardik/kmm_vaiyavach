@@ -148,9 +148,11 @@ class RequirementHeader(EventScopedModel):
         ]
 
     def __str__(self) -> str:
+        if self.form_number:
+            return self.form_number
         if self.order_number:
-            return f"{self.order_number} - {self.upashray}"
-        return f"{self.upashray} - {self.requirement_date}"
+            return self.order_number
+        return str(self.upashray)
 
     def save(self, *args, **kwargs):
         if not self.public_view_token:
