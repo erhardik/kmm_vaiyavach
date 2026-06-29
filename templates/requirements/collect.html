@@ -368,6 +368,8 @@
       lines.push(`${fieldLabel(name)}: ${(messages || []).map((m) => m.message || m).join(', ')}`);
     });
     setStatus(lines.join('<br>') || 'Please review the highlighted fields and try again.', 'danger');
+    var firstErr = form.querySelector('.is-invalid');
+    if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
   function readDraft() {
     try { const raw = localStorage.getItem(draftStorageKey()); return raw ? JSON.parse(raw) : null; } catch (_) { return null; }
