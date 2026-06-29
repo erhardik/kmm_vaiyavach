@@ -458,7 +458,17 @@
       if (url) { showAppreciation(url); return; }
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.ok) {
+        console.log('[CONFIRM ERRORS]', data.errors, data.message, data);
         showErrors(data.errors || {});
+        var top = document.getElementById('confirm-errors-top');
+        if (top && data.message) {
+          var errMsg = data.message;
+          if (data.errors) {
+            var details = Object.entries(data.errors).map(function(e) { return e[0] + ': ' + e[1].map(function(m) { return m.message || m; }).join(', '); }).join('<br>');
+            errMsg += '<br><small>' + details + '</small>';
+          }
+          top.innerHTML = '<div class="alert alert-danger mb-3">' + errMsg + '</div>';
+        }
         setStatus(data.message || 'Confirm failed', 'danger');
         return;
       }
