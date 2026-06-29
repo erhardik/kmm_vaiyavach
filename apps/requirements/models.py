@@ -161,7 +161,10 @@ class RequirementHeader(EventScopedModel):
             raw_area = (self.route_area or "").strip()
             if raw_area == "NOT_IN_LIST" or not raw_area:
                 raw_area = "A11"
-            area_num = int(raw_area[1:])
+            try:
+                area_num = int(raw_area[1:])
+            except (ValueError, IndexError):
+                area_num = 11
             name_part = re.sub(r"[^A-Z0-9]", "", self.volunteer_name.strip().upper())[:10] or "UNKNOWN"
             date_part = timezone.localdate().strftime("%d%m%y")
             seq = RequirementHeader.objects.filter(event=self.event, status=RequirementStatus.SUBMITTED).count() + 1

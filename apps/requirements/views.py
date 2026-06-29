@@ -1,4 +1,5 @@
 import json
+import uuid
 from collections import defaultdict
 from io import BytesIO
 from pathlib import Path
@@ -528,9 +529,17 @@ class RequirementCollectionView(View):
     def _get_event(self):
         event_token = self.kwargs.get("event_token") or self.request.GET.get("event_token") or self.request.POST.get("event_token")
         if event_token:
+            try:
+                uuid.UUID(str(event_token))
+            except (ValueError, AttributeError):
+                return None
             return Event.objects.filter(public_form_token=event_token, is_active=True).first()
         event_id = self.request.GET.get("event") or self.request.POST.get("event") or self.kwargs.get("event_pk")
         if event_id:
+            try:
+                event_id = int(event_id)
+            except (ValueError, TypeError):
+                return None
             return Event.objects.filter(pk=event_id, is_active=True).first()
         return Event.objects.filter(is_current=True, is_active=True).first()
 
@@ -540,9 +549,17 @@ class RequirementCollectionView(View):
     def _get_header(self, event):
         token = self.kwargs.get("token") or self.request.POST.get("token") or self.request.GET.get("token")
         if token:
+            try:
+                uuid.UUID(str(token))
+            except (ValueError, AttributeError):
+                return None
             return RequirementHeader.objects.filter(public_view_token=token, event=event).first()
         pk = self.kwargs.get("pk") or self.request.POST.get("header_pk") or self.request.GET.get("header_pk")
         if not pk or event is None:
+            return None
+        try:
+            pk = int(pk)
+        except (ValueError, TypeError):
             return None
         return RequirementHeader.objects.filter(pk=pk, event=event).first()
 
@@ -768,11 +785,15 @@ class RequirementCollectionView(View):
             item_errors = []
             if formset.is_valid():
                 RequirementLine.objects.filter(event=event, requirement=header_obj).delete()
+                seen_item_ids = set()
                 for item_form in formset.cleaned_data:
                     item_id = item_form.get("item_id")
                     qty = item_form.get("required_qty") or 0
                     if not item_id or qty <= 0:
                         continue
+                    if item_id in seen_item_ids:
+                        continue
+                    seen_item_ids.add(item_id)
                     RequirementLine.objects.create(
                         event=event,
                         requirement=header_obj,
@@ -860,11 +881,15 @@ class RequirementCollectionView(View):
         header_obj.save()
 
         RequirementLine.objects.filter(event=event, requirement=header_obj).delete()
+        seen_item_ids = set()
         for item_form in formset.cleaned_data:
             item_id = item_form.get("item_id")
             qty = item_form.get("required_qty") or 0
             if not item_id or qty <= 0:
                 continue
+            if item_id in seen_item_ids:
+                continue
+            seen_item_ids.add(item_id)
             RequirementLine.objects.create(
                 event=event,
                 requirement=header_obj,

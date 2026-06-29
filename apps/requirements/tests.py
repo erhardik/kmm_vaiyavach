@@ -282,3 +282,27 @@ class RequirementCollectionFlowTest(TestCase):
         qty_map = {line.item_id: line.required_qty for line in lines}
         self.assertEqual(qty_map[self.items[0].pk], 7)
         self.assertEqual(qty_map[self.items[2].pk], 4)
+
+    # ── Test 10: Invalid UUID in public token returns None gracefully ──
+
+    def test_invalid_uuid_in_public_token_does_not_crash(self):
+        """Public collect with invalid UUID via POST param returns gracefully."""
+        post_data = self._full_post_data({"save_details": "1", "event_token": "not-a-uuid"})
+        resp = self.client.post(reverse("requirements:collect"), post_data)
+        # No event found with that token, so redirects to dashboard:home
+        self.assertEqual(resp.status_code, 302)
+
+    def test_invalid_header_pk_does_not_crash(self):
+        """POST with non-integer header_pk returns 200 (creates new form)."""
+        post_data = self._full_post_data({"save_details": "1", "header_pk": "abc"})
+        resp = self.client.post(reverse("requirements:collect"), post_data)
+        self.assertEqual(resp.status_code, 200)
+        # Should have created a new header despite invalid header_pk
+        self.assertEqual(RequirementHeader.objects.count(), 1)
+
+    def test_invalid_event_id_does_not_crash(self):
+        """POST with non-integer event param returns 200 (no event found)."""
+        post_data = self._full_post_data({"save_details": "1", "event": "abc"})
+        resp = self.client.post(reverse("requirements:collect"), post_data)
+        self.assertEqual(resp.status_code, 302)
+        # Redirects to dashboard:home since no active event found
