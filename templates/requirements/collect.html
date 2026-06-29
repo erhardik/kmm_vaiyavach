@@ -208,7 +208,7 @@
   </div>
 </form>
 
-{% if not editing_allowed and header %}
+{% if not editing_allowed and header and header.status == 'CONFIRMED' %}
   <div class="card border-0 collect-panel mt-3">
     <div class="card-body">
       <div class="fw-semibold mb-2">{% if lang == "gu" %}ફોર્મ સ્ટેટસ{% else %}Form Status{% endif %}</div>
