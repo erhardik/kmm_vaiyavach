@@ -79,7 +79,11 @@
                   {% if can_change and row.edit_url %}
                     <a class="btn btn-sm btn-outline-secondary" href="{{ row.edit_url }}">Edit</a>
                   {% endif %}
-                  {% if row.object.status == 'SUBMITTED' %}
+                  {% if row.object.status == 'CONFIRMED' %}
+                    <button type="button" class="btn btn-sm btn-success js-status-btn" data-url="{% url 'requirements:status-transition' pk=row.object.pk %}" data-action="packing">Packing Done</button>
+                  {% elif row.object.status == 'PACKED' %}
+                    <button type="button" class="btn btn-sm btn-primary js-status-btn" data-url="{% url 'requirements:status-transition' pk=row.object.pk %}" data-action="delivery">Delivery Done</button>
+                  {% elif row.object.status == 'SUBMITTED' %}
                     <button type="button" class="btn btn-sm btn-success js-status-btn" data-url="{% url 'requirements:status-transition' pk=row.object.pk %}" data-action="packing">Packing Done</button>
                   {% elif row.object.status == 'IN_PROGRESS' %}
                     <button type="button" class="btn btn-sm btn-primary js-status-btn" data-url="{% url 'requirements:status-transition' pk=row.object.pk %}" data-action="delivery">Delivery Done</button>
@@ -283,6 +287,10 @@
         confirmBody.innerHTML = '<p>Are you sure you want to mark this order as <strong>Received by M.S.</strong>?</p><p class="text-muted mb-0">Once updated, this cannot be changed back.</p>';
         confirmBtn.className = 'btn btn-info text-white';
         confirmBtn.textContent = 'M.S. Received';
+      } else if (action === 'packed') {
+        confirmBody.innerHTML = '<p>Are you sure you want to mark this form as <strong>Packed</strong>?</p><p class="text-danger mb-0">Once updated, the form can no longer be edited.</p>';
+        confirmBtn.className = 'btn btn-success';
+        confirmBtn.textContent = 'Packed';
       }
       confirmModal.show();
     });

@@ -11,20 +11,8 @@
               {% if header.order_number %} | {% if lang_code == "gu" %}ઓર્ડર ID{% else %}Order ID{% endif %}: {{ header.order_number }}{% endif %}
             </div>
           </div>
-          <span class="badge fs-6 {% if header.status == 'SUBMITTED' %}text-bg-primary{% elif header.status == 'IN_PROGRESS' %}text-bg-warning text-dark{% elif header.status == 'CLOSED' %}text-bg-info text-dark{% elif header.status == 'RECEIVED_BY_MS' %}text-bg-success{% elif header.is_locked %}text-bg-success{% else %}text-bg-warning{% endif %}">
-            {% if lang_code == "gu" %}
-              {% if header.status == 'SUBMITTED' %}ફોર્મ પ્રાપ્ત (પેકિંગ બાકી)
-              {% elif header.status == 'IN_PROGRESS' %}પેકિંગ થઈ ગયું (ડિલિવરી બાકી)
-              {% elif header.status == 'CLOSED' %}ડિલિવરી થઈ ગઈ (રૂટ પર)
-              {% elif header.status == 'RECEIVED_BY_MS' %}M.S. દ્વારા પ્રાપ્ત
-              {% else %}{{ header.get_status_display }}{% endif %}
-            {% else %}
-              {% if header.status == 'SUBMITTED' %}Form Received (Packing Awaited)
-              {% elif header.status == 'IN_PROGRESS' %}Packing Done (Delivery Awaited)
-              {% elif header.status == 'CLOSED' %}Delivery Done (On Route)
-              {% elif header.status == 'RECEIVED_BY_MS' %}Received by M.S.
-              {% else %}{{ header.get_status_display }}{% endif %}
-            {% endif %}
+          <span class="badge fs-6 {% if header.status == 'CONFIRMED' or header.status == 'SUBMITTED' %}text-bg-primary{% elif header.status == 'PACKED' or header.status == 'IN_PROGRESS' %}text-bg-warning text-dark{% elif header.status == 'DELIVERED' or header.status == 'CLOSED' %}text-bg-info text-dark{% elif header.status == 'RECEIVED_BY_MS' %}text-bg-success{% elif header.is_locked %}text-bg-success{% else %}text-bg-warning{% endif %}">
+            {{ header.get_status_display }}
           </span>
         </div>
         <div class="row g-2 small">
@@ -46,6 +34,25 @@
       </div>
     </div>
   </div>
+
+  {% if edit_requests and is_admin %}
+    <div class="col-12">
+      <div class="card border-0 shadow-sm border-warning">
+        <div class="card-header bg-warning bg-opacity-10 border-0">
+          <h6 class="mb-0">{% if lang_code == "gu" %}ફેરફારની વિનંતીઓ{% else %}Edit Requests{% endif %} ({{ edit_requests|length }})</h6>
+        </div>
+        <div class="card-body">
+          {% for er in edit_requests %}
+            <div class="mb-2 pb-2 border-bottom">
+              <div class="small text-body-secondary">{{ er.created_at|date:"d-M-Y H:i" }}</div>
+              <p class="mb-1">{{ er.message }}</p>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
   <div class="col-12">
     <div class="card border-0 shadow-sm">
       <div class="table-responsive">
@@ -90,12 +97,22 @@
       </div>
     </div>
   {% endif %}
-  {% if header.status == 'SUBMITTED' or header.status == 'IN_PROGRESS' or header.status == 'CLOSED' %}
+  {% if header.status == 'CONFIRMED' or header.status == 'PACKED' or header.status == 'SUBMITTED' or header.status == 'IN_PROGRESS' or header.status == 'CLOSED' %}
     <div class="col-12">
       <div class="card border-0 shadow-sm">
         <div class="card-body">
           <div class="d-flex flex-wrap gap-2">
-            {% if header.status == 'SUBMITTED' %}
+            {% if header.status == 'CONFIRMED' %}
+              <form method="post" action="{% url 'requirements:status-transition' pk=header.pk %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success">{% if lang_code == "gu" %}પેકિંગ થઈ ગયું{% else %}Packing Done{% endif %}</button>
+              </form>
+            {% elif header.status == 'PACKED' %}
+              <form method="post" action="{% url 'requirements:status-transition' pk=header.pk %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary">{% if lang_code == "gu" %}ડિલિવરી થઈ ગઈ{% else %}Delivery Done{% endif %}</button>
+              </form>
+            {% elif header.status == 'SUBMITTED' %}
               <form method="post" action="{% url 'requirements:status-transition' pk=header.pk %}" class="d-inline">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-success">{% if lang_code == "gu" %}પેકિંગ થઈ ગયું{% else %}Packing Done{% endif %}</button>

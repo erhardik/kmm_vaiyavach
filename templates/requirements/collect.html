@@ -208,6 +208,35 @@
   </div>
 </form>
 
+{% if not editing_allowed and header %}
+  <div class="card border-0 collect-panel mt-3">
+    <div class="card-body">
+      <div class="fw-semibold mb-2">{% if lang == "gu" %}ફોર્મ સ્ટેટસ{% else %}Form Status{% endif %}</div>
+      <span class="badge fs-6
+        {% if header.status == 'CONFIRMED' %}text-bg-primary
+        {% elif header.status == 'PACKED' %}text-bg-warning
+        {% elif header.status == 'DELIVERED' %}text-bg-success
+        {% else %}text-bg-secondary{% endif %}">
+        {{ header.get_status_display }}
+      </span>
+      <hr>
+      <div class="fw-semibold mb-2">{% if lang == "gu" %}ફેરફારની વિનંતી{% else %}Request Edit{% endif %}</div>
+      <p class="small text-body-secondary mb-2">
+        {% if lang == "gu" %}
+          ફોર્મ કન્ફર્મ થઈ ગયું છે. જો તમારે કોઈ ફેરફાર કરવો હોય તો નીચે વિનંતી મોકલો. એડમિન ફોર્મ ખોલી આપશે.
+        {% else %}
+          Form is confirmed. If you need to make changes, send a request below. Admin will unlock the form for editing.
+        {% endif %}
+      </p>
+      <form method="post" action="{% if is_public_flow and header.public_view_token %}{% url 'requirements:public-edit-request' token=header.public_view_token %}{% elif header.pk %}{% url 'requirements:edit-request' pk=header.pk %}{% endif %}">
+        {% csrf_token %}
+        <textarea class="form-control mb-2" name="message" rows="2" placeholder="{% if lang == 'gu' %}કૃપા કરીને ફેરફાર વિશે વિગત આપો...{% else %}Please describe the changes needed...{% endif %}" required></textarea>
+        <button class="btn btn-primary btn-sm" type="submit">{% if lang == "gu" %}વિનંતી મોકલો{% else %}Send Request{% endif %}</button>
+      </form>
+    </div>
+  </div>
+{% endif %}
+
 <script>
 (function() {
   const subRouteData = {{ sub_route_data|safe }};

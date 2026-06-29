@@ -54,12 +54,16 @@ from apps.requirements.forms import (
     RequirementLineForm,
     SpecialRequirementForm,
 )
-from apps.requirements.models import RequirementHeader, RequirementLine, RequirementStatus, SpecialRequirement
+from apps.requirements.models import EditRequest, RequirementHeader, RequirementLine, RequirementStatus, SpecialRequirement
 from apps.masters.models import Upashray
 
 
 PUBLIC_STATUS_CHOICES = [
     (RequirementStatus.DRAFT, "Open"),
+    (RequirementStatus.NOT_CONFIRMED, "Not Confirmed"),
+    (RequirementStatus.CONFIRMED, "Confirmed"),
+    (RequirementStatus.PACKED, "Packed"),
+    (RequirementStatus.DELIVERED, "Delivered"),
     (RequirementStatus.SUBMITTED, "Pending"),
     (RequirementStatus.IN_PROGRESS, "Packing done"),
     (RequirementStatus.CLOSED, "On route"),
@@ -544,6 +548,10 @@ class RequirementCollectionView(View):
 
     def _editing_allowed(self, event, header, user):
         if header and header.status in (
+            RequirementStatus.CONFIRMED,
+            RequirementStatus.PACKED,
+            RequirementStatus.DELIVERED,
+            RequirementStatus.SUBMITTED,
             RequirementStatus.IN_PROGRESS,
             RequirementStatus.CLOSED,
             RequirementStatus.CANCELLED,
@@ -673,6 +681,7 @@ class RequirementCollectionView(View):
             "event_requires_lock": bool(event and not event.allow_requirement_edit_after_confirm),
             "draft_storage_key": draft_key,
             "sub_route_data": json.dumps(RequirementHeader.SUB_ROUTE_CHOICES),
+            "pending_edit_requests": header.edit_requests.filter(is_resolved=False).count() if header else 0,
         }
 
     def _render_summary_html(self, request, header):
@@ -739,7 +748,10 @@ class RequirementCollectionView(View):
                 form.add_error("upashray_name", "Upashray name is required.")
                 return render(request, self.template_name, self._build_context(request, event, header, form, formset, items, existing_quantities))
 
-            header_obj.status = header.status if header else RequirementStatus.DRAFT
+            old_status = header.status if header else None
+            header_obj.status = header.status if header else RequirementStatus.NOT_CONFIRMED
+            if old_status == RequirementStatus.DRAFT:
+                header_obj.status = RequirementStatus.NOT_CONFIRMED
             header_obj.order_number = header.order_number if header else None
             header_obj.is_locked = header.is_locked if header else False
             header_obj.locked_at = header.locked_at if header else None
@@ -828,9 +840,12 @@ class RequirementCollectionView(View):
                     self.template_name,
                     self._build_context(request, event, header, form, formset, items, existing_quantities),
                 )
-            header_obj.status = RequirementStatus.SUBMITTED
+            header_obj.status = RequirementStatus.CONFIRMED
         else:
-            header_obj.status = header.status if header else RequirementStatus.DRAFT
+            old_status = header.status if header else None
+            header_obj.status = header.status if header else RequirementStatus.NOT_CONFIRMED
+            if old_status == RequirementStatus.DRAFT:
+                header_obj.status = RequirementStatus.NOT_CONFIRMED
             header_obj.order_number = header.order_number if header else None
             header_obj.is_locked = header.is_locked if header else False
             header_obj.locked_at = header.locked_at if header else None
@@ -1435,6 +1450,7 @@ class RequirementCollectionDetailView(View):
             .order_by("item__parent_item__standard_serial", "item__standard_serial", "item__pk")
         )
         is_admin = request.user.is_superuser or request.user.groups.filter(name="KMM Admin").exists()
+        edit_requests = list(header.edit_requests.filter(is_resolved=False).order_by("-created_at"))
         return render(
             request,
             "requirements/header_detail.html" if request.headers.get("x-requested-with") == "XMLHttpRequest" else "requirements/header_detail_page.html",
@@ -1444,12 +1460,21 @@ class RequirementCollectionDetailView(View):
                 "grouped_lines": _group_requirement_lines(lines),
                 "lang": _lang_code(request),
                 "is_admin": is_admin,
+                "edit_requests": edit_requests,
             },
         )
 
 
 class RequirementStatusTransitionView(LoginRequiredMixin, View):
     ALLOWED_TRANSITIONS = {
+        RequirementStatus.CONFIRMED: {
+            "next_status": RequirementStatus.PACKED,
+            "button_label": "Packing Done",
+        },
+        RequirementStatus.PACKED: {
+            "next_status": RequirementStatus.DELIVERED,
+            "button_label": "Delivery Done",
+        },
         RequirementStatus.SUBMITTED: {
             "next_status": RequirementStatus.IN_PROGRESS,
             "button_label": "Packing Done",
@@ -1471,7 +1496,7 @@ class RequirementStatusTransitionView(LoginRequiredMixin, View):
             messages.error(request, "Status transition not allowed from current state.")
             return redirect("requirements:header-detail", pk=pk)
         header.status = transition["next_status"]
-        if header.status == RequirementStatus.IN_PROGRESS:
+        if header.status in (RequirementStatus.IN_PROGRESS, RequirementStatus.PACKED):
             header.is_locked = True
             header.locked_at = timezone.now()
         header.updated_at = timezone.now()
@@ -1505,6 +1530,25 @@ class RequirementLockView(LoginRequiredMixin, View):
         header.updated_at = timezone.now()
         header.save(update_fields=["is_locked", "locked_at", "updated_at"])
         messages.success(request, "Form locked.")
+        return redirect("requirements:header-detail", pk=pk)
+
+
+class EditRequestCreateView(View):
+    def post(self, request, pk=None, token=None):
+        if token:
+            header = get_object_or_404(RequirementHeader, public_view_token=token)
+        else:
+            header = get_object_or_404(RequirementHeader, pk=pk)
+        message = request.POST.get("message", "").strip()
+        if not message:
+            messages.error(request, "Please enter a message describing what needs to be edited.")
+            if token:
+                return redirect("requirements:public-detail", token=token)
+            return redirect("requirements:header-detail", pk=pk)
+        EditRequest.objects.create(header=header, message=message)
+        messages.success(request, "Edit request sent. Admin will review and unlock the form for editing.")
+        if token:
+            return redirect("requirements:public-detail", token=token)
         return redirect("requirements:header-detail", pk=pk)
 
 

@@ -16,12 +16,16 @@
         </p>
       </div>
       <div class="d-flex flex-wrap gap-2 align-items-center">
-        {% if header.status == "SUBMITTED" or header.is_locked %}
-          <span class="badge text-bg-success">{% if lang_code == "gu" %}ઓર્ડર થયેલ{% else %}Ordered{% endif %}</span>
+        {% if header.status == "CONFIRMED" or header.status == "NOT_CONFIRMED" or header.is_locked %}
+          <span class="badge text-bg-success">{% if lang_code == "gu" %}{{ header.get_status_display }}{% else %}{{ header.get_status_display }}{% endif %}</span>
+        {% elif header.status == "PACKED" or header.status == "DELIVERED" %}
+          <span class="badge text-bg-info">{% if lang_code == "gu" %}{{ header.get_status_display }}{% else %}{{ header.get_status_display }}{% endif %}</span>
         {% else %}
           <span class="badge text-bg-warning">{% if lang_code == "gu" %}ડ્રાફ્ટ{% else %}Draft{% endif %}</span>
         {% endif %}
-        <button class="btn btn-success btn-lg" type="submit" name="confirm" value="1">{% if lang_code == "gu" %}કન્ફર્મ{% else %}Confirm{% endif %}</button>
+        {% if header.status != "CONFIRMED" and header.status != "PACKED" and header.status != "DELIVERED" %}
+          <button class="btn btn-success btn-lg" type="submit" name="confirm" value="1">{% if lang_code == "gu" %}કન્ફર્મ{% else %}Confirm{% endif %}</button>
+        {% endif %}
       </div>
     </div>
 

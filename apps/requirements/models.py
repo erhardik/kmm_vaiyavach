@@ -10,8 +10,12 @@ from config.models import EventScopedModel
 
 class RequirementStatus(models.TextChoices):
     DRAFT = "DRAFT", "Open"
+    NOT_CONFIRMED = "NOT_CONFIRMED", "Not Confirmed"
+    CONFIRMED = "CONFIRMED", "Confirmed"
     SUBMITTED = "SUBMITTED", "Pending"
+    PACKED = "PACKED", "Packed"
     IN_PROGRESS = "IN_PROGRESS", "Packing done"
+    DELIVERED = "DELIVERED", "Delivered"
     CLOSED = "CLOSED", "On route"
     CANCELLED = "CANCELLED", "Rejected by M.S."
     RETURN_REQUESTED = "RETURN_REQUESTED", "Return Requested"
@@ -151,7 +155,7 @@ class RequirementHeader(EventScopedModel):
     def save(self, *args, **kwargs):
         if not self.public_view_token:
             self.public_view_token = uuid.uuid4()
-        if not self.order_number and self.status == RequirementStatus.SUBMITTED:
+        if not self.order_number and self.status in (RequirementStatus.SUBMITTED, RequirementStatus.CONFIRMED):
             raw_area = (self.route_area or "").strip()
             if raw_area == "NOT_IN_LIST" or not raw_area:
                 raw_area = "A11"
@@ -187,4 +191,19 @@ class SpecialRequirement(EventScopedModel):
 
     def __str__(self) -> str:
         return f"{self.upashray} - {self.priority}"
+
+
+class EditRequest(EventScopedModel):
+    header = models.ForeignKey(RequirementHeader, on_delete=models.CASCADE, related_name="edit_requests")
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_resolved = models.BooleanField(default=False)
+    resolved_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
+    resolved_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"EditRequest for {self.header} - {'Resolved' if self.is_resolved else 'Pending'}"
 

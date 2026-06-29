@@ -97,21 +97,9 @@
                     <td class="text-end">
                       <div class="d-inline-flex flex-wrap gap-2 justify-content-end">
                         <a class="btn btn-sm btn-outline-primary" href="{% url 'requirements:public-detail' token=header.public_view_token %}">જુઓ</a>
-
-                        {% if public_collect_url %}
+                        {% if public_collect_url and header.status != 'CONFIRMED' and header.status != 'PACKED' and header.status != 'DELIVERED' %}
                           <a class="btn btn-sm btn-outline-secondary" href="{{ public_collect_url }}?token={{ header.public_view_token }}">Edit</a>
                         {% endif %}
-                        <form method="post" class="d-inline-flex flex-wrap gap-2 align-items-center">
-                          {% csrf_token %}
-                          <input type="hidden" name="order_token" value="{{ header.public_view_token }}">
-                          <select name="status" class="form-select form-select-sm public-status-select">
-                            {% for value,label in status_choices %}
-                              <option value="{{ value }}" {% if header.status == value %}selected{% endif %}>{{ label }}</option>
-                            {% endfor %}
-                          </select>
-                          <button type="button" class="btn btn-sm btn-outline-warning js-pack-now" data-status="IN_PROGRESS">Pack</button>
-                          <button type="submit" class="btn btn-sm btn-success">સ્ટેટસ સેવ કરો</button>
-                        </form>
                       </div>
                     </td>
                   </tr>
@@ -169,20 +157,6 @@
     </main>
   </div>
 
-  <script>
-    (function() {
-      document.addEventListener("click", function(event) {
-        const button = event.target.closest(".js-pack-now");
-        if (!button) return;
-        const form = button.closest("form");
-        if (!form) return;
-        const select = form.querySelector("select[name='status']");
-        if (select) {
-          select.value = button.getAttribute("data-status") || "IN_PROGRESS";
-        }
-        form.submit();
-      });
-    })();
-  </script>
+
 </body>
 </html>
