@@ -404,14 +404,23 @@
   applyDraft(readDraft());
   syncAllRows();
 
-  form.querySelectorAll('input[name$="-required_qty"]').forEach((field) => {
-    field.addEventListener('input', () => { updateRowState(field.closest('tr')); writeDraft(); });
-    field.addEventListener('change', () => { updateRowState(field.closest('tr')); writeDraft(); });
+  var draftTimer = null;
+  function saveDraft() {
+    if (draftTimer) return;
+    draftTimer = setTimeout(function() {
+      draftTimer = null;
+      writeDraft();
+    }, 300);
+  }
+  form.querySelectorAll('input[name$="-required_qty"]').forEach(function(field) {
+    field.addEventListener('input', function() { updateRowState(field.closest('tr')); saveDraft(); });
   });
-  form.querySelectorAll('input[name], select[name], textarea[name]').forEach((field) => {
+  form.querySelectorAll('input[name], select[name], textarea[name]').forEach(function(field) {
     if (field.name === 'csrfmiddlewaretoken') return;
-    field.addEventListener('input', writeDraft);
-    field.addEventListener('change', writeDraft);
+    field.addEventListener('change', saveDraft);
+    if (field.tagName !== 'SELECT' && field.type !== 'checkbox' && field.type !== 'radio') {
+      field.addEventListener('input', saveDraft);
+    }
   });
   if (resetButton) {
     resetButton.addEventListener('click', () => {
