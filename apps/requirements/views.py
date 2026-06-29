@@ -698,7 +698,7 @@ class RequirementCollectionView(View):
         event = self._get_event()
         header = self._get_header(event) if event else None
         items = self._get_items(event) if event else []
-        existing_quantities = {line.item_id: line.required_qty for line in header.lines.all()} if header else {}
+        existing_quantities = {line.item_id: int(line.required_qty) for line in header.lines.all()} if header else {}
         form = RequirementCollectionHeaderForm(instance=header, current_event=event)
         formset = self._build_formset(items, initial_quantities=existing_quantities)
         return render(request, self.template_name, self._build_context(request, event, header, form, formset, items, existing_quantities))
@@ -714,7 +714,7 @@ class RequirementCollectionView(View):
         header = self._get_header(event)
         items = self._get_items(event)
         form = RequirementCollectionHeaderForm(request.POST, instance=header, current_event=event)
-        existing_quantities = {line.item_id: line.required_qty for line in header.lines.all()} if header else {}
+        existing_quantities = {line.item_id: int(line.required_qty) for line in header.lines.all()} if header else {}
         formset = self._build_formset(items, data=request.POST, initial_quantities=existing_quantities)
 
         save_details_now = "save_details" in request.POST
@@ -794,7 +794,7 @@ class RequirementCollectionView(View):
                     },
                 )
             messages.success(request, "Basic details saved. You can continue filling items.")
-            saved_existing_quantities = {line.item_id: line.required_qty for line in header_obj.lines.all()}
+            saved_existing_quantities = {line.item_id: int(line.required_qty) for line in header_obj.lines.all()}
             return render(
                 request,
                 self.template_name,

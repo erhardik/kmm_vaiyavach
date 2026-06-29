@@ -376,11 +376,13 @@
   function readDraft() {
     try { const raw = localStorage.getItem(draftStorageKey()); return raw ? JSON.parse(raw) : null; } catch (_) { return null; }
   }
+  function isMgmtField(name) { return /-(TOTAL_FORMS|INITIAL_FORMS|MIN_NUM_FORMS|MAX_NUM_FORMS)$/.test(name); }
   function writeDraft() {
     try {
       const payload = {};
       form.querySelectorAll('input[name], select[name], textarea[name]').forEach((field) => {
         if (field.name === 'csrfmiddlewaretoken') return;
+        if (isMgmtField(field.name)) return;
         payload[field.name] = field.value;
       });
       localStorage.setItem(draftStorageKey(), JSON.stringify(payload));
@@ -390,6 +392,7 @@
   function applyDraft(state) {
     if (!state) return;
     Object.entries(state).forEach(([name, value]) => {
+      if (isMgmtField(name)) return;
       const field = form.querySelector(`[name="${name}"]`);
       if (field) field.value = value;
     });
@@ -455,7 +458,7 @@
       });
       const url = getRedirectUrl(response);
       var listUrl = '{% if is_public_flow %}{% url "public-requests" %}{% else %}{% url "requirements:header-list" %}{% endif %}';
-      if (url) { showAppreciation(url); return; }
+      if (url) { localStorage.removeItem(draftStorageKey()); showAppreciation(url); return; }
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.ok) {
         console.log('[CONFIRM ERRORS]', data.errors, data.message, data);
@@ -467,12 +470,17 @@
             var details = Object.entries(data.errors).map(function(e) { return e[0] + ': ' + e[1].map(function(m) { return m.message || m; }).join(', '); }).join('<br>');
             errMsg += '<br><small>' + details + '</small>';
           }
+          if (data.item_errors && data.item_errors.length) {
+            var itemErrCount = data.item_errors.filter(function(er) { return Object.keys(er).length > 0; }).length;
+            if (itemErrCount > 0) errMsg += '<br><small>' + itemErrCount + ' item(s) have errors.</small>';
+          }
           top.innerHTML = '<div class="alert alert-danger mb-3">' + errMsg + '</div>';
         }
         setStatus(data.message || 'Confirm failed', 'danger');
         return;
       }
-      if (data.redirect_url) { showAppreciation(data.redirect_url); return; }
+      if (data.redirect_url) { localStorage.removeItem(draftStorageKey()); showAppreciation(data.redirect_url); return; }
+      localStorage.removeItem(draftStorageKey());
       showAppreciation(listUrl);
     } catch (err) {
       console.error('[CONFIRM ERROR]', err);
