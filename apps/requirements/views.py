@@ -1546,7 +1546,7 @@ class EditRequestCreateView(View):
                 return redirect("requirements:public-detail", token=token)
             return redirect("requirements:header-detail", pk=pk)
         EditRequest.objects.create(header=header, event=header.event, message=message)
-        messages.success(request, "Edit request sent. Admin will review and unlock the form for editing.")
+        messages.success(request, "Edit request sent. Admin will update in 24 hours. NO need of further follow-up")
         if token:
             return redirect("requirements:public-detail", token=token)
         return redirect("requirements:header-detail", pk=pk)
