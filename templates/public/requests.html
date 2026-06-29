@@ -26,21 +26,13 @@
               {% endif %}
             </div>
           </div>
-          <div class="d-flex gap-2">
-            <a class="btn btn-light" href="{{ public_landing_url }}">લાંડિંગ પેજ</a>
-            {% if public_collect_url %}
-              <a class="btn btn-warning" href="{{ public_collect_url }}">નવું ફોર્મ ભરો / Fill New Form</a>
-            {% endif %}
-          </div>
-        </div>
-
-        <div class="row g-3">
-          <div class="col-6 col-md-3"><div class="metric-card metric-card-light"><div class="label">કુલ ફોર્મ</div><div class="value">{{ requests_count|default:0 }}</div></div></div>
-          <div class="col-6 col-md-3"><div class="metric-card metric-card-light"><div class="label">કુલ વસ્તુઓ</div><div class="value">{{ total_items|default:0 }}</div></div></div>
-          <div class="col-6 col-md-6 d-flex gap-2 align-items-center flex-wrap">
+          <div class="d-flex gap-2 align-items-center flex-wrap">
             <a class="btn btn-success btn-sm" href="tel:+919879635446"><i class="bi bi-telephone-fill"></i> Bhumit Shah</a>
             <a class="btn btn-success btn-sm" href="tel:+919427333136"><i class="bi bi-telephone-fill"></i> Bhavik Vora</a>
             <a class="btn btn-outline-light btn-sm" href="{% static 'assets/blank-form.pdf' %}?v=2" target="_blank"><i class="bi bi-filetype-pdf"></i> Blank Form PDF</a>
+            {% if public_collect_url %}
+              <a class="btn btn-warning btn-sm" href="{{ public_collect_url }}">નવું ફોર્મ ભરો</a>
+            {% endif %}
           </div>
         </div>
       </div>
@@ -57,18 +49,6 @@
 
       <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
-          <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-            <div>
-              <h2 class="h5 mb-1">સ્ટેટસ બોર્ડ</h2>
-              <div class="small text-body-secondary">લોગિન વગર સ્ટેટસ બદલો અને તરત સેવ કરો.</div>
-            </div>
-            <div class="d-flex flex-wrap gap-2">
-              {% for value,label in status_choices %}
-                <span class="badge text-bg-light border">{{ label }}</span>
-              {% endfor %}
-            </div>
-          </div>
-
           <div class="mb-3">
             <input type="text" class="form-control" id="requestSearch" placeholder="{% if lang == 'gu' %}શોધો... ફોર્મ નં., પૂજ્ય શ્રી, સરનામું, વિસ્તાર વગેરે{% else %}Search... form no., pujya shri, address, area etc.{% endif %}" autocomplete="off">
           </div>
@@ -119,20 +99,14 @@
 
       <div class="card border-0 shadow-sm">
         <div class="card-body">
-          <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
-            <div>
-              <h2 class="h5 mb-1">વસ્તુ સ્ટોક પૂર્વદર્શન</h2>
-              <div class="small text-body-secondary">અહીં માત્ર વસ્તુ, પ્રકાર અને વર્તમાન સ્ટોક બતાવાયું છે.</div>
-            </div>
-          </div>
+          <h2 class="h5 mb-3">વસ્તુઓ / Items</h2>
           <div class="table-responsive">
             <table class="table table-sm table-hover align-middle mb-0">
               <thead class="table-light">
                 <tr>
                   <th>કોડ</th>
                   <th>વસ્તુ</th>
-                  <th>પ્રકાર</th>
-                  <th class="text-end">વર્તમાન સ્ટોક</th>
+                  <th>પ્રકાર/સાઈઝ</th>
                 </tr>
               </thead>
               <tbody>
@@ -146,11 +120,10 @@
                       <div class="fw-semibold">{{ row.item.item_name }}</div>
                       <div class="small text-body-secondary">{{ row.item.item_name_gu|default:row.item.default_size }}</div>
                     </td>
-                    <td>{{ row.category }}</td>
-                    <td class="text-end">{{ row.stock }}</td>
+                    <td>{{ row.size_display }}</td>
                   </tr>
                 {% empty %}
-                  <tr><td colspan="4" class="text-center py-4 text-body-secondary">વસ્તુઓ મળી નથી.</td></tr>
+                  <tr><td colspan="3" class="text-center py-4 text-body-secondary">વસ્તુઓ મળી નથી.</td></tr>
                 {% endfor %}
               </tbody>
             </table>
