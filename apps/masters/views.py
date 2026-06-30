@@ -388,7 +388,7 @@ class ItemListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
             table_rows.append({
                 "item_code": item.item_code,
                 "display_name": item.display_name(),
-                "type_size": item.default_size_gu or item.default_size or "",
+                "type_size": item.variant_name_gu or item.variant_name or item.default_size_gu or item.default_size or "",
                 "current_req": int(current_req_map.get(item.pk, 0)),
                 "current_stock": current_stock,
                 "qty_acquired": qty_acquired,
