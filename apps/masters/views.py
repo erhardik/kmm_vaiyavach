@@ -488,69 +488,51 @@ class ItemListExportView(LoginRequiredMixin, View):
                     max_len = max(max_len, len(text))
             ws_summary.column_dimensions[get_column_letter(col)].width = min(max_len + 3, 40)
 
-        # --- Sheet 2: Item Detail (column-per-item) ---
-        ws_detail = workbook.create_sheet("Item Master")
+        # --- Sheet 2: Item Detail (row-per-item, original format) ---
+        ws_detail = workbook.create_sheet("Item Detail")
 
-        # Row 1: item codes as column headers
-        ws_detail.cell(row=1, column=1, value="Specification")
-        ws_detail.cell(row=1, column=1).fill = header_fill
-        ws_detail.cell(row=1, column=1).font = Font(bold=True)
-        ws_detail.cell(row=1, column=1).alignment = center
-        for ci, item in enumerate(all_items, 2):
-            cell = ws_detail.cell(row=1, column=ci, value=item.item_code)
+        detail_headers = ["Code", "Item Name", "Type / Size", "Current Req.", "Current Stock", "Qty Acquired", "Qty Distributed", "Cost", "Vendor", "Manager"]
+        for col, h in enumerate(detail_headers, 1):
+            cell = ws_detail.cell(row=1, column=col, value=h)
             cell.fill = header_fill
             cell.font = Font(bold=True)
             cell.alignment = center
 
-        # Row 2: Type/Size of each item
-        ws_detail.cell(row=2, column=1, value="Type / Size")
-        ws_detail.cell(row=2, column=1).font = Font(bold=True)
-        for ci, item in enumerate(all_items, 2):
-            ws_detail.cell(row=2, column=ci, value=item.variant_name_gu or item.variant_name or item.default_size_gu or item.default_size or "")
-
-        # Row 3+: metric rows
-        cost_values = []
-        vendor_values = []
-        manager_values = []
-        for item in all_items:
+        for ri, item in enumerate(all_items, 2):
+            bal = balances.get(item.pk)
+            current_stock = int(bal.current_stock) if bal and bal.current_stock == int(bal.current_stock) else (bal.current_stock if bal else 0)
+            qty_acquired = int(acquired_map.get(item.pk, 0)) if acquired_map.get(item.pk, 0) == int(acquired_map.get(item.pk, 0)) else acquired_map.get(item.pk, 0)
+            qty_distributed = int(distributed_map.get(item.pk, 0)) if distributed_map.get(item.pk, 0) == int(distributed_map.get(item.pk, 0)) else distributed_map.get(item.pk, 0)
             lot = latest_lots.get(item.pk)
             cost = lot.unit_rate if lot else Decimal(item.estimated_rate or 0)
             if cost == int(cost):
                 cost = int(cost)
-            cost_values.append(cost)
-            vendor_values.append(str(lot.vendor) if lot and lot.vendor else "")
-            manager_values.append(lot.managed_by.get_full_name() if lot and lot.managed_by else (str(lot.managed_by) if lot and lot.managed_by else ""))
+            vendor = str(lot.vendor) if lot and lot.vendor else ""
+            manager = lot.managed_by.get_full_name() if lot and lot.managed_by else (str(lot.managed_by) if lot and lot.managed_by else "")
+            ws_detail.cell(row=ri, column=1, value=item.item_code)
+            ws_detail.cell(row=ri, column=2, value=item.display_name())
+            ws_detail.cell(row=ri, column=3, value=item.variant_name_gu or item.variant_name or item.default_size_gu or item.default_size or "")
+            ws_detail.cell(row=ri, column=4, value=int(current_req_map.get(item.pk, 0)))
+            ws_detail.cell(row=ri, column=5, value=current_stock)
+            ws_detail.cell(row=ri, column=6, value=qty_acquired)
+            ws_detail.cell(row=ri, column=7, value=qty_distributed)
+            ws_detail.cell(row=ri, column=8, value=cost)
+            ws_detail.cell(row=ri, column=9, value=vendor)
+            ws_detail.cell(row=ri, column=10, value=manager)
+            for ci in (4, 5, 6, 7, 8):
+                ws_detail.cell(row=ri, column=ci).alignment = right
 
-        metrics = [
-            ("Item Name", [item.display_name() for item in all_items]),
-            ("Current Req.", [int(current_req_map.get(item.pk, 0)) for item in all_items]),
-            ("Current Stock", [int(balances.get(item.pk).current_stock) if balances.get(item.pk) and balances.get(item.pk).current_stock == int(balances.get(item.pk).current_stock) else (balances.get(item.pk).current_stock if balances.get(item.pk) else 0) for item in all_items]),
-            ("Qty Acquired", [int(acquired_map.get(item.pk, 0)) if acquired_map.get(item.pk, 0) == int(acquired_map.get(item.pk, 0)) else acquired_map.get(item.pk, 0) for item in all_items]),
-            ("Qty Distributed", [int(distributed_map.get(item.pk, 0)) if distributed_map.get(item.pk, 0) == int(distributed_map.get(item.pk, 0)) else distributed_map.get(item.pk, 0) for item in all_items]),
-            ("Cost", cost_values),
-            ("Vendor", vendor_values),
-            ("Manager", manager_values),
-        ]
-
-        for ri, (metric_name, values) in enumerate(metrics, 3):
-            cell = ws_detail.cell(row=ri, column=1, value=metric_name)
-            cell.font = Font(bold=True)
-            for ci, val in enumerate(values, 2):
-                ws_detail.cell(row=ri, column=ci, value=val)
-                if metric_name in ("Current Req.", "Current Stock", "Qty Acquired", "Qty Distributed", "Cost"):
-                    ws_detail.cell(row=ri, column=ci).alignment = right
-
-        ws_detail.freeze_panes = "B3"
-        for col_idx in range(1, len(all_items) + 2):
+        ws_detail.freeze_panes = "A2"
+        for col in range(1, len(detail_headers) + 1):
             max_len = 0
-            for row in ws_detail.iter_rows(min_row=1, max_row=ws_detail.max_row, min_col=col_idx, max_col=col_idx):
+            for row in ws_detail.iter_rows(min_row=1, max_row=ws_detail.max_row, min_col=col, max_col=col):
                 for cell in row:
                     try:
                         text = str(cell.value or "")
                     except Exception:
                         text = ""
                     max_len = max(max_len, len(text))
-            ws_detail.column_dimensions[get_column_letter(col_idx)].width = min(max_len + 3, 40)
+            ws_detail.column_dimensions[get_column_letter(col)].width = min(max_len + 3, 40)
 
         buffer = BytesIO()
         workbook.save(buffer)
