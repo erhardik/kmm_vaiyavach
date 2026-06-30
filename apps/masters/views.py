@@ -532,6 +532,17 @@ class ItemListExportView(LoginRequiredMixin, View):
             cell.font = bold_font
             cell.alignment = center
 
+        # Row 2: Type/Size of each item column
+        for col, h in enumerate(all_headers, 1):
+            if col > len(basic_headers) and col <= len(basic_headers) + len(item_col_map):
+                item_pk = list(item_col_map.keys())[col - len(basic_headers) - 1]
+                item_obj = next((i for i in response_items if i.pk == item_pk), None)
+                if item_obj:
+                    ws_response.cell(row=2, column=col, value=item_obj.variant_name_gu or item_obj.variant_name or item_obj.default_size_gu or item_obj.default_size or "")
+                    ws_response.cell(row=2, column=col).font = Font(italic=True, color="666666")
+
+        DATA_START_ROW = 3
+
         form_count = 0
         totals = [0] * (len(item_col_map) + 1)
 
@@ -576,19 +587,19 @@ class ItemListExportView(LoginRequiredMixin, View):
             row_data.extend(item_cells)
             row_data.append(row_qty_total)
             for col, val in enumerate(row_data, 1):
-                ws_response.cell(row=form_count + 1, column=col, value=val)
+                ws_response.cell(row=form_count + DATA_START_ROW - 1, column=col, value=val)
 
         total_row_data = ["TOTAL", "", f"{form_count} Forms", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]
         for item_pk, info in item_col_map.items():
             total_row_data.append(totals[info["col_idx"] - 1])
         total_row_data.append(totals[-1])
-        total_row = form_count + 2
+        total_row = form_count + DATA_START_ROW
         for col, val in enumerate(total_row_data, 1):
             cell = ws_response.cell(row=total_row, column=col, value=val)
             cell.fill = total_fill
             cell.font = bold_font
 
-        ws_response.freeze_panes = "A2"
+        ws_response.freeze_panes = "A3"
         basic_count = len(basic_headers)
         for col_idx in range(1, len(all_headers) + 1):
             max_len = 0
@@ -600,7 +611,7 @@ class ItemListExportView(LoginRequiredMixin, View):
                         text = ""
                     max_len = max(max_len, len(text))
             ws_response.column_dimensions[get_column_letter(col_idx)].width = min(max_len + 2, 50 if col_idx > basic_count else 40)
-        for row in ws_response.iter_rows(min_row=2, max_row=ws_response.max_row - 1):
+        for row in ws_response.iter_rows(min_row=DATA_START_ROW, max_row=ws_response.max_row - 1):
             for cell in row:
                 if cell.column <= basic_count and cell.column not in (10, 11):
                     cell.alignment = center
