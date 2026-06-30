@@ -2,6 +2,8 @@ from django.urls import path
 
 from apps.requirements.views import (
     EditRequestCreateView,
+    EditRequestListView,
+    EditRequestResolveView,
     RequirementHeaderCreateView,
     RequirementHeaderDeleteView,
     RequirementCollectionDetailView,
@@ -52,6 +54,8 @@ urlpatterns = [
     path("collect/<int:pk>/lock/", RequirementLockView.as_view(), name="header-lock"),
     path("collect/<int:pk>/edit-request/", EditRequestCreateView.as_view(), name="edit-request"),
     path("public/<uuid:token>/edit-request/", EditRequestCreateView.as_view(), name="public-edit-request"),
+    path("edit-requests/", EditRequestListView.as_view(), name="edit-request-list"),
+    path("edit-requests/<int:pk>/resolve/", EditRequestResolveView.as_view(), name="edit-request-resolve"),
     path("view-control/", ViewControlView.as_view(), name="view-control"),
 ]
 

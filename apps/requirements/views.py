@@ -1624,6 +1624,48 @@ class EditRequestCreateView(View):
         return redirect("requirements:header-detail", pk=pk)
 
 
+class EditRequestListView(LoginRequiredMixin, View):
+    def get(self, request):
+        event_id = request.GET.get("event")
+        event = None
+        if event_id:
+            try:
+                event = Event.objects.filter(pk=int(event_id), is_active=True).first()
+            except (ValueError, TypeError):
+                pass
+        if not event:
+            event = Event.objects.filter(is_current=True, is_active=True).first()
+        if not event:
+            messages.error(request, "No active event found.")
+            return redirect("dashboard:home")
+        edit_requests = list(
+            EditRequest.objects.filter(event=event)
+            .select_related("header", "resolved_by")
+            .order_by("-created_at")
+        )
+        return render(request, "requirements/edit_request_list.html", {
+            "edit_requests": edit_requests,
+            "event": event,
+            "lang": _lang_code(request),
+        })
+
+
+class EditRequestResolveView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        er = get_object_or_404(EditRequest, pk=pk)
+        resolution = request.POST.get("resolution", "")
+        if resolution not in ("SOLVED", "REJECTED"):
+            messages.error(request, "Invalid resolution.")
+            return redirect("requirements:edit-request-list")
+        er.is_resolved = True
+        er.resolution = resolution
+        er.resolved_by = request.user
+        er.resolved_at = timezone.now()
+        er.save(update_fields=["is_resolved", "resolution", "resolved_by", "resolved_at"])
+        messages.success(request, f"Edit request marked as {resolution.lower()}.")
+        return redirect("requirements:edit-request-list")
+
+
 class RequirementCollectByEventView(RequirementCollectionView):
     pass
 

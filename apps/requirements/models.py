@@ -207,11 +207,18 @@ class SpecialRequirement(EventScopedModel):
         return f"{self.upashray} - {self.priority}"
 
 
+class EditRequestResolution(models.TextChoices):
+    UNSOLVED = "UNSOLVED", "Unsolved"
+    SOLVED = "SOLVED", "Solved"
+    REJECTED = "REJECTED", "Rejected"
+
+
 class EditRequest(EventScopedModel):
     header = models.ForeignKey(RequirementHeader, on_delete=models.CASCADE, related_name="edit_requests")
     message = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     is_resolved = models.BooleanField(default=False)
+    resolution = models.CharField(max_length=20, choices=EditRequestResolution.choices, default=EditRequestResolution.UNSOLVED)
     resolved_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
     resolved_at = models.DateTimeField(null=True, blank=True)
 
@@ -219,7 +226,7 @@ class EditRequest(EventScopedModel):
         ordering = ["-created_at"]
 
     def __str__(self):
-        return f"EditRequest for {self.header} - {'Resolved' if self.is_resolved else 'Pending'}"
+        return f"EditRequest for {self.header} - {self.get_resolution_display()}"
 
 
 class ViewControl(TimeStampedModel):

@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}{% if lang == "gu" %}ફેરફાર વિનંતીઓ{% else %}Edit Requests{% endif %} | KMM{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">{% if lang == "gu" %}ફેરફાર વિનંતીઓ{% else %}Edit Requests{% endif %}</h1>
+  <a class="btn btn-outline-secondary" href="{% url 'dashboard:home' %}">{% if lang == "gu" %}પાછળ{% else %}Back{% endif %}</a>
+</div>
+<div class="card border-0 shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>{% if lang == "gu" %}ફોર્મ નંબર{% else %}Form No.{% endif %}</th>
+          <th>{% if lang == "gu" %}અરજદાર{% else %}Requester{% endif %}</th>
+          <th>{% if lang == "gu" %}વિનંતી{% else %}Request{% endif %}</th>
+          <th>{% if lang == "gu" %}તારીખ{% else %}Date{% endif %}</th>
+          <th>{% if lang == "gu" %}સ્થિતિ{% else %}Status{% endif %}</th>
+          <th class="text-end">{% if lang == "gu" %}કારવાઈ{% else %}Actions{% endif %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for er in edit_requests %}
+          <tr class="{% if er.resolution == 'UNSOLVED' %}table-warning{% endif %}">
+            <td>
+              <a class="fw-semibold text-decoration-none" href="{% url 'requirements:header-detail' pk=er.header.pk %}">{{ er.header.form_number|default:er.header.order_number|default:"Draft" }}</a>
+            </td>
+            <td>{{ er.header.volunteer_name|default:"-" }}</td>
+            <td style="max-width:300px;white-space:pre-wrap;word-break:break-word;">{{ er.message }}</td>
+            <td class="small text-body-secondary">{{ er.created_at|date:"d-M-Y H:i" }}</td>
+            <td>
+              {% if er.resolution == "UNSOLVED" %}
+                <span class="badge text-bg-warning text-dark">{% if lang == "gu" %}અનસોલ્વ્ડ{% else %}Unsolved{% endif %}</span>
+              {% elif er.resolution == "SOLVED" %}
+                <span class="badge text-bg-success">{% if lang == "gu" %}હલ થયું{% else %}Solved{% endif %}</span>
+              {% elif er.resolution == "REJECTED" %}
+                <span class="badge text-bg-danger">{% if lang == "gu" %}નકારી{% else %}Rejected{% endif %}</span>
+              {% endif %}
+            </td>
+            <td class="text-end">
+              <div class="d-inline-flex gap-1">
+                <a class="btn btn-sm btn-outline-primary" href="{% url 'requirements:header-detail' pk=er.header.pk %}">{% if lang == "gu" %}જુઓ{% else %}View{% endif %}</a>
+                <a class="btn btn-sm btn-outline-secondary" href="{% url 'requirements:collect-edit' pk=er.header.pk %}">{% if lang == "gu" %}સંપાદિત કરો{% else %}Edit{% endif %}</a>
+                {% if er.resolution == "UNSOLVED" %}
+                  <form method="post" action="{% url 'requirements:edit-request-resolve' pk=er.pk %}" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="resolution" value="SOLVED">
+                    <button class="btn btn-sm btn-success">{% if lang == "gu" %}હલ થયું{% else %}Solved{% endif %}</button>
+                  </form>
+                  <form method="post" action="{% url 'requirements:edit-request-resolve' pk=er.pk %}" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="resolution" value="REJECTED">
+                    <button class="btn btn-sm btn-danger">{% if lang == "gu" %}નકારી{% else %}Reject{% endif %}</button>
+                  </form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="6" class="text-center py-4 text-body-secondary">
+              {% if lang == "gu" %}કોઈ ફેરફાર વિનંતી નથી.{% else %}No edit requests found.{% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

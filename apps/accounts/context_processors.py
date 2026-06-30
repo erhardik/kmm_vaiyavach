@@ -8,7 +8,7 @@ from apps.funds.models import Donation, FundTransaction, FundTransactionType
 from apps.inventory.models import InventoryBalance
 from apps.masters.models import Event, Item, Vendor
 from apps.procurement.models import PurchaseOrder
-from apps.requirements.models import RequirementHeader
+from apps.requirements.models import EditRequest, RequirementHeader
 from apps.sponsorship.models import SponsorshipCommitment
 
 
@@ -17,6 +17,7 @@ MANAGER_GROUP_NAME = "KMM Manager"
 EVENT_MENU_ITEMS = [
     {"label": "Collect Requirements", "url_name": "requirements:collect", "permission": None, "icon": "clipboard-check"},
     {"label": "Requirement Orders", "url_name": "requirements:header-list", "permission": "requirements.view_requirementheader", "icon": "list-check"},
+    {"label": "Edit Requests", "url_name": "requirements:edit-request-list", "permission": None, "icon": "pencil-square"},
     {"label": "Item Master", "url_name": "dashboard:item_control_center", "permission": None, "icon": "boxes", "manager_exclude": True},
     {"label": "Items", "url_name": "masters:item-list", "permission": "masters.view_item", "icon": "boxes", "manager_only": True},
     {"label": "Sponsorship", "url_name": "sponsorship:commitment-list", "permission": "sponsorship.view_sponsorshipcommitment", "icon": "heart"},
@@ -88,6 +89,7 @@ def _event_metrics(event):
     stock_total = _sum_amount(InventoryBalance.objects.filter(event=event), "current_stock")
     return {
         "requirements": RequirementHeader.objects.filter(event=event, is_active=True).count(),
+        "edit_requests": EditRequest.objects.filter(event=event, is_resolved=False).count(),
         "items": Item.objects.filter(event=event, is_active=True).count(),
         "sponsorship": SponsorshipCommitment.objects.filter(event=event).count(),
         "vendors": Vendor.objects.filter(event=event, is_active=True).count(),
@@ -119,6 +121,7 @@ def portal_navigation(request):
         "funds:donation-list": f"Rs. {_format_metric(metrics.get('fund_balance', 0))}",
         "funds:transaction-list": f"Rs. {_format_metric(metrics.get('fund_balance', 0))}",
         "reports:analytics": f"Rs. {_format_metric(metrics.get('fund_balance', 0))}",
+        "requirements:edit-request-list": f"{metrics.get('edit_requests', 0)} Pending",
     }
     sidebar_events = []
     for event in active_events:
