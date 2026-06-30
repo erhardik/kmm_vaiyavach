@@ -358,7 +358,7 @@ class RequirementHeaderExportView(LoginRequiredMixin, View):
             .select_related("upashray")
             .prefetch_related("lines__item")
             .exclude(status=RequirementStatus.DRAFT)
-            .order_by("route_area", "form_number", "order_number", "pk")
+            .order_by("created_at")
         )
 
         all_items = list(
@@ -391,6 +391,7 @@ class RequirementHeaderExportView(LoginRequiredMixin, View):
 
         basic_headers = [
             "Sr. No.",
+            "Timestamp",
             "Form No.",
             "Order ID",
             "Requirement Date",
@@ -432,6 +433,7 @@ class RequirementHeaderExportView(LoginRequiredMixin, View):
 
             row_data = [
                 form_count,
+                timezone.localtime(header.created_at).strftime("%d-%b-%Y %H:%M") if header.created_at else "",
                 header.form_number or "",
                 header.order_number or "",
                 header.requirement_date.strftime("%d-%b-%Y") if header.requirement_date else "",
@@ -462,7 +464,7 @@ class RequirementHeaderExportView(LoginRequiredMixin, View):
             row_data.append(row_qty_total)
             ws.append(row_data)
 
-        total_row = ["TOTAL", f"{form_count} Forms", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]
+        total_row = ["TOTAL", "", f"{form_count} Forms", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]
         for item_pk, info in item_col_map.items():
             total_row.append(totals[info["col_idx"] - 1])
         total_row.append(totals[-1])
