@@ -56,6 +56,7 @@ from apps.requirements.forms import (
     SpecialRequirementForm,
     ViewControlForm,
 )
+from apps.accounts.permissions import is_manager
 from apps.requirements.models import EditRequest, RequirementHeader, RequirementLine, RequirementStatus, SpecialRequirement, ViewControl
 from apps.masters.models import Upashray
 
@@ -1475,7 +1476,7 @@ class RequirementCollectionDetailView(View):
             .select_related("item")
             .order_by("item__parent_item__standard_serial", "item__standard_serial", "item__pk")
         )
-        is_admin = request.user.is_superuser or request.user.groups.filter(name="KMM Admin").exists()
+        is_admin = request.user.is_superuser or request.user.groups.filter(name="KMM Admin").exists() or is_manager(request.user)
         edit_requests = list(header.edit_requests.filter(is_resolved=False).order_by("-created_at"))
         view_control = ViewControl.objects.filter(event=header.event).first()
         if request.user.is_authenticated:
