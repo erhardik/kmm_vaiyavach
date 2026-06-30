@@ -49,7 +49,7 @@ def _item_display_rows(event, active_only=True):
                 "item_key": item.pk,
             }
         )
-        variants = list(item.variants.all().order_by("variant_name"))
+        variants = list(item.variants.all().order_by("item_code"))
         if active_only:
             variants = [variant for variant in variants if variant.is_active]
         for index, variant in enumerate(variants):
@@ -278,7 +278,7 @@ def build_public_item_preview(event):
         return alphabet[index] if index < len(alphabet) else f"X{index + 1}"
     base_items = Item.objects.filter(event=event, is_active=True, parent_item__isnull=True).prefetch_related("variants").order_by("standard_serial", "pk")
     for item in base_items:
-        variants = list(item.variants.filter(is_active=True).order_by("variant_name", "pk"))
+        variants = list(item.variants.filter(is_active=True).order_by("item_code", "pk"))
         if variants:
             for index, variant in enumerate(variants):
                 rows.append(

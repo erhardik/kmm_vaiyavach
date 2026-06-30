@@ -345,7 +345,7 @@ class ItemListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
         )
         items = []
         for base in base_items:
-            variants = list(base.variants.filter(is_active=True).order_by("variant_name", "pk"))
+            variants = list(base.variants.filter(is_active=True).order_by("item_code", "pk"))
             if variants:
                 items.extend(variants)
             else:
@@ -434,7 +434,7 @@ class ItemListExportView(LoginRequiredMixin, View):
         base_items = Item.objects.filter(event=event, is_active=True, parent_item__isnull=True).prefetch_related("variants").order_by("standard_serial", "pk")
         all_items = []
         for base in base_items:
-            variants = list(base.variants.filter(is_active=True).order_by("variant_name", "pk"))
+            variants = list(base.variants.filter(is_active=True).order_by("item_code", "pk"))
             if variants:
                 all_items.extend(variants)
             else:

@@ -244,7 +244,7 @@ def _group_requirement_lines(lines):
             }
             grouped.append(current_group)
         if item.parent_item_id:
-            siblings = list(base_item.variants.filter(is_active=True).order_by("variant_name", "pk"))
+            siblings = list(base_item.variants.filter(is_active=True).order_by("item_code", "pk"))
             suffix_index = next((idx for idx, sibling in enumerate(siblings) if sibling.pk == item.pk), 0)
             serial_display = f"{base_item.standard_serial or base_item.pk}-{_variant_suffix(suffix_index)}"
             size_display = item.variant_name_gu or item.variant_name or item.default_size or ""
@@ -268,7 +268,7 @@ def _line_serial_display(item):
     if not item.parent_item_id:
         return str(item.standard_serial or item.pk)
     base_item = item.parent_item
-    siblings = list(base_item.variants.filter(is_active=True).order_by("variant_name", "pk"))
+    siblings = list(base_item.variants.filter(is_active=True).order_by("item_code", "pk"))
     suffix_index = next((idx for idx, sibling in enumerate(siblings) if sibling.pk == item.pk), 0)
     return f"{base_item.standard_serial or base_item.pk}-{_variant_suffix(suffix_index)}"
 
@@ -370,7 +370,7 @@ class RequirementHeaderExportView(LoginRequiredMixin, View):
         item_serial_map = {}
         alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         for item in base_items:
-            variants = list(item.variants.filter(is_active=True).order_by("variant_name", "pk"))
+            variants = list(item.variants.filter(is_active=True).order_by("item_code", "pk"))
             if variants:
                 for vi, variant in enumerate(variants):
                     suffix = alphabet[vi] if vi < 26 else f"X{vi+1}"
@@ -605,7 +605,7 @@ class RequirementCollectionView(View):
         )
         items = []
         for item in base_items:
-            variants = list(item.variants.filter(is_active=True).order_by("variant_name", "pk"))
+            variants = list(item.variants.filter(is_active=True).order_by("item_code", "pk"))
             if variants:
                 items.extend(variants)
             else:
@@ -645,7 +645,7 @@ class RequirementCollectionView(View):
             if item.parent_item_id:
                 siblings = variant_positions.get(item.parent_item_id)
                 if siblings is None:
-                    siblings = list(item.parent_item.variants.filter(is_active=True).order_by("variant_name", "pk"))
+                    siblings = list(item.parent_item.variants.filter(is_active=True).order_by("item_code", "pk"))
                     variant_positions[item.parent_item_id] = siblings
         for item, form in zip(items, formset.forms, strict=False):
             serial = item.standard_serial or item.pk
@@ -950,7 +950,7 @@ class RequirementCollectionPrintView(View):
                     event=header.event, is_active=True, parent_item__isnull=True
                 ).prefetch_related("variants").order_by("standard_serial", "pk")
                 for item in base_items:
-                    variants = list(item.variants.filter(is_active=True).order_by("variant_name", "pk"))
+                    variants = list(item.variants.filter(is_active=True).order_by("item_code", "pk"))
                     if variants:
                         all_items.extend(variants)
                     else:
