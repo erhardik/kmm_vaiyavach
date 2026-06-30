@@ -464,6 +464,15 @@
     });
   }
 
+  form.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey && e.target.tagName !== 'BUTTON') {
+      e.preventDefault();
+      var focusable = Array.from(form.querySelectorAll('input, select, textarea, button'));
+      var idx = focusable.indexOf(e.target);
+      if (idx > -1 && idx < focusable.length - 1) focusable[idx + 1].focus();
+    }
+  });
+
   if (!editingAllowed) {
     form.querySelectorAll('input, select, textarea, button').forEach((field) => { if (field.id !== 'save-details-btn') field.disabled = true; });
     return;
