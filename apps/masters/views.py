@@ -488,56 +488,124 @@ class ItemListExportView(LoginRequiredMixin, View):
                     max_len = max(max_len, len(text))
             ws_summary.column_dimensions[get_column_letter(col)].width = min(max_len + 3, 40)
 
-        # --- Sheet 2: Item Detail (row-per-item, original format) ---
-        ws_detail = workbook.create_sheet("Item Detail")
+        # --- Sheet 2: Response Sheet (one row per form) ---
+        ws_response = workbook.create_sheet("Response Sheet")
 
-        detail_headers = ["Code", "Item Name", "Type / Size", "Current Req.", "Current Stock", "Qty Acquired", "Qty Distributed", "Cost", "Vendor", "Manager"]
-        for col, h in enumerate(detail_headers, 1):
-            cell = ws_detail.cell(row=1, column=col, value=h)
+        response_headers_qs = RequirementHeader.objects.filter(event=event).exclude(status=RequirementStatus.DRAFT).select_related("upashray").prefetch_related("lines__item").order_by("created_at")
+
+        alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        response_items = []
+        item_serial_map = {}
+        for base in base_items:
+            variants = list(base.variants.filter(is_active=True).order_by("item_code", "pk"))
+            if variants:
+                for vi, variant in enumerate(variants):
+                    suffix = alphabet[vi] if vi < 26 else f"X{vi+1}"
+                    response_items.append(variant)
+                    item_serial_map[variant.pk] = f"{base.standard_serial or base.pk}-{suffix}"
+            else:
+                response_items.append(base)
+                item_serial_map[base.pk] = str(base.standard_serial or base.pk)
+
+        total_fill = PatternFill("solid", fgColor="FFF3BF")
+        bold_font = Font(bold=True, color="14324F")
+
+        item_col_map = {}
+        for item in response_items:
+            display = item.item_name_gu or item.item_name
+            item_col_map[item.pk] = {
+                "col_idx": len(item_col_map) + 1,
+                "header": f"{item_serial_map[item.pk]}-{display}",
+            }
+
+        basic_headers = [
+            "Sr. No.", "Timestamp", "Form No.", "Order ID", "Requirement Date",
+            "Route", "Sub Route", "Pujya Shri", "Thana", "Area",
+            "Current Address", "Chaturmas Address", "Chaturmas Entry Date",
+            "Volunteer Name", "Volunteer Mobile", "Stay Type",
+            "Care Taker Name", "Care Taker Mobile", "Status",
+        ]
+        all_headers = basic_headers + [v["header"] for v in item_col_map.values()] + ["Total Qty"]
+        for col, h in enumerate(all_headers, 1):
+            cell = ws_response.cell(row=1, column=col, value=h)
             cell.fill = header_fill
-            cell.font = Font(bold=True)
+            cell.font = bold_font
             cell.alignment = center
 
-        for ri, item in enumerate(all_items, 2):
-            bal = balances.get(item.pk)
-            current_stock = int(bal.current_stock) if bal and bal.current_stock == int(bal.current_stock) else (bal.current_stock if bal else 0)
-            qty_acquired = int(acquired_map.get(item.pk, 0)) if acquired_map.get(item.pk, 0) == int(acquired_map.get(item.pk, 0)) else acquired_map.get(item.pk, 0)
-            qty_distributed = int(distributed_map.get(item.pk, 0)) if distributed_map.get(item.pk, 0) == int(distributed_map.get(item.pk, 0)) else distributed_map.get(item.pk, 0)
-            lot = latest_lots.get(item.pk)
-            cost = lot.unit_rate if lot else Decimal(item.estimated_rate or 0)
-            if cost == int(cost):
-                cost = int(cost)
-            vendor = str(lot.vendor) if lot and lot.vendor else ""
-            manager = lot.managed_by.get_full_name() if lot and lot.managed_by else (str(lot.managed_by) if lot and lot.managed_by else "")
-            ws_detail.cell(row=ri, column=1, value=item.item_code)
-            ws_detail.cell(row=ri, column=2, value=item.display_name())
-            ws_detail.cell(row=ri, column=3, value=item.variant_name_gu or item.variant_name or item.default_size_gu or item.default_size or "")
-            ws_detail.cell(row=ri, column=4, value=int(current_req_map.get(item.pk, 0)))
-            ws_detail.cell(row=ri, column=5, value=current_stock)
-            ws_detail.cell(row=ri, column=6, value=qty_acquired)
-            ws_detail.cell(row=ri, column=7, value=qty_distributed)
-            ws_detail.cell(row=ri, column=8, value=cost)
-            ws_detail.cell(row=ri, column=9, value=vendor)
-            ws_detail.cell(row=ri, column=10, value=manager)
-            for ci in (4, 5, 6, 7, 8):
-                ws_detail.cell(row=ri, column=ci).alignment = right
+        form_count = 0
+        totals = [0] * (len(item_col_map) + 1)
 
-        ws_detail.freeze_panes = "A2"
-        for col in range(1, len(detail_headers) + 1):
+        for header in response_headers_qs:
+            form_count += 1
+            row_qty_total = 0
+            item_qty_map = {}
+            for line in header.lines.all():
+                qty = float(line.required_qty)
+                item_qty_map[line.item_id] = qty
+                row_qty_total += qty
+
+            row_data = [
+                form_count,
+                timezone.localtime(header.created_at).strftime("%d-%b-%Y %H:%M") if header.created_at else "",
+                header.form_number or "",
+                header.order_number or "",
+                header.requirement_date.strftime("%d-%b-%Y") if header.requirement_date else "",
+                header.get_route_area_display() or "",
+                header.get_route_sub_area_display() or "",
+                header.pujya_shri_name or "",
+                header.thana_count or "",
+                header.area or "",
+                header.current_address or "",
+                header.chaturmas_place_address or "",
+                header.chaturmas_entry_date.strftime("%d-%b-%Y") if header.chaturmas_entry_date else "",
+                header.volunteer_name or "",
+                header.volunteer_mobile or "",
+                header.get_stay_type_display() or "",
+                header.caretaker_name or "",
+                header.caretaker_mobile or "",
+                header.get_status_display(),
+            ]
+
+            item_cells = []
+            for item_pk, info in item_col_map.items():
+                qty = item_qty_map.get(item_pk, 0)
+                item_cells.append(qty)
+                totals[info["col_idx"] - 1] += qty
+            totals[-1] += row_qty_total
+
+            row_data.extend(item_cells)
+            row_data.append(row_qty_total)
+            for col, val in enumerate(row_data, 1):
+                ws_response.cell(row=form_count + 1, column=col, value=val)
+
+        total_row_data = ["TOTAL", "", f"{form_count} Forms", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]
+        for item_pk, info in item_col_map.items():
+            total_row_data.append(totals[info["col_idx"] - 1])
+        total_row_data.append(totals[-1])
+        total_row = form_count + 2
+        for col, val in enumerate(total_row_data, 1):
+            cell = ws_response.cell(row=total_row, column=col, value=val)
+            cell.fill = total_fill
+            cell.font = bold_font
+
+        ws_response.freeze_panes = "A2"
+        basic_count = len(basic_headers)
+        for col_idx in range(1, len(all_headers) + 1):
             max_len = 0
-            for row in ws_detail.iter_rows(min_row=1, max_row=ws_detail.max_row, min_col=col, max_col=col):
+            for row in ws_response.iter_rows(min_row=1, max_row=ws_response.max_row, min_col=col_idx, max_col=col_idx):
                 for cell in row:
                     try:
                         text = str(cell.value or "")
                     except Exception:
                         text = ""
                     max_len = max(max_len, len(text))
-            ws_detail.column_dimensions[get_column_letter(col)].width = min(max_len + 3, 40)
-
-        buffer = BytesIO()
-        workbook.save(buffer)
-        response = HttpResponse(buffer.getvalue(), content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-        response["Content-Disposition"] = f'attachment; filename="item_master_{event.name}.xlsx"'
+            ws_response.column_dimensions[get_column_letter(col_idx)].width = min(max_len + 2, 50 if col_idx > basic_count else 40)
+        for row in ws_response.iter_rows(min_row=2, max_row=ws_response.max_row - 1):
+            for cell in row:
+                if cell.column <= basic_count and cell.column not in (10, 11):
+                    cell.alignment = center
+                elif cell.column > basic_count:
+                    cell.alignment = right
 
         buffer = BytesIO()
         workbook.save(buffer)
