@@ -13,6 +13,7 @@ from apps.auditlog.services import log_activity, serialize_instance
 from apps.common.views import EventScopedCreateView, EventScopedDeleteView, EventScopedListView, EventScopedUpdateView
 from apps.inventory.models import InventoryBalance, InventoryTransaction, InventoryTransactionType, PurchaseLot
 from apps.masters.forms import EventCreateForm, EventManagerContactForm, EventUpdateForm, ItemForm, SponsorForm, UpashrayForm, VendorForm, VolunteerForm
+from apps.requirements.models import RequirementHeader, RequirementLine, RequirementStatus
 from apps.masters.models import Event, EventManagerContact, Item, Sponsor, Upashray, Vendor, Volunteer
 
 
@@ -338,9 +339,11 @@ class ItemListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
         )
         items = []
         for base in base_items:
-            items.append(base)
             variants = list(base.variants.filter(is_active=True).order_by("variant_name", "pk"))
-            items.extend(variants)
+            if variants:
+                items.extend(variants)
+            else:
+                items.append(base)
         return items
 
     def get_context_data(self, **kwargs):
@@ -361,6 +364,9 @@ class ItemListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
         acquired_map = {a["item_id"]: a["total"] for a in acquired_qs}
         distributed_qs = InventoryTransaction.objects.filter(event=event, item_id__in=item_ids, transaction_type=InventoryTransactionType.DISTRIBUTION).values("item_id").annotate(total=Sum("qty"))
         distributed_map = {d["item_id"]: d["total"] for d in distributed_qs}
+        req_header_ids = RequirementHeader.objects.filter(event=event, is_active=True).exclude(status=RequirementStatus.DRAFT).values_list("pk", flat=True)
+        current_req_qs = RequirementLine.objects.filter(event=event, requirement_id__in=req_header_ids, item_id__in=item_ids).values("item_id").annotate(total=Sum("required_qty"))
+        current_req_map = {r["item_id"]: r["total"] for r in current_req_qs}
         latest_lots = {}
         for item_id in item_ids:
             lot = PurchaseLot.objects.filter(event=event, item_id=item_id).order_by("-transaction_date", "-created_at").first()
@@ -383,6 +389,7 @@ class ItemListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
                 "item_code": item.item_code,
                 "display_name": item.display_name(),
                 "type_size": item.default_size_gu or item.default_size or "",
+                "current_req": int(current_req_map.get(item.pk, 0)),
                 "current_stock": current_stock,
                 "qty_acquired": qty_acquired,
                 "qty_distributed": qty_distributed,
