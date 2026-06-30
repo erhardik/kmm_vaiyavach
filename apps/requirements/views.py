@@ -1490,6 +1490,7 @@ class RequirementCollectionDetailView(View):
         )
         is_admin = request.user.is_superuser or request.user.groups.filter(name="KMM Admin").exists() or is_manager(request.user)
         edit_requests = list(header.edit_requests.filter(is_resolved=False).order_by("-created_at"))
+        resolved_edit_requests = list(header.edit_requests.filter(is_resolved=True).order_by("-updated_at"))
         view_control = ViewControl.objects.filter(event=header.event).first()
         if request.user.is_authenticated:
             view_control = None
@@ -1503,6 +1504,7 @@ class RequirementCollectionDetailView(View):
                 "lang": _lang_code(request),
                 "is_admin": is_admin,
                 "edit_requests": edit_requests,
+                "resolved_edit_requests": resolved_edit_requests,
                 "view_control": view_control,
             },
         )

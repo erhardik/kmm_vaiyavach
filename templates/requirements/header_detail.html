@@ -102,16 +102,41 @@
       </div>
     </div>
   </div>
-  {% if header.remarks %}
     <div class="col-12">
       <div class="card border-0 shadow-sm">
         <div class="card-body">
           <h6 class="mb-2">{% if lang_code == "gu" %}ખાસ નોંધ / રિમાર્કસ{% else %}Remarks{% endif %}</h6>
-          <p class="mb-0" style="white-space: pre-wrap;">{{ header.remarks }}</p>
+          {% if header.remarks %}
+            <p class="mb-0" style="white-space: pre-wrap;">{{ header.remarks }}</p>
+          {% else %}
+            <p class="mb-0 text-body-secondary">---</p>
+          {% endif %}
         </div>
       </div>
     </div>
-  {% endif %}
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <h6 class="mb-2">{% if lang_code == "gu" %}ફેરફાર વિનંતી{% else %}Edit Request{% endif %}</h6>
+          {% if resolved_edit_requests %}
+            {% for er in resolved_edit_requests %}
+              <div class="mb-1">
+                {% if er.resolution == "REJECTED" %}
+                  <p class="mb-0 text-decoration-line-through text-body-secondary">{{ er.message }}</p>
+                {% else %}
+                  <p class="mb-0">{{ er.message }}</p>
+                {% endif %}
+                <div class="small {% if er.resolution == 'REJECTED' %}text-danger{% else %}text-success{% endif %}">
+                  {{ er.get_resolution_display }} {{ er.resolved_at|date:"d-M-Y H:i" }}
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <p class="mb-0 text-body-secondary">---</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
   {% if header.status == 'CONFIRMED' %}
     <div class="col-12">
       <div class="card border-0 shadow-sm border-warning">
