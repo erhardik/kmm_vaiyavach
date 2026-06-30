@@ -19,7 +19,12 @@ body.bg-soft {
   object-fit: contain;
   border-radius: 6px;
   background: #fff;
-  padding: 3px;
+}
+
+@media (max-width: 575.98px) {
+  .brand-logo + div {
+    display: none !important;
+  }
 }
 
 .login-logo {
@@ -643,14 +648,14 @@ body.sidebar-collapsed .app-sidebar {
 .sidebar-collapse-btn {
   width: 2rem;
   height: 2rem;
-  border-color: rgba(255, 255, 255, 0.28);
-  color: #fff;
+  border-color: #e67e22;
+  color: #e67e22;
   flex: 0 0 2rem;
 }
 
 .sidebar-collapse-btn:hover {
-  background: rgba(255, 255, 255, 0.14);
-  color: #fff;
+  background: rgba(230, 126, 34, 0.14);
+  color: #e67e22;
 }
 
 .sidebar-links {
