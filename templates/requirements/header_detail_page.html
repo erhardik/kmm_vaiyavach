@@ -1,13 +1,28 @@
 {% extends "public/form_base.html" %}
 {% block title %}{{ header.form_number|default:"Order" }} | KMM{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <div>
-    <h1 class="h3 mb-1">Order Details</h1>
-    <p class="text-body-secondary mb-0">Form No. {{ header.form_number|default:"-" }}{% if header.order_number %} | Order ID: {{ header.order_number }}{% endif %}</p>
-  </div>
-  <div class="d-flex gap-2">
-    <a class="btn btn-outline-secondary" href="{% if user.is_authenticated %}{% url 'requirements:header-list' %}{% else %}{% url 'public-requests' %}{% endif %}">Back</a>
+<div class="rounded-3 p-3 mb-3" style="background:#e67e22;color:#fff;">
+  <div class="d-flex justify-content-between align-items-start">
+    <div>
+      <h1 class="h4 mb-2">{% if lang == "gu" %}ઓર્ડર વિગતો{% else %}Order Details{% endif %}</h1>
+      <div class="small">
+        {% if not view_control or view_control.show_form_number %}
+          <div>{% if lang == "gu" %}ફોર્મ નં.{% else %}Form No.{% endif %}: <strong>{{ header.form_number|default:"-" }}</strong></div>
+        {% endif %}
+        {% if header.order_number %}
+          {% if not view_control or view_control.show_order_id %}
+            <div>{% if lang == "gu" %}ઓર્ડર ID{% else %}Order ID{% endif %}: <strong>{{ header.order_number }}</strong></div>
+          {% endif %}
+        {% endif %}
+        {% if not view_control or view_control.show_route %}
+          <div>{% if lang == "gu" %}રૂટ{% else %}Route{% endif %}: <strong>{{ header.get_route_area_display|default:"-" }}</strong></div>
+        {% endif %}
+        {% if not view_control or view_control.show_sub_route %}
+          <div>{% if lang == "gu" %}ઉપ-રૂટ{% else %}Sub Route{% endif %}: <strong>{{ header.get_route_sub_area_display|default:"-" }}</strong></div>
+        {% endif %}
+      </div>
+    </div>
+    <a class="btn btn-light btn-sm" href="{% if user.is_authenticated %}{% url 'requirements:header-list' %}{% else %}{% url 'public-requests' %}{% endif %}">{% if lang == "gu" %}પાછળ{% else %}Back{% endif %}</a>
   </div>
 </div>
 {% include "requirements/header_detail.html" %}

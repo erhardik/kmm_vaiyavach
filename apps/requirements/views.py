@@ -54,8 +54,9 @@ from apps.requirements.forms import (
     RequirementHeaderForm,
     RequirementLineForm,
     SpecialRequirementForm,
+    ViewControlForm,
 )
-from apps.requirements.models import EditRequest, RequirementHeader, RequirementLine, RequirementStatus, SpecialRequirement
+from apps.requirements.models import EditRequest, RequirementHeader, RequirementLine, RequirementStatus, SpecialRequirement, ViewControl
 from apps.masters.models import Upashray
 
 
@@ -1476,6 +1477,9 @@ class RequirementCollectionDetailView(View):
         )
         is_admin = request.user.is_superuser or request.user.groups.filter(name="KMM Admin").exists()
         edit_requests = list(header.edit_requests.filter(is_resolved=False).order_by("-created_at"))
+        view_control = ViewControl.objects.filter(event=header.event).first()
+        if request.user.is_authenticated:
+            view_control = None
         return render(
             request,
             "requirements/header_detail.html" if request.headers.get("x-requested-with") == "XMLHttpRequest" else "requirements/header_detail_page.html",
@@ -1486,8 +1490,50 @@ class RequirementCollectionDetailView(View):
                 "lang": _lang_code(request),
                 "is_admin": is_admin,
                 "edit_requests": edit_requests,
+                "view_control": view_control,
             },
         )
+
+
+class ViewControlView(LoginRequiredMixin, View):
+    def get_event(self, request):
+        event_id = request.GET.get("event") or request.POST.get("event")
+        if event_id:
+            try:
+                return Event.objects.filter(pk=int(event_id), is_active=True).first()
+            except (ValueError, TypeError):
+                pass
+        return Event.objects.filter(is_current=True, is_active=True).first()
+
+    def get(self, request):
+        event = self.get_event(request)
+        if not event:
+            messages.error(request, "No active event found.")
+            return redirect("dashboard:home")
+        vc, _ = ViewControl.objects.get_or_create(event=event)
+        form = ViewControlForm(instance=vc)
+        return render(request, "requirements/view_control.html", {
+            "form": form,
+            "event": event,
+            "lang": _lang_code(request),
+        })
+
+    def post(self, request):
+        event = self.get_event(request)
+        if not event:
+            messages.error(request, "No active event found.")
+            return redirect("dashboard:home")
+        vc, _ = ViewControl.objects.get_or_create(event=event)
+        form = ViewControlForm(request.POST, instance=vc)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "View control settings saved.")
+            return redirect("requirements:view-control")
+        return render(request, "requirements/view_control.html", {
+            "form": form,
+            "event": event,
+            "lang": _lang_code(request),
+        })
 
 
 class RequirementStatusTransitionView(LoginRequiredMixin, View):

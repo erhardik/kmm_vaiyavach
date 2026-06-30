@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}{% if lang == "gu" %}વ્યૂ કંટ્રોલ{% else %}View Control{% endif %} | KMM{% endblock %}
+{% block content %}
+<div class="container py-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">{% if lang == "gu" %}વ્યૂ કંટ્રોલ{% else %}View Control{% endif %}</h1>
+    <a class="btn btn-outline-secondary" href="{% url 'dashboard:home' %}">{% if lang == "gu" %}પાછળ{% else %}Back{% endif %}</a>
+  </div>
+  <p class="text-body-secondary mb-3">
+    {% if lang == "gu" %}
+      નીચેના ટૉગલ્સનો ઉપયોગ કરીને નક્કી કરો કે પબ્લિક ફોર્મમાં કઈ વિગતો દેખાડવી. ટૉગલ ઓન હોય તો જ વિગત દેખાશે.
+    {% else %}
+      Toggle which basic details are visible to the public when viewing a form. Only toggles that are ON will be shown.
+    {% endif %}
+  </p>
+  <form method="post" class="row g-3">
+    {% csrf_token %}
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-light border-0">
+          <h6 class="mb-0">{% if lang == "gu" %}મૂળભૂત વિગતો{% else %}Basic Details{% endif %}</h6>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            {% for field in form %}
+              <div class="col-12 col-md-6 col-lg-4">
+                <div class="d-flex justify-content-between align-items-center py-2 px-3 border rounded">
+                  <label class="form-label mb-0 fw-semibold small" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                  <div class="form-check form-switch mb-0">
+                    {{ field }}
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12">
+      <button type="submit" class="btn btn-primary">{% if lang == "gu" %}સાચવો{% else %}Save{% endif %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

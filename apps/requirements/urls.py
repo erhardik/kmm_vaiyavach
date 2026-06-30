@@ -21,6 +21,7 @@ from apps.requirements.views import (
     SpecialRequirementDeleteView,
     SpecialRequirementListView,
     SpecialRequirementUpdateView,
+    ViewControlView,
 )
 
 app_name = "requirements"
@@ -51,5 +52,6 @@ urlpatterns = [
     path("collect/<int:pk>/lock/", RequirementLockView.as_view(), name="header-lock"),
     path("collect/<int:pk>/edit-request/", EditRequestCreateView.as_view(), name="edit-request"),
     path("public/<uuid:token>/edit-request/", EditRequestCreateView.as_view(), name="public-edit-request"),
+    path("view-control/", ViewControlView.as_view(), name="view-control"),
 ]
 

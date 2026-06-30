@@ -5,7 +5,7 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
-from config.models import EventScopedModel
+from config.models import EventScopedModel, TimeStampedModel
 
 
 class RequirementStatus(models.TextChoices):
@@ -154,6 +154,15 @@ class RequirementHeader(EventScopedModel):
             return self.order_number
         return "(draft)"
 
+    def get_route_sub_area_display(self):
+        if not self.route_sub_area or not self.route_area:
+            return ""
+        area_choices = self.SUB_ROUTE_CHOICES.get(self.route_area, [])
+        for code, label in area_choices:
+            if code == self.route_sub_area:
+                return label
+        return self.route_sub_area
+
     def save(self, *args, **kwargs):
         if not self.public_view_token:
             self.public_view_token = uuid.uuid4()
@@ -211,4 +220,32 @@ class EditRequest(EventScopedModel):
 
     def __str__(self):
         return f"EditRequest for {self.header} - {'Resolved' if self.is_resolved else 'Pending'}"
+
+
+class ViewControl(TimeStampedModel):
+    event = models.OneToOneField("masters.Event", on_delete=models.CASCADE, related_name="view_control")
+
+    show_form_number = models.BooleanField(default=True, verbose_name="Form No.")
+    show_order_id = models.BooleanField(default=True, verbose_name="Order ID")
+    show_route = models.BooleanField(default=True, verbose_name="Route")
+    show_sub_route = models.BooleanField(default=True, verbose_name="Sub Route")
+    show_pujya_shri = models.BooleanField(default=True, verbose_name="Pujya Shri")
+    show_thana = models.BooleanField(default=True, verbose_name="Thana")
+    show_area = models.BooleanField(default=True, verbose_name="Area")
+    show_form_date = models.BooleanField(default=True, verbose_name="Form Date")
+    show_current_address = models.BooleanField(default=True, verbose_name="Current Address")
+    show_chaturmas_address = models.BooleanField(default=True, verbose_name="Chaturmas Address")
+    show_chaturmas_entry_date = models.BooleanField(default=True, verbose_name="Chaturmas Entry Date")
+    show_volunteer_name = models.BooleanField(default=True, verbose_name="Volunteer Name")
+    show_volunteer_mobile = models.BooleanField(default=True, verbose_name="Volunteer Mobile")
+    show_stay_type = models.BooleanField(default=True, verbose_name="Stay Type")
+    show_caretaker_name = models.BooleanField(default=True, verbose_name="Care Taker Name")
+    show_caretaker_mobile = models.BooleanField(default=True, verbose_name="Care Taker Mobile")
+
+    class Meta:
+        verbose_name = "View Control"
+        verbose_name_plural = "View Controls"
+
+    def __str__(self):
+        return f"ViewControl - {self.event}"
 

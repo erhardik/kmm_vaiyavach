@@ -7,8 +7,14 @@
           <div>
             <h5 class="mb-1">{% if lang_code == "gu" %}ઓર્ડર વિગતો{% else %}Order Details{% endif %}</h5>
             <div class="text-body-secondary small">
-              {% if lang_code == "gu" %}ફોર્મ નં.{% else %}Form No.{% endif %} {{ header.form_number|default:"-" }}
-              {% if header.order_number %} | {% if lang_code == "gu" %}ઓર્ડર ID{% else %}Order ID{% endif %}: {{ header.order_number }}{% endif %}
+              {% if not view_control or view_control.show_form_number %}
+                {% if lang_code == "gu" %}ફોર્મ નં.{% else %}Form No.{% endif %} {{ header.form_number|default:"-" }}
+              {% endif %}
+              {% if header.order_number %}
+                {% if not view_control or view_control.show_order_id %}
+                  {% if not view_control or view_control.show_form_number %} | {% endif %}{% if lang_code == "gu" %}ઓર્ડર ID{% else %}Order ID{% endif %}: {{ header.order_number }}
+                {% endif %}
+              {% endif %}
             </div>
           </div>
           <span class="badge fs-6 {% if header.status == 'CONFIRMED' or header.status == 'SUBMITTED' %}text-bg-primary{% elif header.status == 'PACKED' or header.status == 'IN_PROGRESS' %}text-bg-warning text-dark{% elif header.status == 'DELIVERED' or header.status == 'CLOSED' %}text-bg-info text-dark{% elif header.status == 'RECEIVED_BY_MS' %}text-bg-success{% elif header.is_locked %}text-bg-success{% else %}text-bg-warning{% endif %}">
@@ -16,20 +22,48 @@
           </span>
         </div>
         <div class="row g-2 small">
-          <div class="col-12 col-md-4"><strong>{% if lang_code == "gu" %}પૂજ્ય શ્રી{% else %}Pujya Shri{% endif %}:</strong> {{ header.pujya_shri_name|default:"-" }}</div>
-          <div class="col-12 col-md-4"><strong>{% if lang_code == "gu" %}ઠાણા{% else %}Thana{% endif %}:</strong> {{ header.thana_count|default:"-" }}</div>
-          <div class="col-12 col-md-4"><strong>{% if lang_code == "gu" %}વિસ્તાર{% else %}Area{% endif %}:</strong> {{ header.area|default:"-" }}</div>
-          <div class="col-12 col-md-4"><strong>{% if lang_code == "gu" %}ફોર્મ તારીખ{% else %}Form Date{% endif %}:</strong> {{ header.requirement_date|date:"d-F-Y" }}</div>
-          <div class="col-12 col-md-4"><strong>{% if lang_code == "gu" %}હાલનું સરનામું{% else %}Current Address{% endif %}:</strong> {{ header.current_address|default:"-" }}</div>
-          <div class="col-12 col-md-4"><strong>{% if lang_code == "gu" %}ચાતુર્માસ સ્થળનું સરનામું{% else %}Chaturmas Place Address{% endif %}:</strong> {{ header.chaturmas_place_address|default:"-" }}</div>
-          <div class="col-12 col-md-4"><strong>{% if lang_code == "gu" %}ચાતુર્માસ પ્રવેશ તારીખ{% else %}Chaturmas Entry Date{% endif %}:</strong> {{ header.chaturmas_entry_date|date:"d-F-Y" }}</div>
-          <div class="col-12 col-md-4"><strong>{% if lang_code == "gu" %}જનારનું નામ{% else %}Volunteer Name{% endif %}:</strong> {{ header.volunteer_name|default:"-" }}</div>
-          <div class="col-12 col-md-4"><strong>{% if lang_code == "gu" %}જનારનું નંબર{% else %}Volunteer Mobile{% endif %}:</strong> {{ header.volunteer_mobile|default:"-" }}</div>
-          <div class="col-12 col-md-4"><strong>{% if lang_code == "gu" %}રૂટ{% else %}Route{% endif %}:</strong> {{ header.get_route_area_display|default:"-" }}</div>
-          <div class="col-12 col-md-4"><strong>{% if lang_code == "gu" %}ઉપ-રૂટ{% else %}Sub Route{% endif %}:</strong> {{ header.route_sub_area|default:"-" }}</div>
-          <div class="col-12 col-md-4"><strong>{% if lang_code == "gu" %}સંઘ ઉપાશ્રય / સ્થિરવાસ{% else %}Stay Type{% endif %}:</strong> {{ header.get_stay_type_display|default:"-" }}</div>
-          <div class="col-12 col-md-4"><strong>{% if lang_code == "gu" %}પૂજ્ય શ્રી સંભાળ લેનારનું નામ{% else %}Care Taker Name{% endif %}:</strong> {{ header.caretaker_name|default:"-" }}</div>
-          <div class="col-12 col-md-4"><strong>{% if lang_code == "gu" %}પૂજ્ય શ્રી સંભાળ લેનારનું નંબર{% else %}Care Taker Mobile{% endif %}:</strong> {{ header.caretaker_mobile|default:"-" }}</div>
+          {% if not view_control or view_control.show_route %}
+            <div class="col-12 col-md-4"><strong>{% if lang_code == "gu" %}રૂટ{% else %}Route{% endif %}:</strong> {{ header.get_route_area_display|default:"-" }}</div>
+          {% endif %}
+          {% if not view_control or view_control.show_sub_route %}
+            <div class="col-12 col-md-4"><strong>{% if lang_code == "gu" %}ઉપ-રૂટ{% else %}Sub Route{% endif %}:</strong> {{ header.get_route_sub_area_display|default:"-" }}</div>
+          {% endif %}
+          {% if not view_control or view_control.show_pujya_shri %}
+            <div class="col-12 col-md-4"><strong>{% if lang_code == "gu" %}પૂજ્ય શ્રી{% else %}Pujya Shri{% endif %}:</strong> {{ header.pujya_shri_name|default:"-" }}</div>
+          {% endif %}
+          {% if not view_control or view_control.show_thana %}
+            <div class="col-12 col-md-4"><strong>{% if lang_code == "gu" %}ઠાણા{% else %}Thana{% endif %}:</strong> {{ header.thana_count|default:"-" }}</div>
+          {% endif %}
+          {% if not view_control or view_control.show_area %}
+            <div class="col-12 col-md-4"><strong>{% if lang_code == "gu" %}વિસ્તાર{% else %}Area{% endif %}:</strong> {{ header.area|default:"-" }}</div>
+          {% endif %}
+          {% if not view_control or view_control.show_form_date %}
+            <div class="col-12 col-md-4"><strong>{% if lang_code == "gu" %}ફોર્મ તારીખ{% else %}Form Date{% endif %}:</strong> {{ header.requirement_date|date:"d-F-Y" }}</div>
+          {% endif %}
+          {% if not view_control or view_control.show_current_address %}
+            <div class="col-12 col-md-4"><strong>{% if lang_code == "gu" %}હાલનું સરનામું{% else %}Current Address{% endif %}:</strong> {{ header.current_address|default:"-" }}</div>
+          {% endif %}
+          {% if not view_control or view_control.show_chaturmas_address %}
+            <div class="col-12 col-md-4"><strong>{% if lang_code == "gu" %}ચાતુર્માસ સ્થળનું સરનામું{% else %}Chaturmas Place Address{% endif %}:</strong> {{ header.chaturmas_place_address|default:"-" }}</div>
+          {% endif %}
+          {% if not view_control or view_control.show_chaturmas_entry_date %}
+            <div class="col-12 col-md-4"><strong>{% if lang_code == "gu" %}ચાતુર્માસ પ્રવેશ તારીખ{% else %}Chaturmas Entry Date{% endif %}:</strong> {{ header.chaturmas_entry_date|date:"d-F-Y" }}</div>
+          {% endif %}
+          {% if not view_control or view_control.show_volunteer_name %}
+            <div class="col-12 col-md-4"><strong>{% if lang_code == "gu" %}જનારનું નામ{% else %}Volunteer Name{% endif %}:</strong> {{ header.volunteer_name|default:"-" }}</div>
+          {% endif %}
+          {% if not view_control or view_control.show_volunteer_mobile %}
+            <div class="col-12 col-md-4"><strong>{% if lang_code == "gu" %}જનારનું નંબર{% else %}Volunteer Mobile{% endif %}:</strong> {{ header.volunteer_mobile|default:"-" }}</div>
+          {% endif %}
+          {% if not view_control or view_control.show_stay_type %}
+            <div class="col-12 col-md-4"><strong>{% if lang_code == "gu" %}સંઘ ઉપાશ્રય / સ્થિરવાસ{% else %}Stay Type{% endif %}:</strong> {{ header.get_stay_type_display|default:"-" }}</div>
+          {% endif %}
+          {% if not view_control or view_control.show_caretaker_name %}
+            <div class="col-12 col-md-4"><strong>{% if lang_code == "gu" %}પૂજ્ય શ્રી સંભાળ લેનારનું નામ{% else %}Care Taker Name{% endif %}:</strong> {{ header.caretaker_name|default:"-" }}</div>
+          {% endif %}
+          {% if not view_control or view_control.show_caretaker_mobile %}
+            <div class="col-12 col-md-4"><strong>{% if lang_code == "gu" %}પૂજ્ય શ્રી સંભાળ લેનારનું નંબર{% else %}Care Taker Mobile{% endif %}:</strong> {{ header.caretaker_mobile|default:"-" }}</div>
+          {% endif %}
         </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 from django import forms
 from decimal import Decimal
 
-from apps.requirements.models import PriorityLevel, RequirementHeader, RequirementLine, SpecialRequirement
+from apps.requirements.models import PriorityLevel, RequirementHeader, RequirementLine, SpecialRequirement, ViewControl
 from apps.masters.models import Upashray, Item
 
 
@@ -138,6 +138,47 @@ class RequirementCollectionItemForm(forms.Form):
         decimal_places=0,
         widget=forms.NumberInput(attrs={"class": "form-control form-control-sm item-qty-input", "min": "0", "placeholder": "0"}),
     )
+
+
+class ViewControlForm(forms.ModelForm):
+    class Meta:
+        model = ViewControl
+        fields = [
+            "show_form_number",
+            "show_order_id",
+            "show_route",
+            "show_sub_route",
+            "show_pujya_shri",
+            "show_thana",
+            "show_area",
+            "show_form_date",
+            "show_current_address",
+            "show_chaturmas_address",
+            "show_chaturmas_entry_date",
+            "show_volunteer_name",
+            "show_volunteer_mobile",
+            "show_stay_type",
+            "show_caretaker_name",
+            "show_caretaker_mobile",
+        ]
+        widgets = {field: forms.CheckboxInput(attrs={"class": "form-check-input", "role": "switch"}) for field in [
+            "show_form_number",
+            "show_order_id",
+            "show_route",
+            "show_sub_route",
+            "show_pujya_shri",
+            "show_thana",
+            "show_area",
+            "show_form_date",
+            "show_current_address",
+            "show_chaturmas_address",
+            "show_chaturmas_entry_date",
+            "show_volunteer_name",
+            "show_volunteer_mobile",
+            "show_stay_type",
+            "show_caretaker_name",
+            "show_caretaker_mobile",
+        ]}
 
 
 class SpecialRequirementForm(BootstrapModelForm):
