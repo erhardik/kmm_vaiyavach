@@ -1,15 +1,17 @@
-from django.urls import reverse_lazy
-from django.urls import reverse
+from decimal import Decimal
 
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib import messages
-from django.db.models import Max
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.core.paginator import Paginator
+from django.db.models import Max, Q, Sum
 from django.http import Http404
 from django.shortcuts import redirect
+from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 
 from apps.auditlog.services import log_activity, serialize_instance
 from apps.common.views import EventScopedCreateView, EventScopedDeleteView, EventScopedListView, EventScopedUpdateView
+from apps.inventory.models import InventoryBalance, InventoryTransaction, InventoryTransactionType, PurchaseLot
 from apps.masters.forms import EventCreateForm, EventManagerContactForm, EventUpdateForm, ItemForm, SponsorForm, UpashrayForm, VendorForm, VolunteerForm
 from apps.masters.models import Event, EventManagerContact, Item, Sponsor, Upashray, Vendor, Volunteer
 
@@ -299,34 +301,112 @@ class EventManagerContactDeleteView(EventContextMixin, LoginRequiredMixin, Permi
         return response
 
 
-class ItemListView(EventScopedListView):
+class ItemListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     model = Item
-    template_name = "common/list.html"
-    row_fields = ("item_code", "display_name", "get_category_display", "unit", "default_size", "estimated_rate")
-    headers = ["Code", "Item", "Category", "Unit", "Size", "Rate"]
-    search_fields = ["item_code", "item_name"]
+    template_name = "masters/item_list.html"
+    paginate_by = 50
+    permission_required = "masters.view_item"
+    raise_exception = True
     create_url_name = "masters:item-create"
     edit_url_name = "masters:item-update"
     delete_url_name = "masters:item-delete"
 
-    def get_table_headers(self):
-        headers = super().get_table_headers()
-        if self.request.user.groups.filter(name="KMM Manager").exists():
-            return headers[:-1]
-        return headers
+    def _perm(self, action):
+        meta = self.model._meta
+        return f"{meta.app_label}.{action}_{meta.model_name}"
 
-    def get_table_rows(self):
-        rows = super().get_table_rows()
-        if self.request.user.groups.filter(name="KMM Manager").exists():
-            for row in rows:
-                row["cells"] = row["cells"][:-1]
-        return rows
+    def get_queryset(self):
+        qs = Item.objects.filter(event=self._get_event(), is_active=True)
+        search = self.request.GET.get("q")
+        if search:
+            qs = qs.filter(
+                Q(item_code__icontains=search) | Q(item_name__icontains=search) | Q(item_name_gu__icontains=search)
+            )
+        return qs.select_related("parent_item")
+
+    def _get_event(self):
+        event_id = self.request.GET.get("event")
+        if event_id:
+            return Event.objects.filter(pk=event_id, is_active=True).first()
+        return Event.objects.filter(is_current=True, is_active=True).first()
+
+    def _expand_items(self, event):
+        base_items = (
+            Item.objects.filter(event=event, is_active=True, parent_item__isnull=True)
+            .prefetch_related("variants")
+            .order_by("standard_serial", "pk")
+        )
+        items = []
+        for base in base_items:
+            items.append(base)
+            variants = list(base.variants.filter(is_active=True).order_by("variant_name", "pk"))
+            items.extend(variants)
+        return items
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        event = self._get_event()
+        all_items = self._expand_items(event)
+        search = self.request.GET.get("q", "").lower()
+        if search:
+            all_items = [i for i in all_items if search in i.item_code.lower() or search in i.item_name.lower() or search in i.item_name_gu.lower()]
+
+        item_ids = [i.pk for i in all_items]
+        balances = {
+            b.item_id: b
+            for b in InventoryBalance.objects.filter(event=event, item_id__in=item_ids)
+        }
+        pos_types = [InventoryTransactionType.PURCHASE, InventoryTransactionType.DONATION, InventoryTransactionType.SPONSORSHIP_RECEIPT, InventoryTransactionType.RETURN, InventoryTransactionType.ADJUSTMENT]
+        acquired_qs = InventoryTransaction.objects.filter(event=event, item_id__in=item_ids, transaction_type__in=pos_types).values("item_id").annotate(total=Sum("qty"))
+        acquired_map = {a["item_id"]: a["total"] for a in acquired_qs}
+        distributed_qs = InventoryTransaction.objects.filter(event=event, item_id__in=item_ids, transaction_type=InventoryTransactionType.DISTRIBUTION).values("item_id").annotate(total=Sum("qty"))
+        distributed_map = {d["item_id"]: d["total"] for d in distributed_qs}
+        latest_lots = {}
+        for item_id in item_ids:
+            lot = PurchaseLot.objects.filter(event=event, item_id=item_id).order_by("-transaction_date", "-created_at").first()
+            if lot:
+                latest_lots[item_id] = lot
+
+        table_rows = []
+        for item in all_items:
+            bal = balances.get(item.pk)
+            current_stock = int(bal.current_stock) if bal and bal.current_stock == int(bal.current_stock) else (bal.current_stock if bal else 0)
+            qty_acquired = int(acquired_map.get(item.pk, 0)) if acquired_map.get(item.pk, 0) == int(acquired_map.get(item.pk, 0)) else acquired_map.get(item.pk, 0)
+            qty_distributed = int(distributed_map.get(item.pk, 0)) if distributed_map.get(item.pk, 0) == int(distributed_map.get(item.pk, 0)) else distributed_map.get(item.pk, 0)
+            lot = latest_lots.get(item.pk)
+            cost = lot.unit_rate if lot else Decimal(item.estimated_rate or 0)
+            if cost == int(cost):
+                cost = int(cost)
+            vendor = str(lot.vendor) if lot and lot.vendor else ""
+            manager = lot.managed_by.get_full_name() if lot and lot.managed_by else (str(lot.managed_by) if lot and lot.managed_by else "")
+            table_rows.append({
+                "item_code": item.item_code,
+                "display_name": item.display_name(),
+                "type_size": item.default_size_gu or item.default_size or "",
+                "current_stock": current_stock,
+                "qty_acquired": qty_acquired,
+                "qty_distributed": qty_distributed,
+                "cost": cost,
+                "vendor": vendor,
+                "manager": manager,
+                "edit_url": reverse(self.edit_url_name, kwargs={"pk": item.pk}) if self.edit_url_name else "",
+                "delete_url": reverse(self.delete_url_name, kwargs={"pk": item.pk}) if self.delete_url_name else "",
+            })
+
+        paginator = Paginator(table_rows, self.paginate_by)
+        page_number = self.request.GET.get("page", 1)
+        page_obj = paginator.get_page(page_number)
+
         context["page_title"] = "Items"
         context["page_subtitle"] = "Event-scoped item master"
         context["create_url"] = reverse_lazy(self.create_url_name)
+        context["table_rows"] = page_obj.object_list
+        context["page_obj"] = page_obj
+        context["paginator"] = paginator
+        context["event_queryset"] = Event.objects.filter(is_active=True).order_by("-is_current", "-start_date", "name")
+        context["can_add"] = self.request.user.has_perm(self._perm("add"))
+        context["can_change"] = self.request.user.has_perm(self._perm("change"))
+        context["can_delete"] = self.request.user.has_perm(self._perm("delete"))
         return context
 
 

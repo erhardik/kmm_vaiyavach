@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">{{ page_title }}</h1>
+  <a class="btn btn-outline-secondary" href="{% url 'inventory:transaction-list' %}">Transactions</a>
+</div>
+<form method="get" class="row g-2 align-items-end mb-3">
+  <div class="col-12 col-md-4">
+    <select name="event" class="form-select" onchange="this.form.submit()">
+      <option value="">Current Event</option>
+      {% for ev in event_queryset %}
+        <option value="{{ ev.pk }}" {% if event and event.pk == ev.pk %}selected{% endif %}>{{ ev.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+</form>
+<div class="card border-0 shadow-sm">
+  <div class="card-body">
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="event" value="{{ event.pk|default:'' }}">
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label class="form-label">Item</label>
+          {{ form.item }}
+          {% if form.item.errors %}<div class="text-danger small">{{ form.item.errors }}</div>{% endif %}
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-bordered align-middle" id="lot-table">
+          <thead class="table-light">
+            <tr>
+              <th style="width:40px">#</th>
+              <th>Qty</th>
+              <th>Rate</th>
+              <th>Vendor</th>
+              <th>Notes</th>
+              <th style="width:60px"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {{ lot_formset.management_form }}
+            {% for lot_form in lot_formset %}
+              <tr class="lot-row">
+                <td class="text-center row-idx">{{ forloop.counter }}</td>
+                <td>
+                  {{ lot_form.qty }}
+                  {% if lot_form.qty.errors %}<div class="text-danger small">{{ lot_form.qty.errors }}</div>{% endif %}
+                </td>
+                <td>
+                  {{ lot_form.unit_rate }}
+                  {% if lot_form.unit_rate.errors %}<div class="text-danger small">{{ lot_form.unit_rate.errors }}</div>{% endif %}
+                </td>
+                <td>
+                  {{ lot_form.vendor }}
+                  {% if lot_form.vendor.errors %}<div class="text-danger small">{{ lot_form.vendor.errors }}</div>{% endif %}
+                </td>
+                <td>
+                  {{ lot_form.notes }}
+                  {% if lot_form.notes.errors %}<div class="text-danger small">{{ lot_form.notes.errors }}</div>{% endif %}
+                </td>
+                <td class="text-center">
+                  <button type="button" class="btn btn-sm btn-outline-danger remove-row" {% if forloop.counter <= 1 %}disabled{% endif %}>X</button>
+                  {{ lot_form.id }}
+                  {{ lot_form.DELETE }}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="mb-3">
+        <button type="button" class="btn btn-sm btn-outline-primary" id="add-row">+ Add Lot</button>
+      </div>
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Save Purchase</button>
+        <a class="btn btn-outline-secondary" href="{% url 'inventory:transaction-list' %}">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+(function() {
+  const prefix = '{{ lot_formset.prefix }}';
+  const totalForms = document.getElementById('id_' + prefix + '-TOTAL_FORMS');
+  function reindex() {
+    const rows = document.querySelectorAll('.lot-row');
+    rows.forEach(function(row, idx) {
+      row.querySelector('.row-idx').textContent = idx + 1;
+      row.querySelectorAll('input, select, textarea').forEach(function(el) {
+        const name = el.name.replace(/^.+-\d+-/, prefix + '-' + idx + '-');
+        el.name = name;
+        el.id = 'id_' + name;
+      });
+    });
+    totalForms.value = rows.length;
+  }
+  document.getElementById('add-row').addEventListener('click', function() {
+    const tbody = document.querySelector('#lot-table tbody');
+    const prototype = tbody.querySelector('.lot-row');
+    if (!prototype) return;
+    const clone = prototype.cloneNode(true);
+    clone.querySelectorAll('input, select, textarea').forEach(function(el) {
+      if (el.type === 'hidden') return;
+      if (el.tagName === 'INPUT' && el.type === 'checkbox') el.checked = false;
+      el.value = '';
+    });
+    clone.querySelector('.remove-row').disabled = false;
+    tbody.appendChild(clone);
+    reindex();
+  });
+  document.getElementById('lot-table').addEventListener('click', function(e) {
+    if (e.target.classList.contains('remove-row')) {
+      const row = e.target.closest('.lot-row');
+      if (row) {
+        const deleteCheckbox = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+        if (deleteCheckbox) {
+          deleteCheckbox.checked = true;
+          row.style.display = 'none';
+        } else {
+          row.remove();
+          reindex();
+        }
+      }
+    }
+  });
+})();
+</script>
+{% endblock %}

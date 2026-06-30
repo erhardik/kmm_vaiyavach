@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <div class="d-flex flex-wrap align-items-center gap-2">
+      <h1 class="h3 mb-0">{{ page_title }}</h1>
+    </div>
+    {% if page_subtitle %}<p class="text-body-secondary mb-0">{{ page_subtitle }}</p>{% endif %}
+  </div>
+  <div class="d-flex gap-2">
+    {% if can_add and create_url %}
+      <a class="btn btn-primary" href="{{ create_url }}">Add New</a>
+    {% endif %}
+  </div>
+</div>
+<div class="card border-0 shadow-sm">
+  <div class="card-body">
+    <form method="get" class="row g-2 align-items-end mb-3">
+      <div class="col-12 col-md-3">
+        <input type="search" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Search">
+      </div>
+      <div class="col-12 col-md-3">
+        <select name="event" class="form-select">
+          <option value="">Current Event</option>
+          {% for ev in event_queryset %}
+            <option value="{{ ev.pk }}" {% if request.GET.event == ev.pk|stringformat:'s' %}selected{% endif %}>{{ ev.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-12 col-md-2">
+        <button class="btn btn-outline-primary" type="submit">Filter</button>
+      </div>
+    </form>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Code</th>
+            <th>Item Name</th>
+            <th>Type / Size</th>
+            <th class="text-end">Current Stock</th>
+            <th class="text-end">Qty Acquired</th>
+            <th class="text-end">Qty Distributed</th>
+            <th class="text-end">Cost</th>
+            <th>Vendor</th>
+            <th>Manager</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in table_rows %}
+            <tr>
+              <td>{{ row.item_code }}</td>
+              <td>{{ row.display_name }}</td>
+              <td>{{ row.type_size }}</td>
+              <td class="text-end">{{ row.current_stock }}</td>
+              <td class="text-end">{{ row.qty_acquired }}</td>
+              <td class="text-end">{{ row.qty_distributed }}</td>
+              <td class="text-end">{{ row.cost }}</td>
+              <td>{{ row.vendor }}</td>
+              <td>{{ row.manager }}</td>
+              <td class="text-end">
+                {% if can_change and row.edit_url %}
+                  <a class="btn btn-sm btn-outline-secondary" href="{{ row.edit_url }}">Edit</a>
+                {% endif %}
+                {% if can_delete and row.delete_url %}
+                  <a class="btn btn-sm btn-outline-danger" href="{{ row.delete_url }}">Delete</a>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="10" class="text-center py-4 text-body-secondary">No records found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if paginator.num_pages > 1 %}
+      <nav class="mt-3">
+        <ul class="pagination pagination-sm justify-content-center mb-0">
+          {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.event %}&event={{ request.GET.event }}{% endif %}">&laquo;</a></li>
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.event %}&event={{ request.GET.event }}{% endif %}">{{ page_obj.previous_page_number }}</a></li>
+          {% endif %}
+          <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+          {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.event %}&event={{ request.GET.event }}{% endif %}">{{ page_obj.next_page_number }}</a></li>
+            <li class="page-item"><a class="page-link" href="?page={{ paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.event %}&event={{ request.GET.event }}{% endif %}">&raquo;</a></li>
+          {% endif %}
+        </ul>
+      </nav>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

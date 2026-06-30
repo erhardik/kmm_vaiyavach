@@ -361,15 +361,24 @@ class RequirementHeaderExportView(LoginRequiredMixin, View):
             .order_by("created_at")
         )
 
-        all_items = list(
-            Item.objects.filter(
-                requirement_lines__requirement__event=event,
-                requirement_lines__requirement__is_active=True,
-            )
-            .exclude(requirement_lines__requirement__status=RequirementStatus.DRAFT)
-            .distinct()
+        base_items = (
+            Item.objects.filter(event=event, is_active=True, parent_item__isnull=True)
+            .prefetch_related("variants")
             .order_by("standard_serial", "pk")
         )
+        all_items = []
+        item_serial_map = {}
+        alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        for item in base_items:
+            variants = list(item.variants.filter(is_active=True).order_by("variant_name", "pk"))
+            if variants:
+                for vi, variant in enumerate(variants):
+                    suffix = alphabet[vi] if vi < 26 else f"X{vi+1}"
+                    all_items.append(variant)
+                    item_serial_map[variant.pk] = f"{item.standard_serial or item.pk}-{suffix}"
+            else:
+                all_items.append(item)
+                item_serial_map[item.pk] = str(item.standard_serial or item.pk)
 
         workbook = Workbook()
         ws = workbook.active
@@ -382,11 +391,11 @@ class RequirementHeaderExportView(LoginRequiredMixin, View):
         right = Alignment(horizontal="right", vertical="center")
 
         item_col_map = {}
-        for idx, item in enumerate(all_items, 1):
+        for item in all_items:
             display = item.item_name_gu or item.item_name
             item_col_map[item.pk] = {
-                "col_idx": idx,
-                "header": f"{idx}-{display}",
+                "col_idx": len(item_col_map) + 1,
+                "header": f"{item_serial_map[item.pk]}-{display}",
             }
 
         basic_headers = [
