@@ -15,9 +15,11 @@
     <header class="public-requests-hero">
       <div class="container py-4 py-lg-5">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-          <div>
-            <div class="small text-uppercase text-white-50">Kalyan Mitra Mandal</div>
-            <h1 class="display-6 fw-bold mb-1">વૈયાવચ્ચ વિનંતીઓ</h1>
+          <div class="d-flex align-items-center gap-2">
+            <img src="{% static 'images/kmm.png' %}" alt="KMM" height="40" style="border-radius:6px;">
+            <div>
+              <div class="small text-uppercase text-white-50">Kalyan Mitra Mandal</div>
+              <h1 class="display-6 fw-bold mb-1">વૈયાવચ્ચ વિનંતીઓ</h1>
             <div class="text-white-75">
               {% if event %}
                 {{ event.name }}
@@ -25,6 +27,7 @@
                 હાલમાં સક્રિય ઇવેન્ટ ઉપલબ્ધ નથી
               {% endif %}
             </div>
+          </div>
           </div>
           <div class="d-flex gap-2 align-items-center flex-wrap">
             <a class="btn btn-success btn-sm" href="tel:+919879635446"><i class="bi bi-telephone-fill"></i> Bhumit Shah</a>
