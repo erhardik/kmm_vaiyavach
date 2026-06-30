@@ -37,7 +37,6 @@ class DashboardHomeView(LoginRequiredMixin, TemplateView):
 
     def dispatch(self, request, *args, **kwargs):
         if is_manager(request.user):
-            messages.warning(request, "You do not have access to the Dashboard.")
             return redirect("masters:item-list")
         return super().dispatch(request, *args, **kwargs)
 
@@ -55,7 +54,6 @@ class ItemControlCenterView(LoginRequiredMixin, TemplateView):
 
     def dispatch(self, request, *args, **kwargs):
         if is_manager(request.user):
-            messages.warning(request, "You do not have access to the Item Control Center.")
             return redirect("masters:item-list")
         return super().dispatch(request, *args, **kwargs)
 

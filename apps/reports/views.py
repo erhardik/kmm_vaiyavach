@@ -34,7 +34,6 @@ class ReportHomeView(LoginRequiredMixin, TemplateView):
 
     def dispatch(self, request, *args, **kwargs):
         if is_manager(request.user):
-            messages.warning(request, "You do not have access to Reports.")
             return redirect("masters:item-list")
         return super().dispatch(request, *args, **kwargs)
 
@@ -68,7 +67,6 @@ class AnalyticsView(LoginRequiredMixin, TemplateView):
 
     def dispatch(self, request, *args, **kwargs):
         if is_manager(request.user):
-            messages.warning(request, "You do not have access to Analytics.")
             return redirect("masters:item-list")
         return super().dispatch(request, *args, **kwargs)
 
