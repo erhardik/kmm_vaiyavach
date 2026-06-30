@@ -8,6 +8,7 @@
     {% if page_subtitle %}<p class="text-body-secondary mb-0">{{ page_subtitle }}</p>{% endif %}
   </div>
   <div class="d-flex gap-2">
+    <a class="btn btn-outline-success" href="{% url 'masters:item-export' %}?event={{ request.GET.event|default:'' }}">Download Excel</a>
     {% if can_add and create_url %}
       <a class="btn btn-primary" href="{{ create_url }}">Add New</a>
     {% endif %}
