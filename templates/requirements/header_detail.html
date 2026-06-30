@@ -4,30 +4,11 @@
     <div class="card border-0 shadow-sm">
       <div class="card-body">
         <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
-          <div>
-            <h5 class="mb-1">{% if lang_code == "gu" %}ઓર્ડર વિગતો{% else %}Order Details{% endif %}</h5>
-            <div class="text-body-secondary small">
-              {% if not view_control or view_control.show_form_number %}
-                {% if lang_code == "gu" %}ફોર્મ નં.{% else %}Form No.{% endif %} {{ header.form_number|default:"-" }}
-              {% endif %}
-              {% if header.order_number %}
-                {% if not view_control or view_control.show_order_id %}
-                  {% if not view_control or view_control.show_form_number %} | {% endif %}{% if lang_code == "gu" %}ઓર્ડર ID{% else %}Order ID{% endif %}: {{ header.order_number }}
-                {% endif %}
-              {% endif %}
-            </div>
-          </div>
           <span class="badge fs-6 {% if header.status == 'CONFIRMED' or header.status == 'SUBMITTED' %}text-bg-primary{% elif header.status == 'PACKED' or header.status == 'IN_PROGRESS' %}text-bg-warning text-dark{% elif header.status == 'DELIVERED' or header.status == 'CLOSED' %}text-bg-info text-dark{% elif header.status == 'RECEIVED_BY_MS' %}text-bg-success{% elif header.is_locked %}text-bg-success{% else %}text-bg-warning{% endif %}">
             {{ header.get_status_display }}
           </span>
         </div>
         <div class="row g-2 small">
-          {% if not view_control or view_control.show_route %}
-            <div class="col-12 col-md-4"><strong>{% if lang_code == "gu" %}રૂટ{% else %}Route{% endif %}:</strong> {{ header.get_route_area_display|default:"-" }}</div>
-          {% endif %}
-          {% if not view_control or view_control.show_sub_route %}
-            <div class="col-12 col-md-4"><strong>{% if lang_code == "gu" %}ઉપ-રૂટ{% else %}Sub Route{% endif %}:</strong> {{ header.get_route_sub_area_display|default:"-" }}</div>
-          {% endif %}
           {% if not view_control or view_control.show_pujya_shri %}
             <div class="col-12 col-md-4"><strong>{% if lang_code == "gu" %}પૂજ્ય શ્રી{% else %}Pujya Shri{% endif %}:</strong> {{ header.pujya_shri_name|default:"-" }}</div>
           {% endif %}

@@ -40,6 +40,7 @@
         {% else %}
           <a class="btn btn-outline-light btn-sm" href="{% url 'requirements:header-list' %}">{% if lang == "gu" %}ઓર્ડર સૂચિ{% else %}Order List{% endif %}</a>
         {% endif %}
+        <a class="btn btn-outline-light btn-sm" href="https://wa.me/918866749627?text=Pranam%2C%20Form%20ma%20help%20joie%20che" target="_blank" title="WhatsApp Query"><i class="bi bi-whatsapp"></i> QUERY</a>
       </div>
     </div>
     {% if order_number %}
@@ -248,7 +249,14 @@
   background: #fff; border-radius: 1.5rem; padding: 2.5rem 2rem;
   max-width: 480px; width: 90%; text-align: center;
   box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  position: relative;
 }
+.confirm-appreciation-close {
+  position: absolute; top: 0.5rem; right: 0.75rem;
+  background: none; border: none; font-size: 1.5rem; line-height: 1;
+  cursor: pointer; color: #999; padding: 0.25rem;
+}
+.confirm-appreciation-close:hover { color: #333; }
 .confirm-appreciation-icon { font-size: 3rem; margin-bottom: 1rem; }
 .confirm-appreciation-message {
   font-size: 1.1rem; line-height: 1.7; color: #14324f;
@@ -263,6 +271,7 @@
 
 <div id="confirmAppreciationOverlay" class="confirm-appreciation-overlay" style="display:none;">
   <div class="confirm-appreciation-box">
+    <button type="button" class="confirm-appreciation-close" id="confirmAppreciationClose" title="Close">&times;</button>
     <div class="confirm-appreciation-icon">🙏</div>
     <div class="confirm-appreciation-message" id="confirmAppreciationMessage"></div>
     <div class="confirm-appreciation-countdown" id="confirmAppreciationCountdown">5</div>
@@ -285,7 +294,12 @@
   ];
 
   function showAppreciation(targetUrl) {
+    var name = (document.querySelector('[name="volunteer_name"]') || {}).value || '';
+    name = name.trim();
     var msg = APPRECIATION_MESSAGES[Math.floor(Math.random() * APPRECIATION_MESSAGES.length)];
+    if (name) {
+      msg = name + ', ' + msg;
+    }
     document.getElementById('confirmAppreciationMessage').textContent = msg;
     document.getElementById('confirmAppreciationCountdown').textContent = '5';
     document.getElementById('confirmAppreciationOverlay').style.display = 'flex';
@@ -299,6 +313,10 @@
         document.getElementById('confirmAppreciationCountdown').textContent = seconds;
       }
     }, 1000);
+    document.getElementById('confirmAppreciationClose').onclick = function() {
+      clearInterval(timer);
+      window.location.href = targetUrl;
+    };
   }
 
   function getRedirectUrl(response) {
