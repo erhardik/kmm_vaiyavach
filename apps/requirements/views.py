@@ -578,8 +578,9 @@ class RequirementCollectionView(View):
         return RequirementHeader.objects.filter(pk=pk, event=event).first()
 
     def _editing_allowed(self, event, header, user):
-        if header and header.status in (
-            RequirementStatus.CONFIRMED,
+        if header is None:
+            return True
+        if header.status in (
             RequirementStatus.PACKED,
             RequirementStatus.DELIVERED,
             RequirementStatus.SUBMITTED,
@@ -591,6 +592,9 @@ class RequirementCollectionView(View):
             RequirementStatus.RECEIVED_BY_MS,
         ):
             return False
+        if header.status == RequirementStatus.CONFIRMED:
+            is_admin_user = user.is_superuser or user.groups.filter(name="KMM Admin").exists() or is_manager(user)
+            return is_admin_user
         return True
 
     def _get_items(self, event):
@@ -756,7 +760,7 @@ class RequirementCollectionView(View):
             messages.error(request, "This confirmed order is locked by admin.")
             return render(request, self.template_name, self._build_context(request, event, header, form, formset, items))
 
-        if header and header.is_locked and not request.user.is_superuser:
+        if header and header.is_locked and not (request.user.is_superuser or request.user.groups.filter(name="KMM Admin").exists() or is_manager(request.user)):
             messages.error(request, "This requirement order is locked.")
             return render(request, self.template_name, self._build_context(request, event, header, form, formset, items))
 
