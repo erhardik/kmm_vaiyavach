@@ -167,7 +167,7 @@ class RequirementHeader(EventScopedModel):
                 area_num = 11
             name_part = re.sub(r"[^A-Z0-9]", "", self.volunteer_name.strip().upper())[:10] or "UNKNOWN"
             date_part = timezone.localdate().strftime("%d%m%y")
-            seq = RequirementHeader.objects.filter(event=self.event, status=RequirementStatus.SUBMITTED).count() + 1
+            seq = RequirementHeader.objects.filter(event=self.event, status__in=(RequirementStatus.SUBMITTED, RequirementStatus.CONFIRMED)).count() + 1
             self.order_number = f"A{area_num:02d}-{name_part}-{date_part}-{seq:03d}"
         super().save(*args, **kwargs)
 

@@ -306,3 +306,23 @@ class RequirementCollectionFlowTest(TestCase):
         resp = self.client.post(reverse("requirements:collect"), post_data)
         self.assertEqual(resp.status_code, 302)
         # Redirects to dashboard:home since no active event found
+
+    # ── Test 13: Order number sequence increments ───────────────────
+
+    def test_order_number_sequence_increments(self):
+        """Each confirmed form gets a unique incrementing order_number."""
+        qty_map = {self.items[0].pk: 5}
+        order_numbers = set()
+        for i in range(3):
+            name = f"Vol{i}"
+            post_data = self._full_post_data(
+                {"confirm": "1", "volunteer_name": name, "form_number": f"F{i:03d}"},
+                qty_map
+            )
+            resp = self.client.post(reverse("requirements:collect"), post_data)
+            self.assertEqual(resp.status_code, 302)
+            h = RequirementHeader.objects.get(volunteer_name=name)
+            self.assertEqual(h.status, RequirementStatus.CONFIRMED)
+            self.assertIsNotNone(h.order_number)
+            order_numbers.add(h.order_number)
+        self.assertEqual(len(order_numbers), 3, "All three order_numbers must be different")
