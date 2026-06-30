@@ -358,14 +358,22 @@ class RequirementHeaderExportView(LoginRequiredMixin, View):
             .select_related("upashray")
             .prefetch_related("lines__item")
             .exclude(status=RequirementStatus.DRAFT)
-            .order_by("-updated_at", "-created_at")
+            .order_by("route_area", "form_number", "order_number", "pk")
+        )
+
+        all_items = list(
+            Item.objects.filter(
+                requirement_lines__requirement__event=event,
+                requirement_lines__requirement__is_active=True,
+            )
+            .exclude(requirement_lines__requirement__status=RequirementStatus.DRAFT)
+            .distinct()
+            .order_by("standard_serial", "pk")
         )
 
         workbook = Workbook()
-        ws_all = workbook.active
-        ws_all.title = "All Data"
-        ws_analysis = workbook.create_sheet("Item Analysis")
-        ws_summary = workbook.create_sheet("Order Summary")
+        ws = workbook.active
+        ws.title = "Response Sheet"
 
         header_fill = PatternFill("solid", fgColor="DCE9F5")
         total_fill = PatternFill("solid", fgColor="FFF3BF")
@@ -373,121 +381,114 @@ class RequirementHeaderExportView(LoginRequiredMixin, View):
         center = Alignment(horizontal="center", vertical="center")
         right = Alignment(horizontal="right", vertical="center")
 
-        all_headers = [
+        item_col_map = {}
+        for idx, item in enumerate(all_items, 1):
+            display = item.item_name_gu or item.item_name
+            item_col_map[item.pk] = {
+                "col_idx": idx,
+                "header": f"{idx}-{display}",
+            }
+
+        basic_headers = [
+            "Sr. No.",
             "Form No.",
             "Order ID",
             "Requirement Date",
-            "Upashray",
+            "Route",
+            "Sub Route",
+            "Pujya Shri",
+            "Thana",
+            "Area",
+            "Current Address",
+            "Chaturmas Address",
+            "Chaturmas Entry Date",
+            "Volunteer Name",
+            "Volunteer Mobile",
+            "Stay Type",
+            "Care Taker Name",
+            "Care Taker Mobile",
             "Status",
-            "Locked",
-            "Item Code",
-            "Item Name",
-            "Category",
-            "Qty Required",
-            "Remarks",
         ]
-        ws_all.append(all_headers)
-        for cell in ws_all[1]:
+        all_headers = basic_headers + [v["header"] for v in item_col_map.values()] + ["Total Qty"]
+        ws.append(all_headers)
+        for cell in ws[1]:
             cell.fill = header_fill
             cell.font = bold_font
             cell.alignment = center
 
-        item_totals = {}
-        order_totals = []
+        total_qty_col = len(all_headers)
+        form_count = 0
+        totals = [0] * (len(item_col_map) + 1)
+
         for header in headers:
-            order_qty = 0
-            lines = list(header.lines.select_related("item").all())
+            form_count += 1
+            row_qty_total = 0
+            item_qty_map = {}
+            lines = list(header.lines.all())
             for line in lines:
-                display_name = line.item.item_name_gu or line.item.item_name
-                ws_all.append([
-                    header.form_number or "",
-                    header.order_number or "",
-                    header.requirement_date.strftime("%d-%b-%Y") if header.requirement_date else "",
-                    str(header.upashray),
-                    header.get_status_display(),
-                    "Yes" if header.is_locked else "No",
-                    line.item.item_code,
-                    display_name,
-                    line.item.get_category_display(),
-                    float(line.required_qty),
-                    line.remarks,
-                ])
-                item_totals.setdefault(
-                    line.item_id,
-                    {
-                        "Code": line.item.item_code,
-                        "Item": display_name,
-                        "Category": line.item.get_category_display(),
-                        "Total Qty": 0,
-                    },
-                )
-                item_totals[line.item_id]["Total Qty"] += float(line.required_qty)
-                order_qty += float(line.required_qty)
-            order_totals.append(
-                {
-                    "Form No.": header.form_number or "",
-                    "Order ID": header.order_number or "",
-                    "Requirement Date": header.requirement_date.strftime("%d-%b-%Y") if header.requirement_date else "",
-                    "Upashray": str(header.upashray),
-                    "Status": header.get_status_display(),
-                    "Lines": len(lines),
-                    "Total Qty": order_qty,
-                }
-            )
+                qty = float(line.required_qty)
+                item_qty_map[line.item_id] = qty
+                row_qty_total += qty
 
-        if ws_all.max_row > 1:
-            all_data_last_row = ws_all.max_row
-            ws_all.append(["TOTAL", "", "", "", "", "", "", "", f"=SUM(I2:I{all_data_last_row})", ""])
-            for cell in ws_all[ws_all.max_row]:
-                cell.fill = total_fill
-                cell.font = bold_font
+            row_data = [
+                form_count,
+                header.form_number or "",
+                header.order_number or "",
+                header.requirement_date.strftime("%d-%b-%Y") if header.requirement_date else "",
+                header.get_route_area_display() or "",
+                header.get_route_sub_area_display() or "",
+                header.pujya_shri_name or "",
+                header.thana_count or "",
+                header.area or "",
+                header.current_address or "",
+                header.chaturmas_place_address or "",
+                header.chaturmas_entry_date.strftime("%d-%b-%Y") if header.chaturmas_entry_date else "",
+                header.volunteer_name or "",
+                header.volunteer_mobile or "",
+                header.get_stay_type_display() or "",
+                header.caretaker_name or "",
+                header.caretaker_mobile or "",
+                header.get_status_display(),
+            ]
 
-        analysis_headers = ["Item Code", "Item Name", "Category", "Total Qty"]
-        ws_analysis.append(analysis_headers)
-        for cell in ws_analysis[1]:
-            cell.fill = header_fill
-            cell.font = bold_font
-            cell.alignment = center
-        for row in sorted(item_totals.values(), key=lambda data: data["Code"]):
-            ws_analysis.append([row["Code"], row["Item"], row["Category"], row["Total Qty"]])
-        analysis_last_row = ws_analysis.max_row
-        ws_analysis.append(["TOTAL", "", "", f"=SUM(D2:D{analysis_last_row})"])
-        for cell in ws_analysis[ws_analysis.max_row]:
+            item_cells = []
+            for item_pk, info in item_col_map.items():
+                qty = item_qty_map.get(item_pk, 0)
+                item_cells.append(qty)
+                totals[info["col_idx"] - 1] += qty
+            totals[-1] += row_qty_total
+
+            row_data.extend(item_cells)
+            row_data.append(row_qty_total)
+            ws.append(row_data)
+
+        total_row = ["TOTAL", f"{form_count} Forms", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]
+        for item_pk, info in item_col_map.items():
+            total_row.append(totals[info["col_idx"] - 1])
+        total_row.append(totals[-1])
+        ws.append(total_row)
+        for cell in ws[ws.max_row]:
             cell.fill = total_fill
             cell.font = bold_font
 
-        summary_headers = ["Form No.", "Order ID", "Requirement Date", "Upashray", "Status", "Lines", "Total Qty"]
-        ws_summary.append(summary_headers)
-        for cell in ws_summary[1]:
-            cell.fill = header_fill
-            cell.font = bold_font
-            cell.alignment = center
-        for row in order_totals:
-            ws_summary.append([row[h] for h in summary_headers])
-        summary_last_row = ws_summary.max_row
-        ws_summary.append(["TOTAL", "", "", "", "", f"=SUM(F2:F{summary_last_row})", f"=SUM(G2:G{summary_last_row})"])
-        for cell in ws_summary[ws_summary.max_row]:
-            cell.fill = total_fill
-            cell.font = bold_font
-
-        for ws in (ws_all, ws_analysis, ws_summary):
-            ws.freeze_panes = "A2"
-            for column_cells in ws.columns:
-                max_len = 0
-                column_letter = column_cells[0].column_letter
-                for cell in column_cells:
-                    try:
-                        text = str(cell.value or "")
-                    except Exception:
-                        text = ""
-                    max_len = max(max_len, len(text))
-                ws.column_dimensions[column_letter].width = min(max_len + 2, 40)
-            for row in ws.iter_rows(min_row=2):
-                for cell in row:
-                    if cell.column in (1, 2, 3, 4, 5):
-                        cell.alignment = center
-                    elif cell.column in (9, 10):
-                        cell.alignment = right
+        ws.freeze_panes = "A2"
+        basic_count = len(basic_headers)
+        for col_idx, column_cells in enumerate(ws.columns, 1):
+            max_len = 0
+            col_letter = column_cells[0].column_letter
+            for cell in column_cells:
+                try:
+                    text = str(cell.value or "")
+                except Exception:
+                    text = ""
+                max_len = max(max_len, len(text))
+            ws.column_dimensions[col_letter].width = min(max_len + 2, 50 if col_idx > basic_count else 40)
+        for row in ws.iter_rows(min_row=2, max_row=ws.max_row - 1):
+            for cell in row:
+                if cell.column <= basic_count and cell.column not in (10, 11):
+                    cell.alignment = center
+                elif cell.column > basic_count:
+                    cell.alignment = right
 
         buffer = BytesIO()
         workbook.save(buffer)
@@ -495,7 +496,7 @@ class RequirementHeaderExportView(LoginRequiredMixin, View):
             buffer.getvalue(),
             content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
-        response["Content-Disposition"] = 'attachment; filename="requirements.xlsx"'
+        response["Content-Disposition"] = f'attachment; filename="response_sheet_{event.name}.xlsx"'
         return response
 
 
