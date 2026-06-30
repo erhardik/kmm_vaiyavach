@@ -455,6 +455,10 @@ class ItemListExportView(LoginRequiredMixin, View):
 
         workbook = Workbook()
 
+        center = Alignment(horizontal="center", vertical="center")
+        right = Alignment(horizontal="right", vertical="center")
+        header_fill = PatternFill("solid", fgColor="DCE9F5")
+
         # --- Sheet 1: Order Summary (pivot) ---
         ws_summary = workbook.active
         ws_summary.title = "Order Summary"
@@ -462,7 +466,7 @@ class ItemListExportView(LoginRequiredMixin, View):
         summary_headers = ["Item Code", "Item Name / Variant", "Type / Size", "Total Required"]
         for col, h in enumerate(summary_headers, 1):
             cell = ws_summary.cell(row=1, column=col, value=h)
-            cell.fill = PatternFill("solid", fgColor="DCE9F5")
+            cell.fill = header_fill
             cell.font = Font(bold=True)
             cell.alignment = center
 
@@ -487,18 +491,14 @@ class ItemListExportView(LoginRequiredMixin, View):
         # --- Sheet 2: Item Detail (column-per-item) ---
         ws_detail = workbook.create_sheet("Item Master")
 
-        detail_header_fill = PatternFill("solid", fgColor="DCE9F5")
-        center = Alignment(horizontal="center", vertical="center")
-        right = Alignment(horizontal="right", vertical="center")
-
         # Row 1: item codes as column headers
         ws_detail.cell(row=1, column=1, value="Specification")
-        ws_detail.cell(row=1, column=1).fill = detail_header_fill
+        ws_detail.cell(row=1, column=1).fill = header_fill
         ws_detail.cell(row=1, column=1).font = Font(bold=True)
         ws_detail.cell(row=1, column=1).alignment = center
         for ci, item in enumerate(all_items, 2):
             cell = ws_detail.cell(row=1, column=ci, value=item.item_code)
-            cell.fill = detail_header_fill
+            cell.fill = header_fill
             cell.font = Font(bold=True)
             cell.alignment = center
 
