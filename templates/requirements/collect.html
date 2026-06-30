@@ -369,7 +369,8 @@
       lines.push(`${fieldLabel(name)}: ${(messages || []).map((m) => m.message || m).join(', ')}`);
     });
     var top = document.getElementById('confirm-errors-top');
-    if (top) top.innerHTML = '<div class="alert alert-danger mb-3">' + lines.join('<br>') + '</div>';
+    var msg = lines.length ? lines.join('<br>') : '{% if lang == "gu" %}કૃપા કરી ફરી પ્રયાસ કરો.{% else %}Please try again.{% endif %}';
+    if (top) top.innerHTML = '<div class="alert alert-danger mb-3">' + msg + '</div>';
     var firstErr = form.querySelector('.is-invalid');
     if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
@@ -404,7 +405,12 @@
   }
   function syncAllRows() { form.querySelectorAll('tr[data-item-row]').forEach(updateRowState); }
 
-  applyDraft(readDraft());
+  var isNewForm = currentDraftKey.indexOf('.new') > -1;
+  if (isNewForm) {
+    localStorage.removeItem(draftStorageKey());
+  } else {
+    applyDraft(readDraft());
+  }
   syncAllRows();
 
   var draftTimer = null;
@@ -507,6 +513,8 @@
           showErrors(data.errors || {});
           if (data.item_errors && data.item_errors.length) {
             setStatus((data.message || 'Please review the highlighted fields and try again.') + '<br>' + data.item_errors.map((row, idx) => `Row ${idx + 1}`).join('<br>'), 'danger');
+          } else {
+            setStatus(data.message || '{% if lang == "gu" %}કૃપા કરી ફરી પ્રયાસ કરો.{% else %}Please try again.{% endif %}', 'danger');
           }
           return;
         }
