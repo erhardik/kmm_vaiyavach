@@ -59,11 +59,41 @@ class PurchaseLotLineForm(forms.Form):
 
 
 class PurchaseEntryForm(forms.Form):
-    item = forms.ModelChoiceField(queryset=Item.objects.none(), label="Item")
+    item = forms.ChoiceField(choices=[], label="Item")
 
     def __init__(self, *args, event=None, user=None, **kwargs):
         super().__init__(*args, **kwargs)
+        choices = [("", "Select item...")]
         if event is not None:
-            self.fields["item"].queryset = Item.objects.filter(event=event, is_active=True).order_by("standard_serial", "pk")
-        if user and user.is_authenticated and user.groups.filter(name="KMM Manager").exists():
-            pass  # Manager can see all fields for purchase entry
+            base_items = Item.objects.filter(event=event, is_active=True, parent_item__isnull=True).prefetch_related("variants").order_by("standard_serial", "pk")
+            for base in base_items:
+                variants = list(base.variants.filter(is_active=True).order_by("item_code", "pk"))
+                if variants:
+                    for vi, variant in enumerate(variants):
+                        suffix = chr(ord('A') + vi) if vi < 26 else f"X{vi+1}"
+                        serial = f"{base.standard_serial or base.pk}-{suffix}"
+                        label_part = variant.display_name()
+                        type_size = variant.variant_name_gu or variant.variant_name or variant.default_size_gu or variant.default_size or ""
+                        if type_size:
+                            type_size = f" - {type_size}"
+                        label = f"{serial}{label_part}{type_size}"
+                        choices.append((variant.pk, label))
+                else:
+                    serial = str(base.standard_serial or base.pk)
+                    label_part = base.display_name()
+                    type_size = base.default_size_gu or base.default_size or ""
+                    if type_size:
+                        type_size = f" - {type_size}"
+                    label = f"{serial}{label_part}{type_size}"
+                    choices.append((base.pk, label))
+        self.fields["item"].choices = choices
+
+    def clean_item(self):
+        value = self.cleaned_data["item"]
+        try:
+            item = Item.objects.get(pk=value)
+            if not item.is_active:
+                raise forms.ValidationError("This item is deactivated and cannot be used.")
+        except Item.DoesNotExist:
+            raise forms.ValidationError("Invalid item selected.")
+        return item
