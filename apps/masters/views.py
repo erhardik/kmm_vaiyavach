@@ -470,7 +470,7 @@ class ItemListExportView(LoginRequiredMixin, View):
             cell.font = Font(bold=True)
             cell.alignment = center
 
-        for item in all_items:
+        for i, item in enumerate(all_items, 2):
             ws_summary.cell(row=i, column=1, value=item.item_code)
             ws_summary.cell(row=i, column=2, value=item.display_name())
             ws_summary.cell(row=i, column=3, value=item.variant_name_gu or item.variant_name or item.default_size_gu or item.default_size or "")

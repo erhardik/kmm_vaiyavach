@@ -64,28 +64,26 @@ class PurchaseEntryForm(forms.Form):
     def __init__(self, *args, event=None, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         choices = [("", "Select item...")]
-        if event is not None:
-            base_items = Item.objects.filter(event=event, is_active=True, parent_item__isnull=True).prefetch_related("variants").order_by("standard_serial", "pk")
-            for base in base_items:
-                variants = list(base.variants.filter(is_active=True).order_by("item_code", "pk"))
-                if variants:
-                    for vi, variant in enumerate(variants):
-                        suffix = chr(ord('A') + vi) if vi < 26 else f"X{vi+1}"
-                        serial = f"{base.standard_serial or base.pk}-{suffix}"
-                        label_part = variant.display_name()
-                        type_size = variant.variant_name_gu or variant.variant_name or variant.default_size_gu or variant.default_size or ""
-                        if type_size:
-                            type_size = f" - {type_size}"
-                        label = f"{serial}{label_part}{type_size}"
-                        choices.append((variant.pk, label))
-                else:
-                    serial = str(base.standard_serial or base.pk)
-                    label_part = base.display_name()
-                    type_size = base.default_size_gu or base.default_size or ""
+        for base in base_items:
+            variants = list(base.variants.filter(is_active=True).order_by("item_code", "pk"))
+            if variants:
+                for vi, variant in enumerate(variants):
+                    suffix = chr(ord('A') + vi) if vi < 26 else f"X{vi+1}"
+                    serial = f"{base.standard_serial or base.pk}-{suffix}"
+                    name = variant.display_name()
+                    type_size = variant.variant_name_gu or variant.variant_name or variant.default_size_gu or variant.default_size or ""
+                    label = f"{serial} - {name}"
                     if type_size:
-                        type_size = f" - {type_size}"
-                    label = f"{serial}{label_part}{type_size}"
-                    choices.append((base.pk, label))
+                        label += f" - {type_size}"
+                    choices.append((variant.pk, label))
+            else:
+                serial = str(base.standard_serial or base.pk)
+                name = base.display_name()
+                type_size = base.default_size_gu or base.default_size or ""
+                label = f"{serial} - {name}"
+                if type_size:
+                    label += f" - {type_size}"
+                choices.append((base.pk, label))
         self.fields["item"].choices = choices
 
     def clean_item(self):
