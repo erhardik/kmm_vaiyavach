@@ -496,7 +496,11 @@
       });
       const url = getRedirectUrl(response);
       var listUrl = '{% if is_public_flow %}{% url "public-requests" %}{% else %}{% url "requirements:header-list" %}{% endif %}';
-      if (url) { localStorage.removeItem(draftStorageKey()); showAppreciation(url); return; }
+      if (url) {
+        localStorage.removeItem(draftStorageKey());
+        {% if is_public_flow %}showAppreciation(url);{% else %}window.location.href = url;{% endif %}
+        return;
+      }
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.ok) {
         console.log('[CONFIRM ERRORS]', data.errors, data.message, data);
@@ -517,9 +521,13 @@
         setStatus(data.message || 'Confirm failed', 'danger');
         return;
       }
-      if (data.redirect_url) { localStorage.removeItem(draftStorageKey()); showAppreciation(data.redirect_url); return; }
+      if (data.redirect_url) {
+        localStorage.removeItem(draftStorageKey());
+        {% if is_public_flow %}showAppreciation(data.redirect_url);{% else %}window.location.href = data.redirect_url;{% endif %}
+        return;
+      }
       localStorage.removeItem(draftStorageKey());
-      showAppreciation(listUrl);
+      {% if is_public_flow %}showAppreciation(listUrl);{% else %}window.location.href = listUrl;{% endif %}
     } catch (err) {
       console.error('[CONFIRM ERROR]', err);
       setStatus('Confirm failed. Please try again.', 'danger');
