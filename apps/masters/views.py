@@ -476,16 +476,17 @@ class ItemListExportView(LoginRequiredMixin, View):
             ws_summary.cell(row=idx, column=4, value=int(current_req_map.get(item.pk, 0)))
 
         ws_summary.freeze_panes = "A2"
-        for col in range(1, 5):
-            max_len = 0
-            for row in ws_summary.iter_rows(min_row=1, max_row=ws_summary.max_row, min_col=col, max_col=col):
-                for cell in row:
-                    try:
-                        text = str(cell.value or "")
-                    except Exception:
-                        text = ""
-                    max_len = max(max_len, len(text))
-            ws_summary.column_dimensions[get_column_letter(col)].width = min(max_len + 3, 40)
+        ws_summary.column_dimensions["A"].width = 12
+        ws_summary.column_dimensions["B"].width = 75
+        ws_summary.column_dimensions["C"].width = 15
+        ws_summary.column_dimensions["D"].width = 12
+        wrap_left_mid = Alignment(horizontal="left", vertical="center", wrap_text=True)
+        for row in ws_summary.iter_rows(min_row=1, max_row=ws_summary.max_row):
+            row[0].row_dimensions.height = 27
+            for cell in row:
+                cell.alignment = wrap_left_mid
+        ws_summary.print_area = f"A1:D{ws_summary.max_row}"
+        ws_summary.print_title_rows = "1:1"
 
         # --- Sheet 2: Response Sheet (one row per form) ---
         ws_response = workbook.create_sheet("Response Sheet")
@@ -600,25 +601,53 @@ class ItemListExportView(LoginRequiredMixin, View):
             cell = ws_response.cell(row=total_row, column=col, value=val)
             cell.fill = total_fill
             cell.font = bold_font
+            cell.alignment = center
+        total_qty_cell = ws_response.cell(row=total_row, column=total_qty_col)
+        total_qty_cell.fill = total_qty_fill
+        total_qty_cell.font = total_qty_font
 
         ws_response.freeze_panes = "A3"
         basic_count = len(basic_headers)
+        item_start_col = basic_count + 1
+        total_qty_col = basic_count + len(item_col_map) + 1
+        extra_cols_start = total_qty_col + 1
+
+        alt_fill_1 = PatternFill("solid", fgColor="E8F0FE")
+        alt_fill_2 = PatternFill("solid", fgColor="FDF2E9")
+        total_qty_fill = PatternFill("solid", fgColor="F9E79F")
+        total_qty_font = Font(bold=True, color="14324F", size=11)
+
         for col_idx in range(1, len(all_headers) + 1):
-            max_len = 0
-            for row in ws_response.iter_rows(min_row=1, max_row=ws_response.max_row, min_col=col_idx, max_col=col_idx):
-                for cell in row:
-                    try:
-                        text = str(cell.value or "")
-                    except Exception:
-                        text = ""
-                    max_len = max(max_len, len(text))
-            ws_response.column_dimensions[get_column_letter(col_idx)].width = min(max_len + 2, 50 if col_idx > basic_count else 40)
-        for row in ws_response.iter_rows(min_row=DATA_START_ROW, max_row=ws_response.max_row - 1):
-            for cell in row:
-                if cell.column <= basic_count and cell.column not in (10, 11):
-                    cell.alignment = center
-                elif cell.column > basic_count:
-                    cell.alignment = right
+            if col_idx <= basic_count:
+                max_len = 0
+                for row in ws_response.iter_rows(min_row=1, max_row=ws_response.max_row, min_col=col_idx, max_col=col_idx):
+                    for cell in row:
+                        try:
+                            text = str(cell.value or "")
+                        except Exception:
+                            text = ""
+                        max_len = max(max_len, len(text))
+                ws_response.column_dimensions[get_column_letter(col_idx)].width = min(max_len + 2, 40)
+            elif col_idx <= total_qty_col:
+                ws_response.column_dimensions[get_column_letter(col_idx)].width = 15
+            else:
+                ws_response.column_dimensions[get_column_letter(col_idx)].width = 15
+
+        for row_idx in range(1, ws_response.max_row + 1):
+            for col_idx in range(item_start_col, extra_cols_start + 4 + 1):
+                cell = ws_response.cell(row=row_idx, column=col_idx)
+                if row_idx >= DATA_START_ROW and row_idx <= ws_response.max_row - 1:
+                    if col_idx == total_qty_col:
+                        cell.fill = total_qty_fill
+                        cell.font = total_qty_font
+                    else:
+                        item_offset = col_idx - item_start_col
+                        cell.fill = alt_fill_1 if item_offset % 2 == 0 else alt_fill_2
+                cell.alignment = center
+
+        for row_idx in range(DATA_START_ROW, ws_response.max_row):
+            for col_idx in range(1, total_qty_col + 1):
+                ws_response.cell(row=row_idx, column=col_idx).alignment = center
 
         buffer = BytesIO()
         workbook.save(buffer)
