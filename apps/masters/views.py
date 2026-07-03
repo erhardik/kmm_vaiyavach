@@ -430,7 +430,6 @@ class ItemListExportView(LoginRequiredMixin, View):
         if event is None:
             return HttpResponse("No active event found.", status=404)
 
-        item_ids = set()
         base_items = Item.objects.filter(event=event, is_active=True, parent_item__isnull=True).prefetch_related("variants").order_by("standard_serial", "pk")
         all_items = []
         for base in base_items:
