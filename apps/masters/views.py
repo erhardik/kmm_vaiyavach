@@ -602,9 +602,6 @@ class ItemListExportView(LoginRequiredMixin, View):
             cell.fill = total_fill
             cell.font = bold_font
             cell.alignment = center
-        total_qty_cell = ws_response.cell(row=total_row, column=total_qty_col)
-        total_qty_cell.fill = total_qty_fill
-        total_qty_cell.font = total_qty_font
 
         ws_response.freeze_panes = "A3"
         basic_count = len(basic_headers)
@@ -616,6 +613,10 @@ class ItemListExportView(LoginRequiredMixin, View):
         alt_fill_2 = PatternFill("solid", fgColor="FDF2E9")
         total_qty_fill = PatternFill("solid", fgColor="F9E79F")
         total_qty_font = Font(bold=True, color="14324F", size=11)
+
+        total_qty_cell = ws_response.cell(row=total_row, column=total_qty_col)
+        total_qty_cell.fill = total_qty_fill
+        total_qty_cell.font = total_qty_font
 
         for col_idx in range(1, len(all_headers) + 1):
             if col_idx <= basic_count:
