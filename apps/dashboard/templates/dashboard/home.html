@@ -29,10 +29,10 @@
     </a>
   </div>
   <div class="col-12 col-md-6 col-xl-3">
-    <a class="card dashboard-quick-card h-100 text-decoration-none" href="{% url 'dashboard:item_control_center' %}">
+    <a class="card dashboard-quick-card h-100 text-decoration-none" href="{% url 'masters:item-list' %}">
       <div class="card-body">
         <div class="dashboard-card-kicker">Stock</div>
-        <div class="dashboard-card-title">Item Master</div>
+        <div class="dashboard-card-title">Item Summary</div>
         <div class="dashboard-card-meta">Rates, shortage and stock flow</div>
       </div>
     </a>
@@ -63,7 +63,7 @@
       {% else %}
         <span class="btn btn-outline-primary disabled" aria-disabled="true">Event Contacts</span>
       {% endif %}
-      <a class="btn btn-outline-primary" href="{% url 'dashboard:item_control_center' %}">Item Master</a>
+      <a class="btn btn-outline-primary" href="{% url 'masters:item-list' %}">Item Summary</a>
       <a class="btn btn-outline-primary" href="{% url 'requirements:collect' %}">Collect Requirements</a>
       <a class="btn btn-outline-primary" href="{% url 'requirements:header-list' %}">Requirement Orders</a>
       <a class="btn" style="background:#6f42c1;border-color:#6f42c1;color:#fff;" href="{% url 'requirements:header-export' %}">Download Response Sheet</a>
