@@ -524,7 +524,7 @@ class ItemListExportView(LoginRequiredMixin, View):
             "Volunteer Name", "Volunteer Mobile", "Stay Type",
             "Care Taker Name", "Care Taker Mobile", "Status",
         ]
-        all_headers = basic_headers + [v["header"] for v in item_col_map.values()] + ["Total Qty"]
+        all_headers = basic_headers + [v["header"] for v in item_col_map.values()] + ["Total Qty", "Extra Item 1", "Extra Item 2", "Extra Item 3", "Extra Item 4"]
         for col, h in enumerate(all_headers, 1):
             cell = ws_response.cell(row=1, column=col, value=h)
             cell.fill = header_fill
@@ -585,10 +585,13 @@ class ItemListExportView(LoginRequiredMixin, View):
 
             row_data.extend(item_cells)
             row_data.append(row_qty_total)
+            note_lines = (header.remarks.splitlines() if header.remarks else [])[:4]
+            note_lines = (note_lines + ["", "", "", ""])[:4]
+            row_data.extend(note_lines)
             for col, val in enumerate(row_data, 1):
                 ws_response.cell(row=form_count + DATA_START_ROW - 1, column=col, value=val)
 
-        total_row_data = ["TOTAL", "", f"{form_count} Forms", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]
+        total_row_data = ["TOTAL", "", f"{form_count} Forms", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]
         for item_pk, info in item_col_map.items():
             total_row_data.append(totals[info["col_idx"] - 1])
         total_row_data.append(totals[-1])
