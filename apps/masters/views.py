@@ -649,6 +649,32 @@ class ItemListExportView(LoginRequiredMixin, View):
             for col_idx in range(1, total_qty_col + 1):
                 ws_response.cell(row=row_idx, column=col_idx).alignment = center
 
+        ws_extra = workbook.create_sheet("Extra Items")
+        extra_headers = ["Form No.", "Extra Item"]
+        for col, h in enumerate(extra_headers, 1):
+            cell = ws_extra.cell(row=1, column=col, value=h)
+            cell.fill = header_fill
+            cell.font = Font(bold=True)
+            cell.alignment = center
+
+        extra_row = 2
+        for header in response_headers_qs:
+            form_no = header.form_number or ""
+            note_lines = (header.remarks.splitlines() if header.remarks else [])[:4]
+            note_lines = [n.strip() for n in note_lines if n.strip()]
+            for note in note_lines:
+                ws_extra.cell(row=extra_row, column=1, value=form_no)
+                ws_extra.cell(row=extra_row, column=2, value=note)
+                extra_row += 1
+
+        if extra_row == 2:
+            ws_extra.cell(row=2, column=1, value="(No extra items)")
+            extra_row = 3
+
+        ws_extra.column_dimensions["A"].width = 18
+        ws_extra.column_dimensions["B"].width = 50
+        ws_extra.freeze_panes = "A2"
+
         buffer = BytesIO()
         workbook.save(buffer)
         response = HttpResponse(buffer.getvalue(), content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
