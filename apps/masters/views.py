@@ -482,7 +482,7 @@ class ItemListExportView(LoginRequiredMixin, View):
         ws_summary.column_dimensions["D"].width = 12
         wrap_left_mid = Alignment(horizontal="left", vertical="center", wrap_text=True)
         for row in ws_summary.iter_rows(min_row=1, max_row=ws_summary.max_row):
-            row[0].row_dimensions.height = 27
+            ws_summary.row_dimensions[row[0].row].height = 27
             for cell in row:
                 cell.alignment = wrap_left_mid
         ws_summary.print_area = f"A1:D{ws_summary.max_row}"
