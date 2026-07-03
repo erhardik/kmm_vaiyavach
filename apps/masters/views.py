@@ -591,7 +591,7 @@ class ItemListExportView(LoginRequiredMixin, View):
             for col, val in enumerate(row_data, 1):
                 ws_response.cell(row=form_count + DATA_START_ROW - 1, column=col, value=val)
 
-        total_row_data = ["TOTAL", "", f"{form_count} Forms", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]
+        total_row_data = ["TOTAL", "", f"{form_count} Forms"] + [""] * (len(basic_headers) - 3)
         for item_pk, info in item_col_map.items():
             total_row_data.append(totals[info["col_idx"] - 1])
         total_row_data.append(totals[-1])
