@@ -446,6 +446,9 @@ class ItemListExportView(LoginRequiredMixin, View):
         distributed_map = {d["item_id"]: d["total"] for d in InventoryTransaction.objects.filter(event=event, item_id__in=item_ids, transaction_type=InventoryTransactionType.DISTRIBUTION).values("item_id").annotate(total=Sum("qty"))}
         req_header_ids = RequirementHeader.objects.filter(event=event, is_active=True).exclude(status=RequirementStatus.DRAFT).values_list("pk", flat=True)
         current_req_map = {r["item_id"]: r["total"] for r in RequirementLine.objects.filter(event=event, requirement_id__in=req_header_ids, item_id__in=item_ids).values("item_id").annotate(total=Sum("required_qty"))}
+        stock_map = {}
+        for item_id, bal in balances.items():
+            stock_map[item_id] = int(bal.current_stock) if bal and bal.current_stock == int(bal.current_stock) else (bal.current_stock if bal else 0)
         latest_lots = {}
         for item_id in item_ids:
             lot = PurchaseLot.objects.filter(event=event, item_id=item_id).order_by("-transaction_date", "-created_at").first()
@@ -462,7 +465,7 @@ class ItemListExportView(LoginRequiredMixin, View):
         ws_summary = workbook.active
         ws_summary.title = "Order Summary"
 
-        summary_headers = ["Item Code", "Item Name / Variant", "Type / Size", "Total Required"]
+        summary_headers = ["Item Code", "Item Name / Variant", "Type / Size", "Total Required", "Current Stock"]
         for col, h in enumerate(summary_headers, 1):
             cell = ws_summary.cell(row=1, column=col, value=h)
             cell.fill = header_fill
@@ -474,18 +477,20 @@ class ItemListExportView(LoginRequiredMixin, View):
             ws_summary.cell(row=idx, column=2, value=item.display_name())
             ws_summary.cell(row=idx, column=3, value=item.variant_name_gu or item.variant_name or item.default_size_gu or item.default_size or "")
             ws_summary.cell(row=idx, column=4, value=int(current_req_map.get(item.pk, 0)))
+            ws_summary.cell(row=idx, column=5, value=stock_map.get(item.pk, 0))
 
         ws_summary.freeze_panes = "A2"
         ws_summary.column_dimensions["A"].width = 12
         ws_summary.column_dimensions["B"].width = 75
         ws_summary.column_dimensions["C"].width = 15
         ws_summary.column_dimensions["D"].width = 12
+        ws_summary.column_dimensions["E"].width = 12
         wrap_left_mid = Alignment(horizontal="left", vertical="center", wrap_text=True)
         for row in ws_summary.iter_rows(min_row=1, max_row=ws_summary.max_row):
             ws_summary.row_dimensions[row[0].row].height = 27
             for cell in row:
                 cell.alignment = wrap_left_mid
-        ws_summary.print_area = f"A1:D{ws_summary.max_row}"
+        ws_summary.print_area = f"A1:E{ws_summary.max_row}"
         ws_summary.print_title_rows = "1:1"
 
         # --- Sheet 2: Response Sheet (one row per form) ---
