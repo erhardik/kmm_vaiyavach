@@ -26,6 +26,21 @@
           {% if form.item.errors %}<div class="text-danger small">{{ form.item.errors }}</div>{% endif %}
         </div>
       </div>
+      <div id="purchase-history" class="mb-3" style="display:none;">
+        <h6 class="text-muted mb-2">Recent Purchases</h6>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Date</th>
+                <th>Qty</th>
+                <th>Rate</th>
+              </tr>
+            </thead>
+            <tbody id="history-body"></tbody>
+          </table>
+        </div>
+      </div>
       <div class="table-responsive">
         <table class="table table-bordered align-middle" id="lot-table">
           <thead class="table-light">
@@ -126,6 +141,39 @@
       }
     }
   });
+
+  const itemSelect = document.querySelector('select[name="item"]');
+  const historySection = document.getElementById('purchase-history');
+  const historyBody = document.getElementById('history-body');
+  const eventInput = document.querySelector('input[name="event"]');
+  if (itemSelect) {
+    itemSelect.addEventListener('change', function() {
+      const itemId = itemSelect.value;
+      const eventId = eventInput ? eventInput.value : '';
+      if (!itemId) {
+        historySection.style.display = 'none';
+        return;
+      }
+      fetch('{% url "inventory:purchase-history" %}?event=' + encodeURIComponent(eventId) + '&item=' + encodeURIComponent(itemId))
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (!data.length) {
+            historySection.style.display = 'none';
+            return;
+          }
+          historyBody.innerHTML = '';
+          data.forEach(function(row) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = '<td>' + row.date + '</td><td>' + row.qty + '</td><td>' + row.rate + '</td>';
+            historyBody.appendChild(tr);
+          });
+          historySection.style.display = '';
+        })
+        .catch(function() {
+          historySection.style.display = 'none';
+        });
+    });
+  }
 })();
 </script>
 {% endblock %}

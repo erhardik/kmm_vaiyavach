@@ -8,6 +8,7 @@ from apps.inventory.views import (
     InventoryTransactionListView,
     InventoryTransactionUpdateView,
     PurchaseEntryView,
+    PurchaseHistoryView,
 )
 
 app_name = "inventory"
@@ -20,5 +21,6 @@ urlpatterns = [
     path("transactions/delete-all/", InventoryTransactionDeleteAllView.as_view(), name="transaction-delete-all"),
     path("balances/", InventoryBalanceListView.as_view(), name="balance-list"),
     path("purchase-entry/", PurchaseEntryView.as_view(), name="purchase-entry"),
+    path("purchase-history/", PurchaseHistoryView.as_view(), name="purchase-history"),
 ]
 

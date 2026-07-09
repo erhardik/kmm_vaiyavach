@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.db import transaction
 from django.forms import formset_factory
-from django.http import HttpResponseRedirect
+from django.http import JsonResponse, HttpResponseRedirect
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.utils import timezone
@@ -110,7 +110,7 @@ class PurchaseEntryView(LoginRequiredMixin, PermissionRequiredMixin, TemplateVie
     template_name = "inventory/purchase_entry.html"
     permission_required = "inventory.add_inventorytransaction"
     raise_exception = True
-    LotLineFormset = formset_factory(PurchaseLotLineForm, extra=5, max_num=20, can_delete=True)
+    LotLineFormset = formset_factory(PurchaseLotLineForm, extra=3, max_num=20, can_delete=True)
 
     def get_event(self):
         event_id = self.request.GET.get("event") or self.request.POST.get("event")
@@ -180,4 +180,21 @@ class PurchaseEntryView(LoginRequiredMixin, PermissionRequiredMixin, TemplateVie
             recalculate_inventory_balance(event, item)
         messages.success(request, f"Created {lots_created} purchase lot(s) for {item} (total {total_qty})")
         return redirect("inventory:purchase-entry")
+
+
+class PurchaseHistoryView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        event_id = request.GET.get("event")
+        item_id = request.GET.get("item")
+        if not event_id or not item_id:
+            return JsonResponse([], safe=False)
+        lots = PurchaseLot.objects.filter(event_id=event_id, item_id=item_id).order_by("-transaction_date", "-created_at")[:10]
+        data = []
+        for lot in lots:
+            data.append({
+                "date": timezone.localtime(lot.transaction_date).strftime("%d-%b-%Y %H:%M") if lot.transaction_date else "",
+                "qty": float(lot.qty),
+                "rate": float(lot.unit_rate) if lot.unit_rate else 0,
+            })
+        return JsonResponse(data, safe=False)
 
