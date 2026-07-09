@@ -26,21 +26,6 @@
           {% if form.item.errors %}<div class="text-danger small">{{ form.item.errors }}</div>{% endif %}
         </div>
       </div>
-      <div id="purchase-history" class="mb-3" style="display:none;">
-        <h6 class="text-muted mb-2">Recent Purchases</h6>
-        <div class="table-responsive">
-          <table class="table table-sm table-bordered mb-0">
-            <thead class="table-light">
-              <tr>
-                <th>Date</th>
-                <th>Qty</th>
-                <th>Rate</th>
-              </tr>
-            </thead>
-            <tbody id="history-body"></tbody>
-          </table>
-        </div>
-      </div>
       <div class="table-responsive">
         <table class="table table-bordered align-middle" id="lot-table">
           <thead class="table-light">
@@ -92,6 +77,21 @@
         <a class="btn btn-outline-secondary" href="{% url 'inventory:transaction-list' %}">Cancel</a>
       </div>
     </form>
+    <div id="purchase-history" class="mt-4" style="display:none;">
+      <h6 class="text-muted mb-2">Recent Purchases</h6>
+      <div class="table-responsive">
+        <table class="table table-sm table-bordered mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Date</th>
+              <th>Qty</th>
+              <th>Rate</th>
+            </tr>
+          </thead>
+          <tbody id="history-body"></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}
