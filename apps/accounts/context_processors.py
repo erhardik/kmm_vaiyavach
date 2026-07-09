@@ -108,21 +108,21 @@ def portal_navigation(request):
     selected_event = active_events.filter(pk=selected_event_id).first() if selected_event_id else active_events.filter(is_current=True).first()
     metrics = _event_metrics(selected_event)
     badge_map = {
-        "masters:event-list": f"{Event.objects.filter(is_active=True).count()} Events",
-        "requirements:collect": f"{metrics.get('requirements', 0)} Orders",
-        "requirements:header-list": f"{metrics.get('requirements', 0)} Orders",
-        "masters:item-list": f"{metrics.get('items', 0)} Items",
-        "dashboard:item_control_center": f"{metrics.get('items', 0)} Items",
-        "sponsorship:commitment-list": f"{metrics.get('sponsorship', 0)} Commitments",
-        "vendors:quote-list": f"{metrics.get('vendors', 0)} Vendors",
-        "procurement:po-list": f"{metrics.get('procurement', 0)} POs",
-        "inventory:transaction-list": f"Stock {_format_metric(metrics.get('stock_total', 0))}",
-        "inventory:balance-list": f"Stock {_format_metric(metrics.get('stock_total', 0))}",
-        "distribution:batch-list": f"{metrics.get('distribution', 0)} Batches",
-        "funds:donation-list": f"Rs. {_format_metric(metrics.get('fund_balance', 0))}",
-        "funds:transaction-list": f"Rs. {_format_metric(metrics.get('fund_balance', 0))}",
-        "reports:analytics": f"Rs. {_format_metric(metrics.get('fund_balance', 0))}",
-        "requirements:edit-request-list": f"{metrics.get('edit_requests', 0)} Pending",
+        "masters:event-list": f"{Event.objects.filter(is_active=True).count()}",
+        "requirements:collect": f"{metrics.get('requirements', 0)}",
+        "requirements:header-list": f"{metrics.get('requirements', 0)}",
+        "masters:item-list": f"{metrics.get('items', 0)}",
+        "dashboard:item_control_center": f"{metrics.get('items', 0)}",
+        "sponsorship:commitment-list": f"{metrics.get('sponsorship', 0)}",
+        "vendors:quote-list": f"{metrics.get('vendors', 0)}",
+        "procurement:po-list": f"{metrics.get('procurement', 0)}",
+        "inventory:transaction-list": f"{_format_metric(metrics.get('stock_total', 0))}",
+        "inventory:balance-list": f"{_format_metric(metrics.get('stock_total', 0))}",
+        "distribution:batch-list": f"{metrics.get('distribution', 0)}",
+        "funds:donation-list": f"{_format_metric(metrics.get('fund_balance', 0))}",
+        "funds:transaction-list": f"{_format_metric(metrics.get('fund_balance', 0))}",
+        "reports:analytics": f"{_format_metric(metrics.get('fund_balance', 0))}",
+        "requirements:edit-request-list": f"{metrics.get('edit_requests', 0)}",
     }
     sidebar_events = []
     for event in active_events:
