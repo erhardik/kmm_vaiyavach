@@ -94,8 +94,6 @@
     </div>
   </div>
 </div>
-{% endblock %}
-{% block extra_js %}
 <script>
 (function() {
   const prefix = '{{ lot_formset.prefix }}';
@@ -142,14 +140,14 @@
     }
   });
 
-  const itemSelect = document.getElementById('id_item');
-  const historySection = document.getElementById('purchase-history');
-  const historyBody = document.getElementById('history-body');
-  const eventInput = document.querySelector('input[name="event"]');
+  var itemSelect = document.getElementById('id_item');
+  var historySection = document.getElementById('purchase-history');
+  var historyBody = document.getElementById('history-body');
+  var eventInput = document.querySelector('input[name="event"]');
   if (itemSelect) {
     itemSelect.addEventListener('change', function() {
-      const itemId = itemSelect.value;
-      const eventId = eventInput ? eventInput.value : '';
+      var itemId = itemSelect.value;
+      var eventId = eventInput ? eventInput.value : '';
       if (!itemId) {
         historySection.style.display = 'none';
         return;
