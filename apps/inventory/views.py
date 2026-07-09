@@ -4,7 +4,7 @@ from django.db import transaction
 from django.forms import formset_factory
 from django.http import JsonResponse, HttpResponseRedirect
 from django.shortcuts import redirect
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views import View
 from django.views.generic import ListView, TemplateView
@@ -25,6 +25,41 @@ class InventoryTransactionListView(EventScopedListView):
     create_url_name = "inventory:transaction-create"
     edit_url_name = "inventory:transaction-update"
     delete_url_name = "inventory:transaction-delete"
+
+    def _item_display(self, item):
+        parent = item.parent_item if item.parent_item_id else None
+        if parent:
+            alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            siblings = list(parent.variants.filter(is_active=True).order_by("item_code", "pk"))
+            idx = next((i for i, s in enumerate(siblings) if s.pk == item.pk), 0)
+            suffix = alphabet[idx] if idx < 26 else f"X{idx+1}"
+            serial = f"{parent.standard_serial or parent.pk}-{suffix}"
+        else:
+            serial = str(item.standard_serial or item.pk)
+        name = item.item_name
+        type_size = item.variant_name_gu or item.variant_name or item.default_size_gu or item.default_size or ""
+        result = f"{serial} : {name}"
+        if type_size:
+            result += f" - {type_size}"
+        return result
+
+    def get_table_rows(self):
+        rows = []
+        for obj in self.object_list:
+            cells = []
+            for field in self.row_fields:
+                if field == "item":
+                    cells.append(self._item_display(obj.item))
+                else:
+                    val = getattr(obj, field)() if callable(getattr(obj, field)) else getattr(obj, field, "")
+                    cells.append(val)
+            rows.append({
+                "object": obj,
+                "cells": cells,
+                "edit_url": reverse(self.edit_url_name, kwargs=self.get_row_url_kwargs(obj)) if self.edit_url_name else "",
+                "delete_url": reverse(self.delete_url_name, kwargs=self.get_row_url_kwargs(obj)) if self.delete_url_name else "",
+            })
+        return rows
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
