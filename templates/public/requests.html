@@ -13,6 +13,9 @@
     @media (min-width: 992px) {
       .public-requests-hero .justify-content-between > div:last-child { padding-right: 40px; }
     }
+    .row-packed { background-color: #fffde7 !important; }
+    .row-delivered { background-color: #e8f5e9 !important; }
+    .row-cancelled { background-color: #ffebee !important; }
   </style>
 </head>
 <body class="bg-soft">
@@ -73,7 +76,7 @@
               </thead>
               <tbody>
                 {% for header in headers %}
-                  <tr data-search="{{ header.form_number }} {{ header.order_number }} {{ header.pujya_shri_name }} {{ header.area }} {{ header.volunteer_name }} {{ header.current_address }} {{ header.chaturmas_place_address }} {{ header.get_status_display }}">
+                  <tr data-search="{{ header.form_number }} {{ header.order_number }} {{ header.pujya_shri_name }} {{ header.area }} {{ header.volunteer_name }} {{ header.current_address }} {{ header.chaturmas_place_address }} {{ header.get_status_display }}" class="{% if header.status == 'PACKED' %}row-packed{% elif header.status == 'DELIVERED' %}row-delivered{% elif header.status == 'CANCELLED' or header.status == 'RETURN_REQUESTED' or header.status == 'RETURN_DONE' %}row-cancelled{% endif %}">
                     <td>
                       <a class="fw-semibold text-decoration-none" href="{% url 'requirements:public-detail' token=header.public_view_token %}">{{ header.form_number|default:header.order_number|default:"Draft" }}</a>
                       <div class="small text-body-secondary">{{ header.requirement_date }}</div>
