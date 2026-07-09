@@ -142,7 +142,7 @@
     }
   });
 
-  const itemSelect = document.querySelector('select[name="item"]');
+  const itemSelect = document.getElementById('id_item');
   const historySection = document.getElementById('purchase-history');
   const historyBody = document.getElementById('history-body');
   const eventInput = document.querySelector('input[name="event"]');
@@ -158,12 +158,13 @@
         .then(function(r) { return r.json(); })
         .then(function(data) {
           if (!data.length) {
-            historySection.style.display = 'none';
+            historyBody.innerHTML = '<tr><td colspan="3" class="text-muted text-center">No purchase history</td></tr>';
+            historySection.style.display = '';
             return;
           }
           historyBody.innerHTML = '';
           data.forEach(function(row) {
-            const tr = document.createElement('tr');
+            var tr = document.createElement('tr');
             tr.innerHTML = '<td>' + row.date + '</td><td>' + row.qty + '</td><td>' + row.rate + '</td>';
             historyBody.appendChild(tr);
           });
