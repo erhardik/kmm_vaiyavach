@@ -84,6 +84,8 @@
                       <button type="button" class="btn btn-sm btn-outline-danger js-reject-btn" data-url="{% url 'requirements:reject' pk=row.object.pk %}">Reject</button>
                     {% endif %}
                   {% endif %}
+                </div>
+                <div class="d-inline-flex flex-wrap gap-2 justify-content-end mt-1">
                   {% if row.object.status == 'CONFIRMED' %}
                     <button type="button" class="btn btn-sm btn-success js-status-btn" data-url="{% url 'requirements:status-transition' pk=row.object.pk %}" data-action="packing">Packing Done</button>
                   {% elif row.object.status == 'PACKED' %}
