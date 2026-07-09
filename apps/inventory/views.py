@@ -11,7 +11,7 @@ from django.views.generic import ListView, TemplateView
 
 from apps.common.views import EventScopedCreateView, EventScopedDeleteView, EventScopedListView, EventScopedUpdateView
 from apps.inventory.forms import InventoryBalanceForm, InventoryTransactionForm, PurchaseEntryForm, PurchaseLotLineForm
-from apps.inventory.models import InventoryBalance, InventoryTransaction, PurchaseLot
+from apps.inventory.models import InventoryBalance, InventoryTransaction, InventoryTransactionType, PurchaseLot
 from apps.inventory.services import create_inventory_transaction, recalculate_inventory_balance
 from apps.masters.models import Event
 
@@ -186,15 +186,24 @@ class PurchaseHistoryView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         event_id = request.GET.get("event")
         item_id = request.GET.get("item")
-        if not event_id or not item_id:
+        if not item_id:
             return JsonResponse([], safe=False)
-        lots = PurchaseLot.objects.filter(event_id=event_id, item_id=item_id).order_by("-transaction_date", "-created_at")[:10]
+        filters = {"item_id": item_id}
+        if event_id:
+            filters["event_id"] = event_id
+        txs = InventoryTransaction.objects.filter(
+            transaction_type=InventoryTransactionType.PURCHASE,
+            **filters
+        ).order_by("-created_at")[:10]
         data = []
-        for lot in lots:
+        for tx in txs:
+            rate = float(tx.unit_rate) if tx.unit_rate else 0
+            if tx.purchase_lot and tx.purchase_lot.unit_rate:
+                rate = float(tx.purchase_lot.unit_rate)
             data.append({
-                "date": timezone.localtime(lot.transaction_date).strftime("%d-%b-%Y %H:%M") if lot.transaction_date else "",
-                "qty": float(lot.qty),
-                "rate": float(lot.unit_rate) if lot.unit_rate else 0,
+                "date": timezone.localtime(tx.created_at).strftime("%d-%b-%Y %H:%M") if tx.created_at else "",
+                "qty": float(tx.qty),
+                "rate": rate,
             })
         return JsonResponse(data, safe=False)
 
