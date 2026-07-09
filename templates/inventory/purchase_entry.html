@@ -95,84 +95,81 @@
   </div>
 </div>
 <script>
-(function() {
-  const prefix = '{{ lot_formset.prefix }}';
-  const totalForms = document.getElementById('id_' + prefix + '-TOTAL_FORMS');
-  function reindex() {
-    const rows = document.querySelectorAll('.lot-row');
-    rows.forEach(function(row, idx) {
-      row.querySelector('.row-idx').textContent = idx + 1;
-      row.querySelectorAll('input, select, textarea').forEach(function(el) {
-        const name = el.name.replace(/^.+-\d+-/, prefix + '-' + idx + '-');
-        el.name = name;
-        el.id = 'id_' + name;
-      });
-    });
-    totalForms.value = rows.length;
-  }
-  document.getElementById('add-row').addEventListener('click', function() {
-    const tbody = document.querySelector('#lot-table tbody');
-    const prototype = tbody.querySelector('.lot-row');
-    if (!prototype) return;
-    const clone = prototype.cloneNode(true);
-    clone.querySelectorAll('input, select, textarea').forEach(function(el) {
-      if (el.type === 'hidden') return;
-      if (el.tagName === 'INPUT' && el.type === 'checkbox') el.checked = false;
-      el.value = '';
-    });
-    clone.querySelector('.remove-row').disabled = false;
-    tbody.appendChild(clone);
-    reindex();
+document.getElementById('add-row').addEventListener('click', function() {
+  var prefix = '{{ lot_formset.prefix }}';
+  var tbody = document.querySelector('#lot-table tbody');
+  var prototype = tbody.querySelector('.lot-row');
+  if (!prototype) return;
+  var totalForms = document.getElementById('id_' + prefix + '-TOTAL_FORMS');
+  var clone = prototype.cloneNode(true);
+  clone.querySelectorAll('input, select, textarea').forEach(function(el) {
+    if (el.type === 'hidden') return;
+    if (el.tagName === 'INPUT' && el.type === 'checkbox') el.checked = false;
+    el.value = '';
   });
-  document.getElementById('lot-table').addEventListener('click', function(e) {
-    if (e.target.classList.contains('remove-row')) {
-      const row = e.target.closest('.lot-row');
-      if (row) {
-        const deleteCheckbox = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
-        if (deleteCheckbox) {
-          deleteCheckbox.checked = true;
-          row.style.display = 'none';
-        } else {
-          row.remove();
-          reindex();
-        }
+  clone.querySelector('.remove-row').disabled = false;
+  tbody.appendChild(clone);
+  var rows = document.querySelectorAll('.lot-row');
+  rows.forEach(function(row, idx) {
+    row.querySelector('.row-idx').textContent = idx + 1;
+    row.querySelectorAll('input, select, textarea').forEach(function(el) {
+      el.name = el.name.replace(/^.+-\d+-/, prefix + '-' + idx + '-');
+      el.id = 'id_' + el.name;
+    });
+  });
+  totalForms.value = rows.length;
+});
+document.getElementById('lot-table').addEventListener('click', function(e) {
+  if (e.target.classList.contains('remove-row')) {
+    var row = e.target.closest('.lot-row');
+    if (row) {
+      var deleteCheckbox = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+      if (deleteCheckbox) {
+        deleteCheckbox.checked = true;
+        row.style.display = 'none';
+      } else {
+        row.remove();
       }
     }
-  });
-
+  }
+});
+</script>
+<script>
+(function() {
   var itemSelect = document.getElementById('id_item');
   var historySection = document.getElementById('purchase-history');
   var historyBody = document.getElementById('history-body');
   var eventInput = document.querySelector('input[name="event"]');
-  if (itemSelect) {
-    itemSelect.addEventListener('change', function() {
-      var itemId = itemSelect.value;
-      var eventId = eventInput ? eventInput.value : '';
-      if (!itemId) {
-        historySection.style.display = 'none';
-        return;
-      }
-      fetch('{% url "inventory:purchase-history" %}?event=' + encodeURIComponent(eventId) + '&item=' + encodeURIComponent(itemId))
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-          if (!data.length) {
-            historyBody.innerHTML = '<tr><td colspan="3" class="text-muted text-center">No purchase history</td></tr>';
-            historySection.style.display = '';
-            return;
-          }
-          historyBody.innerHTML = '';
-          data.forEach(function(row) {
-            var tr = document.createElement('tr');
-            tr.innerHTML = '<td>' + row.date + '</td><td>' + row.qty + '</td><td>' + row.rate + '</td>';
-            historyBody.appendChild(tr);
-          });
+  if (!itemSelect) return;
+  itemSelect.addEventListener('change', function() {
+    var itemId = itemSelect.value;
+    var eventId = eventInput ? eventInput.value : '';
+    if (!itemId) {
+      historySection.style.display = 'none';
+      return;
+    }
+    var url = '{% url "inventory:purchase-history" %}' + '?event=' + encodeURIComponent(eventId) + '&item=' + encodeURIComponent(itemId);
+    fetch(url)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data.length) {
+          historyBody.innerHTML = '<tr><td colspan="3" class="text-muted text-center">No purchase history</td></tr>';
           historySection.style.display = '';
-        })
-        .catch(function() {
-          historySection.style.display = 'none';
+          return;
+        }
+        historyBody.innerHTML = '';
+        data.forEach(function(row) {
+          var tr = document.createElement('tr');
+          tr.innerHTML = '<td>' + row.date + '</td><td>' + row.qty + '</td><td>' + row.rate + '</td>';
+          historyBody.appendChild(tr);
         });
-    });
-  }
+        historySection.style.display = '';
+      })
+      .catch(function(err) {
+        console.error('Purchase history error:', err);
+        historySection.style.display = 'none';
+      });
+  });
 })();
 </script>
 {% endblock %}
