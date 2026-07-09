@@ -81,10 +81,7 @@
                   {% endif %}
                   {% if row.object.status == 'CONFIRMED' or row.object.status == 'NOT_CONFIRMED' %}
                     {% if current_role_label == 'systemadmin' or current_role_label == 'admin' or current_role_label == 'manager' %}
-                      <form method="post" action="{% url 'requirements:reject' pk=row.object.pk %}" class="d-inline" onsubmit="return confirm('Move this form back to Draft?')">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-sm btn-outline-danger">Reject</button>
-                      </form>
+                      <button type="button" class="btn btn-sm btn-outline-danger js-reject-btn" data-url="{% url 'requirements:reject' pk=row.object.pk %}">Reject</button>
                     {% endif %}
                   {% endif %}
                   {% if row.object.status == 'CONFIRMED' %}
@@ -303,5 +300,25 @@
       confirmModal.show();
     });
   })();
+
+  document.addEventListener('click', function(e) {
+    var btn = e.target.closest('.js-reject-btn');
+    if (!btn) return;
+    if (!confirm('Move this form back to Draft?')) return;
+    var url = btn.getAttribute('data-url');
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = url;
+    var csrf = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (csrf) {
+      var input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'csrfmiddlewaretoken';
+      input.value = csrf.value;
+      form.appendChild(input);
+    }
+    document.body.appendChild(form);
+    form.submit();
+  });
 </script>
 {% endblock %}
