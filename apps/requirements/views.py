@@ -303,8 +303,8 @@ def _requirement_pdf_rows(lines, language_code="gu", filter_zero=True):
 class RequirementHeaderListView(EventScopedListView):
     model = RequirementHeader
     template_name = "requirements/header_list.html"
-    row_fields = ("form_number", "requirement_date", "volunteer_name", "get_route_area_display", "current_address", "chaturmas_place_address", "get_status_display")
-    headers = ["Form No.", "Filled Date", "Janaar name", "Route", "હાલનું સરનામું", "ચાતુર્માસ સ્થળનું સરનામું", "Status"]
+    row_fields = ("form_number", "requirement_date", "volunteer_name", "get_route_area_display", "pujya_shri_name", "chaturmas_place_address", "get_status_display")
+    headers = ["Form No.", "Filled Date", "Janaar name", "Route", "પૂજ્ય શ્રી", "ચાતુર્માસ સ્થળનું સરનામું", "Status"]
     search_fields = ["form_number", "order_number", "volunteer_name", "current_address", "chaturmas_place_address", "remarks"]
     create_url_name = "requirements:collect"
     edit_url_name = "requirements:collect-edit"

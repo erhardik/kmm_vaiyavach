@@ -59,15 +59,15 @@
             <th><button class="sheet-sort-btn" type="button" data-sort-key="1">Filled Date <span class="sheet-sort-icon">↕</span></button></th>
             <th><button class="sheet-sort-btn" type="button" data-sort-key="2">Janaar name <span class="sheet-sort-icon">↕</span></button></th>
             <th><button class="sheet-sort-btn" type="button" data-sort-key="3">Route <span class="sheet-sort-icon">↕</span></button></th>
-            <th><button class="sheet-sort-btn" type="button" data-sort-key="4">હાલનું સરનામું <span class="sheet-sort-icon">↕</span></button></th>
-            <th><button class="sheet-sort-btn" type="button" data-sort-key="5">ચાતુર્માસ સ્થળનું સરનામું <span class="sheet-sort-icon">↕</span></button></th>
+            <th><button class="sheet-sort-btn" type="button" data-sort-key="4">પૂજ્ય શ્રી <span class="sheet-sort-icon">↕</span></button></th>
+            <th><button class="sheet-sort-btn" type="button" data-sort-key="5" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">ચાતુર્માસ સ્થળનું સરનામું <span class="sheet-sort-icon">↕</span></button></th>
             <th><button class="sheet-sort-btn" type="button" data-sort-key="6">Status <span class="sheet-sort-icon">↕</span></button></th>
             <th class="text-end">Actions</th>
           </tr>
         </thead>
         <tbody>
           {% for row in table_rows %}
-            <tr data-sheet-row data-search="{{ row.object.form_number }} {{ row.object.order_number }} {{ row.object.volunteer_name }} {{ row.object.get_route_area_display }} {{ row.object.current_address }} {{ row.object.chaturmas_place_address }} {{ row.object.get_status_display }} {{ row.object.remarks }}">
+             <tr data-sheet-row data-search="{{ row.object.form_number }} {{ row.object.order_number }} {{ row.object.volunteer_name }} {{ row.object.get_route_area_display }} {{ row.object.pujya_shri_name }} {{ row.object.chaturmas_place_address }} {{ row.object.get_status_display }} {{ row.object.remarks }}">
               {% for value in row.cells %}
                 <td>{{ value }}</td>
               {% endfor %}
@@ -200,19 +200,28 @@
       }
     }
 
-    function sortTable(key) {
+    function sortTable(key, ascending) {
       if (!table) return;
       const tbody = table.querySelector('tbody');
       const visibleRows = rows.filter((row) => !row.classList.contains('d-none'));
       const nextRows = visibleRows.slice().sort((a, b) => {
         const av = (a.children[key]?.innerText || '').trim();
         const bv = (b.children[key]?.innerText || '').trim();
-        return av.localeCompare(bv, undefined, { numeric: true, sensitivity: 'base' });
+        const cmp = av.localeCompare(bv, undefined, { numeric: true, sensitivity: 'base' });
+        return ascending ? cmp : -cmp;
       });
       nextRows.forEach((row) => tbody.appendChild(row));
-      sortButtons.forEach((btn) => btn.classList.remove('active'));
+      sortButtons.forEach((btn) => {
+        btn.classList.remove('active');
+        const span = btn.querySelector('.sheet-sort-icon');
+        if (span) span.textContent = '↕';
+      });
       const active = sortButtons.find((btn) => btn.getAttribute('data-sort-key') === String(key));
-      if (active) active.classList.add('active');
+      if (active) {
+        active.classList.add('active');
+        const span = active.querySelector('.sheet-sort-icon');
+        if (span) span.textContent = ascending ? '↑' : '↓';
+      }
     }
 
     if (search) {
@@ -229,7 +238,11 @@
     }
     sortButtons.forEach((button) => {
       button.addEventListener('click', function() {
-        sortTable(Number(button.getAttribute('data-sort-key')));
+        const key = Number(button.getAttribute('data-sort-key'));
+        const current = button.getAttribute('data-sort-dir') || '';
+        const ascending = current !== 'asc';
+        button.setAttribute('data-sort-dir', ascending ? 'asc' : 'desc');
+        sortTable(key, ascending);
       });
     });
     syncFilters();
