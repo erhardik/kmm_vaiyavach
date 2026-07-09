@@ -110,7 +110,7 @@ class PurchaseEntryView(LoginRequiredMixin, PermissionRequiredMixin, TemplateVie
     template_name = "inventory/purchase_entry.html"
     permission_required = "inventory.add_inventorytransaction"
     raise_exception = True
-    LotLineFormset = formset_factory(PurchaseLotLineForm, extra=3, max_num=20, can_delete=True)
+    LotLineFormset = formset_factory(PurchaseLotLineForm, extra=2, max_num=20, can_delete=True)
 
     def get_event(self):
         event_id = self.request.GET.get("event") or self.request.POST.get("event")
