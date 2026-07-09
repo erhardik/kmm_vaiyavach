@@ -79,6 +79,14 @@
                   {% if can_change and row.edit_url %}
                     <a class="btn btn-sm btn-outline-secondary" href="{{ row.edit_url }}">Edit</a>
                   {% endif %}
+                  {% if row.object.status == 'CONFIRMED' or row.object.status == 'NOT_CONFIRMED' %}
+                    {% if current_role_label == 'systemadmin' or current_role_label == 'admin' or current_role_label == 'manager' %}
+                      <form method="post" action="{% url 'requirements:reject' pk=row.object.pk %}" class="d-inline" onsubmit="return confirm('Move this form back to Draft?')">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Reject</button>
+                      </form>
+                    {% endif %}
+                  {% endif %}
                   {% if row.object.status == 'CONFIRMED' %}
                     <button type="button" class="btn btn-sm btn-success js-status-btn" data-url="{% url 'requirements:status-transition' pk=row.object.pk %}" data-action="packing">Packing Done</button>
                   {% elif row.object.status == 'PACKED' %}

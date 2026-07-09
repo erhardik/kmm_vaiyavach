@@ -1595,6 +1595,22 @@ class RequirementStatusTransitionView(LoginRequiredMixin, View):
         return redirect("requirements:header-detail", pk=pk)
 
 
+class RequirementRejectView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        if not request.user.is_superuser and not request.user.groups.filter(name__in=["KMM Admin", "KMM Manager"]).exists():
+            messages.error(request, "Only admin/manager can reject forms.")
+            return redirect("requirements:header-list")
+        header = get_object_or_404(RequirementHeader, pk=pk)
+        if header.status not in (RequirementStatus.CONFIRMED, RequirementStatus.NOT_CONFIRMED):
+            messages.error(request, "Reject is only allowed for Confirmed or Not Confirmed forms.")
+            return redirect("requirements:header-list")
+        header.status = RequirementStatus.DRAFT
+        header.updated_at = timezone.now()
+        header.save(update_fields=["status", "updated_at"])
+        messages.success(request, f"Form {header.form_number or header.order_number} moved back to Draft.")
+        return redirect("requirements:header-list")
+
+
 class RequirementUnlockView(LoginRequiredMixin, View):
     def post(self, request, pk):
         if not request.user.is_superuser and not request.user.groups.filter(name="KMM Admin").exists():
