@@ -67,7 +67,7 @@
         </thead>
         <tbody>
           {% for row in table_rows %}
-             <tr data-sheet-row data-search="{{ row.object.form_number }} {{ row.object.order_number }} {{ row.object.volunteer_name }} {{ row.object.get_route_area_display }} {{ row.object.pujya_shri_name }} {{ row.object.chaturmas_place_address }} {{ row.object.get_status_display }} {{ row.object.remarks }}">
+             <tr data-sheet-row data-pk="{{ row.object.pk }}" data-search="{{ row.object.form_number }} {{ row.object.order_number }} {{ row.object.volunteer_name }} {{ row.object.get_route_area_display }} {{ row.object.pujya_shri_name }} {{ row.object.chaturmas_place_address }} {{ row.object.get_status_display }} {{ row.object.remarks }}">
               {% for value in row.cells %}
                 <td>{{ value }}</td>
               {% endfor %}
@@ -276,6 +276,16 @@
         sessionStorage.removeItem('requirementsSortKey');
         sessionStorage.removeItem('requirementsSortDir');
       }
+      var lastPk = sessionStorage.getItem('requirementsLastPk');
+      if (lastPk !== null) {
+        var targetRow = document.querySelector('tr[data-pk="' + lastPk + '"]');
+        if (targetRow) {
+          targetRow.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          targetRow.classList.add('table-active');
+          setTimeout(function() { targetRow.classList.remove('table-active'); }, 2000);
+        }
+        sessionStorage.removeItem('requirementsLastPk');
+      }
     })();
   })();
 
@@ -317,14 +327,6 @@
     const confirmForm = document.getElementById('statusConfirmForm');
     const confirmBtn = document.getElementById('statusConfirmBtn');
 
-    confirmForm.addEventListener('submit', function() {
-      var activeBtn = document.querySelector('.sheet-sort-btn.active');
-      if (activeBtn) {
-        sessionStorage.setItem('requirementsSortKey', activeBtn.getAttribute('data-sort-key'));
-        sessionStorage.setItem('requirementsSortDir', activeBtn.getAttribute('data-sort-dir') || 'asc');
-      }
-    });
-
     document.addEventListener('click', function(event) {
       const btn = event.target.closest('.js-status-btn');
       if (!btn) return;
@@ -332,6 +334,15 @@
       const url = btn.getAttribute('data-url');
       const action = btn.getAttribute('data-action');
       if (!url || !confirmModal || !confirmBody || !confirmForm || !confirmBtn) return;
+      var row = btn.closest('tr[data-pk]');
+      if (row) {
+        sessionStorage.setItem('requirementsLastPk', row.getAttribute('data-pk'));
+      }
+      var activeBtn = document.querySelector('.sheet-sort-btn.active');
+      if (activeBtn) {
+        sessionStorage.setItem('requirementsSortKey', activeBtn.getAttribute('data-sort-key'));
+        sessionStorage.setItem('requirementsSortDir', activeBtn.getAttribute('data-sort-dir') || 'asc');
+      }
       confirmForm.action = url;
       if (action === 'packing') {
         confirmBody.innerHTML = '<p>Are you sure you want to mark this form as <strong>Packing Done</strong>?</p><p class="text-danger mb-0">Once updated, the form can no longer be edited.</p>';
