@@ -222,12 +222,6 @@
       const nextRows = visibleRows.slice().sort((a, b) => {
         const av = (a.children[key]?.innerText || '').trim();
         const bv = (b.children[key]?.innerText || '').trim();
-        const isDate = (s) => /^\d{4}-\d{2}-\d{2}$/.test(s);
-        const da = isDate(av) ? Date.parse(av) : NaN;
-        const db = isDate(bv) ? Date.parse(bv) : NaN;
-        if (!isNaN(da) && !isNaN(db)) {
-          return ascending ? da - db : db - da;
-        }
         const cmp = av.localeCompare(bv, undefined, { numeric: true, sensitivity: 'base' });
         return ascending ? cmp : -cmp;
       });
