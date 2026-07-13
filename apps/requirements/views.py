@@ -1584,7 +1584,7 @@ class RequirementStatusTransitionView(LoginRequiredMixin, View):
         transition = self.ALLOWED_TRANSITIONS.get(header.status)
         if not transition:
             messages.error(request, "Status transition not allowed from current state.")
-            return redirect("requirements:header-detail", pk=pk)
+            return redirect("requirements:header-list")
         header.status = transition["next_status"]
         if header.status in (RequirementStatus.IN_PROGRESS, RequirementStatus.PACKED):
             header.is_locked = True
@@ -1592,7 +1592,7 @@ class RequirementStatusTransitionView(LoginRequiredMixin, View):
         header.updated_at = timezone.now()
         header.save(update_fields=["status", "is_locked", "locked_at", "updated_at"])
         messages.success(request, f"Status updated to {header.get_status_display()}.")
-        return redirect("requirements:header-detail", pk=pk)
+        return redirect("requirements:header-list")
 
 
 class RequirementRejectView(LoginRequiredMixin, View):
