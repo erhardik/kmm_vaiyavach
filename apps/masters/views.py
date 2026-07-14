@@ -456,12 +456,18 @@ class ItemListExportView(LoginRequiredMixin, View):
         balances = {b.item_id: b for b in InventoryBalance.objects.filter(event=event, item_id__in=item_ids)}
         pos_types = [InventoryTransactionType.PURCHASE, InventoryTransactionType.DONATION, InventoryTransactionType.SPONSORSHIP_RECEIPT, InventoryTransactionType.RETURN, InventoryTransactionType.ADJUSTMENT]
         acquired_map = {a["item_id"]: a["total"] for a in InventoryTransaction.objects.filter(event=event, item_id__in=item_ids, transaction_type__in=pos_types).values("item_id").annotate(total=Sum("qty"))}
-        distributed_map = {d["item_id"]: d["total"] for d in InventoryTransaction.objects.filter(event=event, item_id__in=item_ids, transaction_type=InventoryTransactionType.DISTRIBUTION).values("item_id").annotate(total=Sum("qty"))}
+        packed_statuses = [RequirementStatus.PACKED, RequirementStatus.IN_PROGRESS]
+        delivered_statuses = [RequirementStatus.DELIVERED, RequirementStatus.CLOSED, RequirementStatus.RECEIVED_BY_MS]
+        packed_map = {p["item_id"]: p["total"] for p in RequirementLine.objects.filter(event=event, item_id__in=item_ids, requirement__status__in=packed_statuses).values("item_id").annotate(total=Sum("required_qty"))}
+        delivered_map = {d["item_id"]: d["total"] for d in RequirementLine.objects.filter(event=event, item_id__in=item_ids, requirement__status__in=delivered_statuses).values("item_id").annotate(total=Sum("required_qty"))}
         req_header_ids = RequirementHeader.objects.filter(event=event, is_active=True).exclude(status=RequirementStatus.DRAFT).values_list("pk", flat=True)
         current_req_map = {r["item_id"]: r["total"] for r in RequirementLine.objects.filter(event=event, requirement_id__in=req_header_ids, item_id__in=item_ids).values("item_id").annotate(total=Sum("required_qty"))}
         stock_map = {}
-        for item_id, bal in balances.items():
-            stock_map[item_id] = int(bal.current_stock) if bal and bal.current_stock == int(bal.current_stock) else (bal.current_stock if bal else 0)
+        for item_id in item_ids:
+            acquired = acquired_map.get(item_id, 0) or 0
+            packed = packed_map.get(item_id, 0) or 0
+            delivered = delivered_map.get(item_id, 0) or 0
+            stock_map[item_id] = int(acquired - packed - delivered) if (acquired - packed - delivered) == int(acquired - packed - delivered) else (acquired - packed - delivered)
         latest_lots = {}
         for item_id in item_ids:
             lot = PurchaseLot.objects.filter(event=event, item_id=item_id).order_by("-transaction_date", "-created_at").first()
@@ -478,7 +484,7 @@ class ItemListExportView(LoginRequiredMixin, View):
         ws_summary = workbook.active
         ws_summary.title = "Order Summary"
 
-        summary_headers = ["Item Code", "Item Name / Variant", "Type / Size", "Total Required", "Current Stock"]
+        summary_headers = ["Item Code", "Item Name / Variant", "Type / Size", "Current Req.", "Current Stock", "Qty Acquired", "Qty Packed", "Qty Delivered"]
         for col, h in enumerate(summary_headers, 1):
             cell = ws_summary.cell(row=1, column=col, value=h)
             cell.fill = header_fill
@@ -491,19 +497,19 @@ class ItemListExportView(LoginRequiredMixin, View):
             ws_summary.cell(row=idx, column=3, value=item.variant_name_gu or item.variant_name or item.default_size_gu or item.default_size or "")
             ws_summary.cell(row=idx, column=4, value=int(current_req_map.get(item.pk, 0)))
             ws_summary.cell(row=idx, column=5, value=stock_map.get(item.pk, 0))
+            ws_summary.cell(row=idx, column=6, value=int(acquired_map.get(item.pk, 0)))
+            ws_summary.cell(row=idx, column=7, value=int(packed_map.get(item.pk, 0)))
+            ws_summary.cell(row=idx, column=8, value=int(delivered_map.get(item.pk, 0)))
 
         ws_summary.freeze_panes = "A2"
-        ws_summary.column_dimensions["A"].width = 12
-        ws_summary.column_dimensions["B"].width = 75
-        ws_summary.column_dimensions["C"].width = 15
-        ws_summary.column_dimensions["D"].width = 12
-        ws_summary.column_dimensions["E"].width = 12
+        for col_letter, w in [("A", 12), ("B", 75), ("C", 15), ("D", 12), ("E", 12), ("F", 12), ("G", 12), ("H", 12)]:
+            ws_summary.column_dimensions[col_letter].width = w
         wrap_left_mid = Alignment(horizontal="left", vertical="center", wrap_text=True)
         for row in ws_summary.iter_rows(min_row=1, max_row=ws_summary.max_row):
             ws_summary.row_dimensions[row[0].row].height = 27
             for cell in row:
                 cell.alignment = wrap_left_mid
-        ws_summary.print_area = f"A1:E{ws_summary.max_row}"
+        ws_summary.print_area = f"A1:H{ws_summary.max_row}"
         ws_summary.print_title_rows = "1:1"
 
         # --- Sheet 2: Response Sheet (one row per form) ---
@@ -669,7 +675,7 @@ class ItemListExportView(LoginRequiredMixin, View):
                 ws_response.cell(row=row_idx, column=col_idx).alignment = center
 
         ws_extra = workbook.create_sheet("Extra Items")
-        extra_headers = ["Form No.", "Extra Item"]
+        extra_headers = ["Form No.", "Extra Item", "Form Status"]
         for col, h in enumerate(extra_headers, 1):
             cell = ws_extra.cell(row=1, column=col, value=h)
             cell.fill = header_fill
@@ -679,11 +685,13 @@ class ItemListExportView(LoginRequiredMixin, View):
         extra_row = 2
         for header in response_headers_qs:
             form_no = header.form_number or ""
+            status_display = header.get_status_display()
             note_lines = (header.remarks.splitlines() if header.remarks else [])[:4]
             note_lines = [n.strip() for n in note_lines if n.strip()]
             for note in note_lines:
                 ws_extra.cell(row=extra_row, column=1, value=form_no)
                 ws_extra.cell(row=extra_row, column=2, value=note)
+                ws_extra.cell(row=extra_row, column=3, value=status_display)
                 extra_row += 1
 
         if extra_row == 2:
@@ -692,6 +700,7 @@ class ItemListExportView(LoginRequiredMixin, View):
 
         ws_extra.column_dimensions["A"].width = 18
         ws_extra.column_dimensions["B"].width = 50
+        ws_extra.column_dimensions["C"].width = 18
         ws_extra.freeze_panes = "A2"
 
         buffer = BytesIO()
