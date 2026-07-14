@@ -322,10 +322,35 @@ class RequirementHeaderListView(EventScopedListView):
             "items": sum(header.lines.count() for header in headers),
             "qty_total": sum((line.required_qty for header in headers for line in header.lines.all()), start=0),
         }
+        event = Event.objects.filter(is_current=True, is_active=True).first()
+        event_id = self.request.GET.get("event")
+        if event_id:
+            event = Event.objects.filter(pk=event_id, is_active=True).first()
+        if event:
+            all_reqs = RequirementHeader.objects.filter(event=event, is_active=True).exclude(status=RequirementStatus.DRAFT)
+            context["order_summary"] = {
+                "confirmed": all_reqs.filter(status__in=[RequirementStatus.CONFIRMED, RequirementStatus.NOT_CONFIRMED]).count(),
+                "packed": all_reqs.filter(status__in=[RequirementStatus.PACKED, RequirementStatus.IN_PROGRESS]).count(),
+                "delivered": all_reqs.filter(status__in=[RequirementStatus.DELIVERED, RequirementStatus.CLOSED, RequirementStatus.RECEIVED_BY_MS]).count(),
+                "total": all_reqs.count(),
+            }
+        context["status_filter"] = self.request.GET.get("status", "")
         return context
 
     def get_queryset(self):
-        return super().get_queryset()
+        qs = super().get_queryset()
+        status = self.request.GET.get("status", "")
+        if status == "confirmed":
+            qs = qs.filter(status__in=[RequirementStatus.CONFIRMED, RequirementStatus.NOT_CONFIRMED])
+        elif status == "packed":
+            qs = qs.filter(status__in=[RequirementStatus.PACKED, RequirementStatus.IN_PROGRESS])
+        elif status == "delivered":
+            qs = qs.filter(status__in=[RequirementStatus.DELIVERED, RequirementStatus.CLOSED, RequirementStatus.RECEIVED_BY_MS])
+        elif status == "returned":
+            qs = qs.filter(status__in=[RequirementStatus.RETURN_REQUESTED, RequirementStatus.RETURN_DONE])
+        elif status == "rejected":
+            qs = qs.filter(status=RequirementStatus.CANCELLED)
+        return qs
 
     def get_table_rows(self):
         rows = []

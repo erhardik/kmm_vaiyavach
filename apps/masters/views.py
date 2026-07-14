@@ -368,13 +368,12 @@ class ItemListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
         pos_types = [InventoryTransactionType.PURCHASE, InventoryTransactionType.DONATION, InventoryTransactionType.SPONSORSHIP_RECEIPT, InventoryTransactionType.RETURN, InventoryTransactionType.ADJUSTMENT]
         acquired_qs = InventoryTransaction.objects.filter(event=event, item_id__in=item_ids, transaction_type__in=pos_types).values("item_id").annotate(total=Sum("qty"))
         acquired_map = {a["item_id"]: a["total"] for a in acquired_qs}
-        distributed_qs = InventoryTransaction.objects.filter(event=event, item_id__in=item_ids, transaction_type=InventoryTransactionType.DISTRIBUTION).values("item_id").annotate(total=Sum("qty"))
-        distributed_map = {d["item_id"]: d["total"] for d in distributed_qs}
         packed_statuses = [RequirementStatus.PACKED, RequirementStatus.IN_PROGRESS]
         delivered_statuses = [RequirementStatus.DELIVERED, RequirementStatus.CLOSED, RequirementStatus.RECEIVED_BY_MS]
-        all_committed_statuses = packed_statuses + delivered_statuses
-        packed_qs = RequirementLine.objects.filter(event=event, item_id__in=item_ids, requirement__status__in=all_committed_statuses).values("item_id").annotate(total=Sum("required_qty"))
+        packed_qs = RequirementLine.objects.filter(event=event, item_id__in=item_ids, requirement__status__in=packed_statuses).values("item_id").annotate(total=Sum("required_qty"))
         packed_map = {p["item_id"]: p["total"] for p in packed_qs}
+        delivered_qs = RequirementLine.objects.filter(event=event, item_id__in=item_ids, requirement__status__in=delivered_statuses).values("item_id").annotate(total=Sum("required_qty"))
+        delivered_map = {d["item_id"]: d["total"] for d in delivered_qs}
         req_header_ids = RequirementHeader.objects.filter(event=event, is_active=True).exclude(status=RequirementStatus.DRAFT).values_list("pk", flat=True)
         current_req_qs = RequirementLine.objects.filter(event=event, requirement_id__in=req_header_ids, item_id__in=item_ids).values("item_id").annotate(total=Sum("required_qty"))
         current_req_map = {r["item_id"]: r["total"] for r in current_req_qs}
@@ -389,8 +388,8 @@ class ItemListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
             bal = balances.get(item.pk)
             qty_acquired = int(acquired_map.get(item.pk, 0)) if acquired_map.get(item.pk, 0) == int(acquired_map.get(item.pk, 0)) else acquired_map.get(item.pk, 0)
             qty_packed = int(packed_map.get(item.pk, 0)) if packed_map.get(item.pk, 0) == int(packed_map.get(item.pk, 0)) else packed_map.get(item.pk, 0)
-            qty_distributed = int(distributed_map.get(item.pk, 0)) if distributed_map.get(item.pk, 0) == int(distributed_map.get(item.pk, 0)) else distributed_map.get(item.pk, 0)
-            current_stock = qty_acquired - qty_packed
+            qty_delivered = int(delivered_map.get(item.pk, 0)) if delivered_map.get(item.pk, 0) == int(delivered_map.get(item.pk, 0)) else delivered_map.get(item.pk, 0)
+            current_stock = qty_acquired - (qty_packed + qty_delivered)
             lot = latest_lots.get(item.pk)
             cost = lot.unit_rate if lot else Decimal(item.estimated_rate or 0)
             if cost == int(cost):
@@ -405,7 +404,7 @@ class ItemListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
                 "current_stock": current_stock,
                 "qty_acquired": qty_acquired,
                 "qty_packed": qty_packed,
-                "qty_distributed": qty_distributed,
+                "qty_delivered": qty_delivered,
                 "cost": cost,
                 "vendor": vendor,
                 "manager": manager,
@@ -427,6 +426,13 @@ class ItemListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
         context["can_add"] = self.request.user.has_perm(self._perm("add"))
         context["can_change"] = self.request.user.has_perm(self._perm("change"))
         context["can_delete"] = self.request.user.has_perm(self._perm("delete"))
+        reqs = RequirementHeader.objects.filter(event=event, is_active=True).exclude(status=RequirementStatus.DRAFT)
+        context["order_summary"] = {
+            "confirmed": reqs.filter(status__in=[RequirementStatus.CONFIRMED, RequirementStatus.NOT_CONFIRMED]).count(),
+            "packed": reqs.filter(status__in=[RequirementStatus.PACKED, RequirementStatus.IN_PROGRESS]).count(),
+            "delivered": reqs.filter(status__in=[RequirementStatus.DELIVERED, RequirementStatus.CLOSED, RequirementStatus.RECEIVED_BY_MS]).count(),
+            "total": reqs.count(),
+        }
         return context
 
 

@@ -7,7 +7,15 @@
     </div>
     {% if page_subtitle %}<p class="text-body-secondary mb-0">{{ page_subtitle }}</p>{% endif %}
   </div>
-  <div class="d-flex gap-2">
+  <div class="d-flex gap-2 flex-wrap align-items-center">
+    {% if order_summary %}
+    <div class="d-flex gap-1 me-2">
+      <span class="metric-card d-inline-flex align-items-center gap-1 px-2 py-1 small border rounded"><span class="text-body-secondary">Confirmed:</span> <span class="fw-bold">{{ order_summary.confirmed }}</span></span>
+      <span class="metric-card d-inline-flex align-items-center gap-1 px-2 py-1 small border rounded"><span class="text-body-secondary">Packed:</span> <span class="fw-bold">{{ order_summary.packed }}</span></span>
+      <span class="metric-card d-inline-flex align-items-center gap-1 px-2 py-1 small border rounded"><span class="text-body-secondary">Delivered:</span> <span class="fw-bold">{{ order_summary.delivered }}</span></span>
+      <span class="metric-card d-inline-flex align-items-center gap-1 px-2 py-1 small border rounded"><span class="text-body-secondary">Total:</span> <span class="fw-bold">{{ order_summary.total }}</span></span>
+    </div>
+    {% endif %}
     <a class="btn btn-outline-success" href="{% url 'masters:item-export' %}?event={{ request.GET.event|default:'' }}">Download Excel</a>
     {% if can_add and create_url %}
       <a class="btn btn-primary" href="{{ create_url }}">Add New</a>
@@ -43,7 +51,7 @@
             <th class="text-end">Current Stock</th>
             <th class="text-end">Qty Acquired</th>
             <th class="text-end">Qty Packed</th>
-            <th class="text-end">Qty Distributed</th>
+            <th class="text-end">Qty Delivered</th>
             <th class="text-end">Cost</th>
             <th>Vendor</th>
             <th>Manager</th>
@@ -60,7 +68,7 @@
               <td class="text-end">{{ row.current_stock }}</td>
               <td class="text-end">{{ row.qty_acquired }}</td>
               <td class="text-end">{{ row.qty_packed }}</td>
-              <td class="text-end">{{ row.qty_distributed }}</td>
+              <td class="text-end">{{ row.qty_delivered }}</td>
               <td class="text-end">{{ row.cost }}</td>
               <td>{{ row.vendor }}</td>
               <td>{{ row.manager }}</td>
