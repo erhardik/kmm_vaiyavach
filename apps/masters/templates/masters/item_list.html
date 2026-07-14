@@ -10,10 +10,10 @@
   <div class="d-flex gap-2 flex-wrap align-items-center">
     {% if order_summary %}
     <div class="d-flex gap-1 me-2">
-      <span class="metric-card d-inline-flex align-items-center gap-1 px-2 py-1 small border rounded"><span class="text-body-secondary">Confirmed:</span> <span class="fw-bold">{{ order_summary.confirmed }}</span></span>
-      <span class="metric-card d-inline-flex align-items-center gap-1 px-2 py-1 small border rounded"><span class="text-body-secondary">Packed:</span> <span class="fw-bold">{{ order_summary.packed }}</span></span>
-      <span class="metric-card d-inline-flex align-items-center gap-1 px-2 py-1 small border rounded"><span class="text-body-secondary">Delivered:</span> <span class="fw-bold">{{ order_summary.delivered }}</span></span>
-      <span class="metric-card d-inline-flex align-items-center gap-1 px-2 py-1 small border rounded"><span class="text-body-secondary">Total:</span> <span class="fw-bold">{{ order_summary.total }}</span></span>
+      <span class="metric-card d-inline-flex align-items-center gap-1 px-2 py-1 small border border-primary rounded" style="background:#eef4ff"><span class="text-primary">Confirmed:</span> <span class="fw-bold text-primary">{{ order_summary.confirmed }}</span></span>
+      <span class="metric-card d-inline-flex align-items-center gap-1 px-2 py-1 small border border-warning rounded" style="background:#fff9e6"><span class="text-warning-emphasis">Packed:</span> <span class="fw-bold text-warning-emphasis">{{ order_summary.packed }}</span></span>
+      <span class="metric-card d-inline-flex align-items-center gap-1 px-2 py-1 small border border-success rounded" style="background:#edfff5"><span class="text-success">Delivered:</span> <span class="fw-bold text-success">{{ order_summary.delivered }}</span></span>
+      <span class="metric-card d-inline-flex align-items-center gap-1 px-2 py-1 small border border-dark rounded" style="background:#f8f9fa"><span class="text-dark">Total:</span> <span class="fw-bold text-dark">{{ order_summary.total }}</span></span>
     </div>
     {% endif %}
     <a class="btn btn-outline-success" href="{% url 'masters:item-export' %}?event={{ request.GET.event|default:'' }}">Download Excel</a>
