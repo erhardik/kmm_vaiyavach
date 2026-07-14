@@ -42,6 +42,7 @@
             <th class="text-end">Current Req.</th>
             <th class="text-end">Current Stock</th>
             <th class="text-end">Qty Acquired</th>
+            <th class="text-end">Qty Packed</th>
             <th class="text-end">Qty Distributed</th>
             <th class="text-end">Cost</th>
             <th>Vendor</th>
@@ -58,6 +59,7 @@
               <td class="text-end">{{ row.current_req }}</td>
               <td class="text-end">{{ row.current_stock }}</td>
               <td class="text-end">{{ row.qty_acquired }}</td>
+              <td class="text-end">{{ row.qty_packed }}</td>
               <td class="text-end">{{ row.qty_distributed }}</td>
               <td class="text-end">{{ row.cost }}</td>
               <td>{{ row.vendor }}</td>
@@ -72,7 +74,7 @@
               </td>
             </tr>
           {% empty %}
-            <tr><td colspan="11" class="text-center py-4 text-body-secondary">No records found.</td></tr>
+            <tr><td colspan="12" class="text-center py-4 text-body-secondary">No records found.</td></tr>
           {% endfor %}
         </tbody>
       </table>

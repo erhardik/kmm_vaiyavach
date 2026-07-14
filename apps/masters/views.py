@@ -370,6 +370,11 @@ class ItemListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
         acquired_map = {a["item_id"]: a["total"] for a in acquired_qs}
         distributed_qs = InventoryTransaction.objects.filter(event=event, item_id__in=item_ids, transaction_type=InventoryTransactionType.DISTRIBUTION).values("item_id").annotate(total=Sum("qty"))
         distributed_map = {d["item_id"]: d["total"] for d in distributed_qs}
+        packed_statuses = [RequirementStatus.PACKED, RequirementStatus.IN_PROGRESS]
+        delivered_statuses = [RequirementStatus.DELIVERED, RequirementStatus.CLOSED, RequirementStatus.RECEIVED_BY_MS]
+        all_committed_statuses = packed_statuses + delivered_statuses
+        packed_qs = RequirementLine.objects.filter(event=event, item_id__in=item_ids, requirement__status__in=all_committed_statuses).values("item_id").annotate(total=Sum("required_qty"))
+        packed_map = {p["item_id"]: p["total"] for p in packed_qs}
         req_header_ids = RequirementHeader.objects.filter(event=event, is_active=True).exclude(status=RequirementStatus.DRAFT).values_list("pk", flat=True)
         current_req_qs = RequirementLine.objects.filter(event=event, requirement_id__in=req_header_ids, item_id__in=item_ids).values("item_id").annotate(total=Sum("required_qty"))
         current_req_map = {r["item_id"]: r["total"] for r in current_req_qs}
@@ -382,9 +387,10 @@ class ItemListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
         table_rows = []
         for item in all_items:
             bal = balances.get(item.pk)
-            current_stock = int(bal.current_stock) if bal and bal.current_stock == int(bal.current_stock) else (bal.current_stock if bal else 0)
             qty_acquired = int(acquired_map.get(item.pk, 0)) if acquired_map.get(item.pk, 0) == int(acquired_map.get(item.pk, 0)) else acquired_map.get(item.pk, 0)
+            qty_packed = int(packed_map.get(item.pk, 0)) if packed_map.get(item.pk, 0) == int(packed_map.get(item.pk, 0)) else packed_map.get(item.pk, 0)
             qty_distributed = int(distributed_map.get(item.pk, 0)) if distributed_map.get(item.pk, 0) == int(distributed_map.get(item.pk, 0)) else distributed_map.get(item.pk, 0)
+            current_stock = qty_acquired - qty_packed
             lot = latest_lots.get(item.pk)
             cost = lot.unit_rate if lot else Decimal(item.estimated_rate or 0)
             if cost == int(cost):
@@ -398,6 +404,7 @@ class ItemListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
                 "current_req": int(current_req_map.get(item.pk, 0)),
                 "current_stock": current_stock,
                 "qty_acquired": qty_acquired,
+                "qty_packed": qty_packed,
                 "qty_distributed": qty_distributed,
                 "cost": cost,
                 "vendor": vendor,
