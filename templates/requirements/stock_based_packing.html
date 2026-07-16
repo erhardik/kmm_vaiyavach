@@ -53,7 +53,7 @@
               <td>{{ entry.header.pujya_shri_name|default:"—" }}</td>
               <td>{{ entry.total_items }}</td>
               <td class="text-center">
-                <form method="post" style="display:inline">
+                <form method="post" class="js-pack-form" style="display:inline">
                   {% csrf_token %}
                   <input type="hidden" name="action" value="pack">
                   <input type="hidden" name="header_pk" value="{{ entry.header.pk }}">
@@ -114,7 +114,7 @@
                 </button>
               </td>
               <td class="text-center">
-                <form method="post" style="display:inline">
+                <form method="post" class="js-pack-form" style="display:inline">
                   {% csrf_token %}
                   <input type="hidden" name="action" value="pack">
                   <input type="hidden" name="header_pk" value="{{ entry.header.pk }}">
@@ -193,4 +193,78 @@
 
   {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+  var forms = document.querySelectorAll(".js-pack-form");
+  var toastContainer = document.getElementById("packToastContainer");
+  if (!toastContainer) {
+    toastContainer = document.createElement("div");
+    toastContainer.id = "packToastContainer";
+    toastContainer.className = "toast-container position-fixed top-0 start-50 translate-middle-x p-3";
+    toastContainer.style.zIndex = "9999";
+    document.body.appendChild(toastContainer);
+  }
+
+  function showToast(msg, type) {
+    var t = document.createElement("div");
+    t.className = "toast align-items-center text-bg-" + (type || "success") + " border-0 show";
+    t.role = "alert";
+    t.innerHTML = '<div class="d-flex"><div class="toast-body">' + msg + '</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>';
+    toastContainer.appendChild(t);
+    window.setTimeout(function() { t.remove() }, 4000);
+  }
+
+  forms.forEach(function(form) {
+    form.addEventListener("submit", function(e) {
+      e.preventDefault();
+      var btn = form.querySelector("button[type=submit]");
+      var row = form.closest("tr");
+      var formData = new FormData(form);
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+      formData.set("ajax", "1");
+      fetch(form.action, { method: "POST", body: formData })
+        .then(function(r) {
+          if (!r.ok) throw new Error("Server error");
+          return r.json();
+        })
+        .then(function(data) {
+          if (data.ok) {
+            showToast(data.message || "Packed");
+            if (row) {
+              row.style.transition = "opacity 0.3s";
+              row.style.opacity = "0";
+              window.setTimeout(function() { row.remove(); updateCounts(); }, 350);
+            }
+          } else {
+            showToast(data.error || "Error", "danger");
+            btn.disabled = false;
+            btn.textContent = "Pack";
+          }
+        })
+        .catch(function(err) {
+          showToast("Request failed: " + err.message, "danger");
+          btn.disabled = false;
+          btn.textContent = "Pack";
+        });
+    });
+  });
+
+  function updateCounts() {
+    document.querySelectorAll(".card").forEach(function(card) {
+      var tbody = card.querySelector("tbody");
+      var badge = card.querySelector(".card-header .badge");
+      if (tbody && badge) {
+        var visible = tbody.querySelectorAll("tr:not(.collapse)").length;
+        badge.textContent = visible + " form" + (visible !== 1 ? "s" : "");
+      }
+    });
+  }
+})();
+</script>
 {% endblock %}

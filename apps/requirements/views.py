@@ -2089,19 +2089,26 @@ class StockBasedPackingView(LoginRequiredMixin, View):
     def post(self, request):
         event = self._get_event(request)
         action = request.POST.get("action")
+        is_ajax = request.POST.get("ajax") == "1"
 
         if action == "pack":
             header_pk = request.POST.get("header_pk")
             header = get_object_or_404(RequirementHeader, pk=header_pk, event=event)
             if header.status not in (RequirementStatus.CONFIRMED, RequirementStatus.NOT_CONFIRMED):
-                messages.error(request, f"Form #{header.form_number} cannot be packed from current status.")
+                msg = f"Form #{header.form_number} cannot be packed from current status."
+                if is_ajax:
+                    return JsonResponse({"ok": False, "error": msg})
+                messages.error(request, msg)
                 return redirect("requirements:pack-by-order")
             header.status = RequirementStatus.PACKED
             header.is_locked = True
             header.locked_at = timezone.now()
             header.updated_at = timezone.now()
             header.save(update_fields=["status", "is_locked", "locked_at", "updated_at"])
-            messages.success(request, f"Form #{header.form_number} packed successfully.")
+            msg = f"Form #{header.form_number} packed successfully."
+            if is_ajax:
+                return JsonResponse({"ok": True, "message": msg})
+            messages.success(request, msg)
 
         elif action == "adjust_stock":
             is_allowed = (
