@@ -1994,7 +1994,7 @@ class StockBasedPackingView(LoginRequiredMixin, View):
         headers = RequirementHeader.objects.filter(
             event=event, is_active=True,
             status__in=[RequirementStatus.CONFIRMED, RequirementStatus.NOT_CONFIRMED]
-        ).order_by("form_no").prefetch_related("lines", "lines__item")
+        ).order_by("form_number").prefetch_related("lines", "lines__item")
 
         fully_packable = []
         partially_packable = []
@@ -2094,14 +2094,14 @@ class StockBasedPackingView(LoginRequiredMixin, View):
             header_pk = request.POST.get("header_pk")
             header = get_object_or_404(RequirementHeader, pk=header_pk, event=event)
             if header.status not in (RequirementStatus.CONFIRMED, RequirementStatus.NOT_CONFIRMED):
-                messages.error(request, f"Form #{header.form_no} cannot be packed from current status.")
+                messages.error(request, f"Form #{header.form_number} cannot be packed from current status.")
                 return redirect("requirements:pack-by-order")
             header.status = RequirementStatus.PACKED
             header.is_locked = True
             header.locked_at = timezone.now()
             header.updated_at = timezone.now()
             header.save(update_fields=["status", "is_locked", "locked_at", "updated_at"])
-            messages.success(request, f"Form #{header.form_no} packed successfully.")
+            messages.success(request, f"Form #{header.form_number} packed successfully.")
 
         elif action == "adjust_stock":
             is_allowed = (
