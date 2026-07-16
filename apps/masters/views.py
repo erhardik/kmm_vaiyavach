@@ -374,7 +374,7 @@ class ItemListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
         packed_map = {p["item_id"]: p["total"] for p in packed_qs}
         delivered_qs = RequirementLine.objects.filter(event=event, item_id__in=item_ids, requirement__status__in=delivered_statuses).values("item_id").annotate(total=Sum("required_qty"))
         delivered_map = {d["item_id"]: d["total"] for d in delivered_qs}
-        req_header_ids = RequirementHeader.objects.filter(event=event, is_active=True).exclude(status=RequirementStatus.DRAFT).values_list("pk", flat=True)
+        req_header_ids = RequirementHeader.objects.filter(event=event, is_active=True, status__in=[RequirementStatus.CONFIRMED, RequirementStatus.NOT_CONFIRMED, RequirementStatus.SUBMITTED]).values_list("pk", flat=True)
         current_req_qs = RequirementLine.objects.filter(event=event, requirement_id__in=req_header_ids, item_id__in=item_ids).values("item_id").annotate(total=Sum("required_qty"))
         current_req_map = {r["item_id"]: r["total"] for r in current_req_qs}
         latest_lots = {}
@@ -460,7 +460,7 @@ class ItemListExportView(LoginRequiredMixin, View):
         delivered_statuses = [RequirementStatus.DELIVERED, RequirementStatus.CLOSED, RequirementStatus.RECEIVED_BY_MS]
         packed_map = {p["item_id"]: p["total"] for p in RequirementLine.objects.filter(event=event, item_id__in=item_ids, requirement__status__in=packed_statuses).values("item_id").annotate(total=Sum("required_qty"))}
         delivered_map = {d["item_id"]: d["total"] for d in RequirementLine.objects.filter(event=event, item_id__in=item_ids, requirement__status__in=delivered_statuses).values("item_id").annotate(total=Sum("required_qty"))}
-        req_header_ids = RequirementHeader.objects.filter(event=event, is_active=True).exclude(status=RequirementStatus.DRAFT).values_list("pk", flat=True)
+        req_header_ids = RequirementHeader.objects.filter(event=event, is_active=True, status__in=[RequirementStatus.CONFIRMED, RequirementStatus.NOT_CONFIRMED, RequirementStatus.SUBMITTED]).values_list("pk", flat=True)
         current_req_map = {r["item_id"]: r["total"] for r in RequirementLine.objects.filter(event=event, requirement_id__in=req_header_ids, item_id__in=item_ids).values("item_id").annotate(total=Sum("required_qty"))}
         stock_map = {}
         for item_id in item_ids:
