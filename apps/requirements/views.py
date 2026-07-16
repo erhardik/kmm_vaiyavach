@@ -1628,6 +1628,37 @@ class RequirementStatusTransitionView(LoginRequiredMixin, View):
         return redirect("requirements:header-list")
 
 
+class RevertToPackedView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        is_allowed = (
+            request.user.is_superuser
+            or request.user.groups.filter(name__in=["KMM Admin", "KMM Manager"]).exists()
+        )
+        if not is_allowed:
+            msg = "Only admin/manager can revert status."
+            if request.POST.get("ajax") == "1":
+                return JsonResponse({"ok": False, "error": msg})
+            messages.error(request, msg)
+            return redirect("requirements:header-list")
+        header = get_object_or_404(RequirementHeader, pk=pk)
+        if header.status != RequirementStatus.DELIVERED:
+            msg = "Revert is only allowed for Delivered forms."
+            if request.POST.get("ajax") == "1":
+                return JsonResponse({"ok": False, "error": msg})
+            messages.error(request, msg)
+            return redirect("requirements:header-list")
+        header.status = RequirementStatus.PACKED
+        header.is_locked = True
+        header.locked_at = timezone.now()
+        header.updated_at = timezone.now()
+        header.save(update_fields=["status", "is_locked", "locked_at", "updated_at"])
+        msg = f"Form #{header.form_number} reverted to Packed."
+        if request.POST.get("ajax") == "1":
+            return JsonResponse({"ok": True, "message": msg})
+        messages.success(request, msg)
+        return redirect("requirements:header-list")
+
+
 class RequirementRejectView(LoginRequiredMixin, View):
     def post(self, request, pk):
         if not request.user.is_superuser and not request.user.groups.filter(name__in=["KMM Admin", "KMM Manager"]).exists():
