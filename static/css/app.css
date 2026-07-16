@@ -1076,7 +1076,26 @@ body.sidebar-collapsed .sidebar-accordion .list-group-item {
 .sheet-table-wrap {
   border: 1px solid rgba(20, 50, 79, 0.08);
   border-radius: 1rem;
-  overflow: hidden;
+  overflow-x: auto;
+}
+
+.sheet-table-wrap .sticky-col {
+  position: sticky;
+  right: 0;
+  z-index: 2;
+  background: inherit;
+}
+
+.sheet-table-wrap thead .sticky-col {
+  background: var(--bs-table-bg, #f8f9fa);
+}
+
+.sheet-table-wrap tbody .sticky-col {
+  background: var(--bs-table-bg, #fff);
+}
+
+.sheet-table-wrap tbody tr:hover .sticky-col {
+  background: var(--bs-table-hover-bg, rgba(0,0,0,0.04));
 }
 
 .sheet-table thead th {
