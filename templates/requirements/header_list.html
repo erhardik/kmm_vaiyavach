@@ -82,7 +82,7 @@
             <th><button class="sheet-sort-btn" type="button" data-sort-key="4">પૂજ્ય શ્રી <span class="sheet-sort-icon">↕</span></button></th>
             <th><button class="sheet-sort-btn" type="button" data-sort-key="5" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">ચાતુર્માસ સ્થળનું સરનામું <span class="sheet-sort-icon">↕</span></button></th>
             <th><button class="sheet-sort-btn" type="button" data-sort-key="6">Status <span class="sheet-sort-icon">↕</span></button></th>
-            <th class="text-end sticky-col">Actions</th>
+            <th class="text-end">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -91,7 +91,7 @@
               {% for value in row.cells %}
                 <td>{{ value }}</td>
               {% endfor %}
-              <td class="text-end sticky-col" style="min-width:180px">
+              <td class="text-end" style="min-width:180px">
                 <div class="d-flex flex-wrap gap-1 justify-content-end">
                   {% if row.view_url %}
                     <a class="btn btn-sm btn-outline-primary js-order-view" href="{{ row.view_url }}" data-detail-url="{{ row.view_url }}" data-order-label="{{ row.object.form_number|default:row.object.volunteer_name }}" title="View"><i class="bi bi-eye"></i></a>

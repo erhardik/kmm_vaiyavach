@@ -1077,19 +1077,6 @@ body.sidebar-collapsed .sidebar-accordion .list-group-item {
 .sheet-table-wrap {
   border: 1px solid rgba(20, 50, 79, 0.08);
   border-radius: 1rem;
-  overflow-x: auto;
-}
-
-.sheet-table-wrap .sticky-col {
-  position: sticky;
-  right: 0;
-  z-index: 3;
-  background: var(--bs-table-bg);
-  box-shadow: inset 1px 0 0 rgba(0,0,0,0.08);
-}
-
-.sheet-table-wrap tbody tr:hover .sticky-col {
-  background: var(--bs-table-hover-bg);
 }
 
 .sheet-table thead th {
