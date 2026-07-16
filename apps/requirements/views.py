@@ -2074,8 +2074,8 @@ class StockBasedPackingView(LoginRequiredMixin, View):
         for entry in fully_packable + partially_packable:
             for s in entry["items_status"]:
                 all_item_ids.add(s["item_id"])
-        stock_qs = Item.objects.filter(pk__in=all_item_ids, event=event).values("pk", "name")
-        stock_items = [{"pk": it["pk"], "name": it["name"], "stock": stock_map.get(it["pk"], 0)} for it in stock_qs]
+        stock_qs = Item.objects.filter(pk__in=all_item_ids, event=event).values("pk", "item_name", "variant_name")
+        stock_items = [{"pk": it["pk"], "name": it["item_name"], "stock": stock_map.get(it["pk"], 0)} for it in stock_qs]
 
         context = {
             "event": event,
