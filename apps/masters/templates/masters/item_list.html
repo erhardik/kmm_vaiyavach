@@ -65,7 +65,7 @@
               <td>{{ row.display_name }}</td>
               <td>{{ row.type_size }}</td>
               <td class="text-end">{{ row.current_req }}</td>
-              <td class="text-end">{{ row.current_stock }}</td>
+              <td class="text-end {% if row.current_stock < row.current_req %}text-danger fw-bold{% elif row.current_stock >= row.current_req %}text-success fw-bold{% endif %}">{{ row.current_stock }}</td>
               <td class="text-end">{{ row.qty_acquired }}</td>
               <td class="text-end">{{ row.qty_packed }}</td>
               <td class="text-end">{{ row.qty_delivered }}</td>
