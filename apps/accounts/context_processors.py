@@ -8,7 +8,7 @@ from apps.funds.models import Donation, FundTransaction, FundTransactionType
 from apps.inventory.models import InventoryBalance
 from apps.masters.models import Event, Item, Vendor
 from apps.procurement.models import PurchaseOrder
-from apps.requirements.models import EditRequest, RequirementHeader
+from apps.requirements.models import EditRequest, RequirementHeader, RequirementStatus
 from apps.sponsorship.models import SponsorshipCommitment
 
 
@@ -17,6 +17,7 @@ MANAGER_GROUP_NAME = "KMM Manager"
 EVENT_MENU_ITEMS = [
     {"label": "Collect Requirements", "url_name": "requirements:collect", "permission": None, "icon": "clipboard-check"},
     {"label": "Requirement Orders", "url_name": "requirements:header-list", "permission": "requirements.view_requirementheader", "icon": "list-check"},
+    {"label": "Stock-Based Packing", "url_name": "requirements:pack-by-order", "permission": "requirements.view_requirementheader", "icon": "box-seam"},
     {"label": "Edit Requests", "url_name": "requirements:edit-request-list", "permission": None, "icon": "pencil-square"},
     {"label": "Item Master", "url_name": "dashboard:item_control_center", "permission": None, "icon": "boxes", "manager_exclude": True},
     {"label": "Items", "url_name": "masters:item-list", "permission": "masters.view_item", "icon": "boxes", "manager_only": True},
@@ -107,6 +108,10 @@ def portal_navigation(request):
     selected_event_id = request.GET.get("event")
     selected_event = active_events.filter(pk=selected_event_id).first() if selected_event_id else active_events.filter(is_current=True).first()
     metrics = _event_metrics(selected_event)
+    confirmed_count = RequirementHeader.objects.filter(
+        event=selected_event, is_active=True,
+        status__in=[RequirementStatus.CONFIRMED, RequirementStatus.NOT_CONFIRMED]
+    ).count() if selected_event else 0
     badge_map = {
         "masters:event-list": f"{Event.objects.filter(is_active=True).count()}",
         "requirements:collect": f"{metrics.get('requirements', 0)}",
@@ -123,6 +128,7 @@ def portal_navigation(request):
         "funds:transaction-list": f"{_format_metric(metrics.get('fund_balance', 0))}",
         "reports:analytics": f"{_format_metric(metrics.get('fund_balance', 0))}",
         "requirements:edit-request-list": f"{metrics.get('edit_requests', 0)}",
+        "requirements:pack-by-order": f"{confirmed_count}",
     }
     sidebar_events = []
     for event in active_events:

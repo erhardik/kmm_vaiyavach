@@ -24,6 +24,7 @@ from apps.requirements.views import (
     SpecialRequirementDeleteView,
     SpecialRequirementListView,
     SpecialRequirementUpdateView,
+    StockBasedPackingView,
     ViewControlView,
 )
 
@@ -59,5 +60,6 @@ urlpatterns = [
     path("edit-requests/", EditRequestListView.as_view(), name="edit-request-list"),
     path("edit-requests/<int:pk>/resolve/", EditRequestResolveView.as_view(), name="edit-request-resolve"),
     path("view-control/", ViewControlView.as_view(), name="view-control"),
+    path("pack-by-order/", StockBasedPackingView.as_view(), name="pack-by-order"),
 ]
 

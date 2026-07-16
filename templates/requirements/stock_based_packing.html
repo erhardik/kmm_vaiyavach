@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Stock-Based Packing{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">Stock-Based Packing</h4>
+    <div>
+      {% if event %}
+        <span class="badge bg-secondary fs-6">{{ event.name }}</span>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if no_event %}
+    <div class="alert alert-warning">No active event selected.</div>
+  {% else %}
+
+  {% if messages %}
+    {% for msg in messages %}
+      <div class="alert alert-{{ msg.tags }} alert-dismissible fade show">{{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- Fully Packable -->
+  <div class="card mb-4">
+    <div class="card-header bg-success text-white d-flex justify-content-between">
+      <span><strong>Fully Packable</strong></span>
+      <span class="badge bg-light text-dark">{{ fully_packable|length }} form{{ fully_packable|pluralize }}</span>
+    </div>
+    <div class="card-body p-0">
+      {% if fully_packable %}
+      <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Form No</th>
+              <th>Janaar</th>
+              <th>Route</th>
+              <th>પૂજ્ય શ્રી</th>
+              <th>Items</th>
+              <th class="text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for entry in fully_packable %}
+            <tr>
+              <td>{{ entry.header.form_number|default:entry.header.order_number }}</td>
+              <td>{{ entry.header.volunteer_name }}</td>
+              <td>{{ entry.header.get_route_area_display|default:"—" }}</td>
+              <td>{{ entry.header.pujya_shri_name|default:"—" }}</td>
+              <td>{{ entry.total_items }}</td>
+              <td class="text-center">
+                <form method="post" style="display:inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="pack">
+                  <input type="hidden" name="header_pk" value="{{ entry.header.pk }}">
+                  <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Pack form #{{ entry.header.form_number|default:entry.header.order_number }}?')">Pack</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="p-3 text-body-secondary">No forms ready for packing.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Partially Packable -->
+  <div class="card mb-4">
+    <div class="card-header bg-warning d-flex justify-content-between">
+      <span><strong>Partially Packable</strong></span>
+      <span class="badge bg-light text-dark">{{ partially_packable|length }} form{{ partially_packable|pluralize }}</span>
+    </div>
+    <div class="card-body p-0">
+      {% if partially_packable %}
+      <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Form No</th>
+              <th>Janaar</th>
+              <th>Route</th>
+              <th>પૂજ્ય શ્રી</th>
+              <th>Items / Short</th>
+              <th>Fulfillment</th>
+              <th>Short Items</th>
+              <th class="text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for entry in partially_packable %}
+            <tr>
+              <td>{{ entry.header.form_number|default:entry.header.order_number }}</td>
+              <td>{{ entry.header.volunteer_name }}</td>
+              <td>{{ entry.header.get_route_area_display|default:"—" }}</td>
+              <td>{{ entry.header.pujya_shri_name|default:"—" }}</td>
+              <td>{{ entry.total_items }} / {{ entry.short_items }}</td>
+              <td>
+                <div class="progress" style="height: 18px;">
+                  <div class="progress-bar {% if entry.fulfillment_pct < 50 %}bg-danger{% elif entry.fulfillment_pct < 80 %}bg-warning{% else %}bg-success{% endif %}" style="width:{{ entry.fulfillment_pct }}%">
+                    {{ entry.fulfillment_pct }}%
+                  </div>
+                </div>
+              </td>
+              <td>
+                <button class="btn btn-sm btn-outline-info" type="button" data-bs-toggle="collapse" data-bs-target="#short-{{ entry.header.pk }}" aria-expanded="false">
+                  View {{ entry.short_items }} short
+                </button>
+              </td>
+              <td class="text-center">
+                <form method="post" style="display:inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="pack">
+                  <input type="hidden" name="header_pk" value="{{ entry.header.pk }}">
+                  <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Pack form #{{ entry.header.form_number|default:entry.header.order_number}} (partial)?')">Pack</button>
+                </form>
+              </td>
+            </tr>
+            <tr class="collapse" id="short-{{ entry.header.pk }}">
+              <td colspan="8" class="bg-light">
+                <table class="table table-sm table-borderless mb-0 small">
+                  <thead>
+                    <tr>
+                      <th>Item</th>
+                      <th>Required</th>
+                      <th>Available</th>
+                      <th>Shortfall</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for si in entry.items_status %}
+                    <tr class="{% if si.status == 'short' %}table-danger{% endif %}">
+                      <td>{{ si.item_name }}</td>
+                      <td>{{ si.required|floatformat }}</td>
+                      <td>{{ si.available|floatformat }}</td>
+                      <td>{% if si.shortfall > 0 %}{{ si.shortfall|floatformat }}{% else %}0{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="p-3 text-body-secondary">No partially packable forms.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Adjust Stock -->
+  {% if current_role_label == 'systemadmin' or current_role_label == 'admin' or current_role_label == 'manager' %}
+  <div class="card">
+    <div class="card-header bg-secondary text-white">
+      <strong>Adjust Stock</strong>
+    </div>
+    <div class="card-body">
+      <form method="post" class="row g-3 align-items-end">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="adjust_stock">
+        <div class="col-md-4">
+          <label class="form-label">Item</label>
+          <select name="item_pk" class="form-select" required>
+            <option value="">— Select item —</option>
+            {% for item in stock_items %}
+              <option value="{{ item.pk }}">{{ item.name }} (stock: {{ item.stock|floatformat }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Quantity (+/-)</label>
+          <input type="number" name="delta_qty" class="form-control" step="any" required placeholder="e.g. 10 or -5">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Remarks</label>
+          <input type="text" name="remarks" class="form-control" placeholder="Reason for adjustment">
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-secondary w-100">Apply</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  {% endif %}
+</div>
+{% endblock %}

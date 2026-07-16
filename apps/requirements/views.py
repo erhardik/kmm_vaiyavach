@@ -8,7 +8,7 @@ from xml.sax.saxutils import escape
 from django.contrib import messages
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db import transaction
+from django.db import models, transaction
 from django.http import HttpResponse, JsonResponse
 from django.forms import formset_factory
 from django.shortcuts import get_object_or_404, redirect, render
@@ -46,6 +46,7 @@ from apps.common.pdf_utils import (
 
 from apps.common.views import EventScopedCreateView, EventScopedDeleteView, EventScopedListView, EventScopedUpdateView
 from apps.dashboard.services import build_public_item_preview
+from apps.inventory.models import InventoryTransaction, InventoryTransactionType
 from apps.inventory.services import apply_requirement_packing
 from apps.masters.models import Event, EventManagerContact, Item, ItemCategory
 from apps.requirements.forms import (
@@ -1944,4 +1945,193 @@ class PublicRequirementListView(View):
         if previous_status != new_status:
             messages.success(request, "Status saved.")
         return redirect(reverse("public-requests"))
+
+
+class StockBasedPackingView(LoginRequiredMixin, View):
+    template_name = "requirements/stock_based_packing.html"
+
+    def _get_event(self, request):
+        event_id = request.GET.get("event")
+        if event_id:
+            return get_object_or_404(Event, pk=event_id)
+        return Event.objects.filter(is_active=True, is_current=True).first()
+
+    def _compute_stock_data(self, event):
+        acquired_statuses = [
+            InventoryTransactionType.PURCHASE,
+            InventoryTransactionType.DONATION,
+            InventoryTransactionType.SPONSORSHIP_RECEIPT,
+            InventoryTransactionType.RETURN,
+            InventoryTransactionType.ADJUSTMENT,
+        ]
+        acquired_qs = InventoryTransaction.objects.filter(
+            event=event, transaction_type__in=acquired_statuses
+        ).values("item_id").annotate(total=models.Sum("qty"))
+        acquired_map = {a["item_id"]: a["total"] for a in acquired_qs}
+
+        packed_statuses = [RequirementStatus.PACKED, RequirementStatus.IN_PROGRESS]
+        packed_qs = RequirementLine.objects.filter(
+            event=event, requirement__status__in=packed_statuses
+        ).values("item_id").annotate(total=models.Sum("required_qty"))
+        packed_map = {p["item_id"]: p["total"] for p in packed_qs}
+
+        delivered_statuses = [RequirementStatus.DELIVERED, RequirementStatus.CLOSED, RequirementStatus.RECEIVED_BY_MS]
+        delivered_qs = RequirementLine.objects.filter(
+            event=event, requirement__status__in=delivered_statuses
+        ).values("item_id").annotate(total=models.Sum("required_qty"))
+        delivered_map = {d["item_id"]: d["total"] for d in delivered_qs}
+
+        all_ids = set(acquired_map) | set(packed_map) | set(delivered_map)
+        stock_map = {}
+        for item_id in all_ids:
+            acquired = float(acquired_map.get(item_id, 0) or 0)
+            packed = float(packed_map.get(item_id, 0) or 0)
+            delivered = float(delivered_map.get(item_id, 0) or 0)
+            stock_map[item_id] = acquired - packed - delivered
+        return stock_map
+
+    def _analyze_forms(self, event, stock_map):
+        headers = RequirementHeader.objects.filter(
+            event=event, is_active=True,
+            status__in=[RequirementStatus.CONFIRMED, RequirementStatus.NOT_CONFIRMED]
+        ).order_by("form_no").prefetch_related("lines", "lines__item")
+
+        fully_packable = []
+        partially_packable = []
+        item_cache = {}
+
+        for header in headers:
+            lines = list(header.lines.all())
+            if not lines:
+                continue
+
+            item_requirements = {}
+            for line in lines:
+                item_id = line.item_id
+                req_qty = float(line.required_qty)
+                item_requirements[item_id] = item_requirements.get(item_id, 0) + req_qty
+
+            can_full = True
+            items_status = []
+            for item_id, req_qty in item_requirements.items():
+                if item_id not in item_cache:
+                    try:
+                        item_cache[item_id] = Item.objects.get(pk=item_id)
+                    except Item.DoesNotExist:
+                        item_cache[item_id] = None
+                item_obj = item_cache[item_id]
+                available = stock_map.get(item_id, 0)
+                shortfall = max(0, req_qty - available)
+                if shortfall > 0:
+                    can_full = False
+                items_status.append({
+                    "item_id": item_id,
+                    "item_name": str(item_obj) if item_obj else f"#{item_id}",
+                    "required": req_qty,
+                    "available": available,
+                    "shortfall": shortfall,
+                    "status": "short" if shortfall > 0 else "ok",
+                })
+
+            ratios = []
+            any_negative = False
+            for item_id, req_qty in item_requirements.items():
+                avail = stock_map.get(item_id, 0)
+                if avail < 0:
+                    any_negative = True
+                if req_qty > 0:
+                    ratios.append(avail / req_qty)
+            if ratios and not any_negative:
+                fulfillment_pct = min(100, int(min(ratios) * 100))
+            else:
+                fulfillment_pct = 0
+
+            entry = {
+                "header": header,
+                "items_status": items_status,
+                "total_items": len(items_status),
+                "short_items": sum(1 for s in items_status if s["status"] == "short"),
+                "fulfillment_pct": fulfillment_pct,
+            }
+
+            if can_full:
+                fully_packable.append(entry)
+            else:
+                partially_packable.append(entry)
+
+        partially_packable.sort(key=lambda x: x["fulfillment_pct"], reverse=True)
+        return fully_packable, partially_packable
+
+    def get(self, request):
+        event = self._get_event(request)
+        if not event:
+            return render(request, self.template_name, {"no_event": True})
+
+        stock_map = self._compute_stock_data(event)
+        fully_packable, partially_packable = self._analyze_forms(event, stock_map)
+
+        all_item_ids = set(stock_map)
+        for entry in fully_packable + partially_packable:
+            for s in entry["items_status"]:
+                all_item_ids.add(s["item_id"])
+        stock_qs = Item.objects.filter(pk__in=all_item_ids, event=event).values("pk", "name")
+        stock_items = [{"pk": it["pk"], "name": it["name"], "stock": stock_map.get(it["pk"], 0)} for it in stock_qs]
+
+        context = {
+            "event": event,
+            "fully_packable": fully_packable,
+            "partially_packable": partially_packable,
+            "stock_items": stock_items,
+            "stock_map": stock_map,
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request):
+        event = self._get_event(request)
+        action = request.POST.get("action")
+
+        if action == "pack":
+            header_pk = request.POST.get("header_pk")
+            header = get_object_or_404(RequirementHeader, pk=header_pk, event=event)
+            if header.status not in (RequirementStatus.CONFIRMED, RequirementStatus.NOT_CONFIRMED):
+                messages.error(request, f"Form #{header.form_no} cannot be packed from current status.")
+                return redirect("requirements:pack-by-order")
+            header.status = RequirementStatus.PACKED
+            header.is_locked = True
+            header.locked_at = timezone.now()
+            header.updated_at = timezone.now()
+            header.save(update_fields=["status", "is_locked", "locked_at", "updated_at"])
+            messages.success(request, f"Form #{header.form_no} packed successfully.")
+
+        elif action == "adjust_stock":
+            is_allowed = (
+                request.user.is_superuser
+                or request.user.groups.filter(name__in=["KMM Admin", "KMM Manager"]).exists()
+            )
+            if not is_allowed:
+                messages.error(request, "You don't have permission to adjust stock.")
+                return redirect("requirements:pack-by-order")
+            item_pk = request.POST.get("item_pk")
+            delta_qty = request.POST.get("delta_qty")
+            remarks = request.POST.get("remarks", "")
+            item = get_object_or_404(Item, pk=item_pk, event=event)
+            try:
+                delta = float(delta_qty)
+            except (TypeError, ValueError):
+                messages.error(request, "Invalid quantity.")
+                return redirect("requirements:pack-by-order")
+            if delta == 0:
+                messages.error(request, "Adjustment quantity cannot be zero.")
+                return redirect("requirements:pack-by-order")
+            InventoryTransaction.objects.create(
+                event=event,
+                item=item,
+                transaction_type=InventoryTransactionType.ADJUSTMENT,
+                qty=delta,
+                remarks=remarks or f"Manual adjustment by {request.user.get_full_name() or request.user.username}",
+                source_module="StockBasedPacking",
+            )
+            messages.success(request, f"Stock adjusted for {item.name}: {delta:+g}.")
+
+        return redirect("requirements:pack-by-order")
 
