@@ -1,6 +1,6 @@
 import json
 import uuid
-from collections import defaultdict
+from collections import Counter, defaultdict
 from io import BytesIO
 from pathlib import Path
 from xml.sax.saxutils import escape
@@ -318,10 +318,17 @@ class RequirementHeaderListView(EventScopedListView):
         context["page_subtitle"] = "Collect new orders, review saved orders, and edit them when needed."
         context["create_url"] = reverse_lazy(self.create_url_name)
         headers = list(self.object_list)
+        total_orders = len(headers)
+        total_qty = sum((line.required_qty for header in headers for line in header.lines.all()), start=0)
+        avg_qty = total_qty / total_orders if total_orders else 0
+        route_counts = Counter(header.get_route_area_display() or "Unknown" for header in headers)
+        top_route = route_counts.most_common(1)
         context["summary"] = {
-            "orders": len(headers),
-            "items": sum(header.lines.count() for header in headers),
-            "qty_total": sum((line.required_qty for header in headers for line in header.lines.all()), start=0),
+            "orders": total_orders,
+            "qty_total": total_qty,
+            "avg_qty_per_order": avg_qty,
+            "top_route_name": top_route[0][0] if top_route else "—",
+            "top_route_count": top_route[0][1] if top_route else 0,
         }
         event = Event.objects.filter(is_current=True, is_active=True).first()
         event_id = self.request.GET.get("event")

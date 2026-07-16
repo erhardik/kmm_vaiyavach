@@ -27,10 +27,10 @@
 </div>
 
 <div class="row g-3 mb-3">
-  <div class="col-6 col-lg-3"><div class="metric-card"><div class="label">Orders</div><div class="value">{{ summary.orders|default:0 }}</div></div></div>
-  <div class="col-6 col-lg-3"><div class="metric-card"><div class="label">Rows</div><div class="value">{{ summary.items|default:0 }}</div></div></div>
-    <div class="col-6 col-lg-3"><div class="metric-card"><div class="label">Qty Total</div><div class="value">{{ summary.qty_total|default:0|floatformat:0 }}</div></div></div>
-  <div class="col-6 col-lg-3"><div class="metric-card"><div class="label">Current Event</div><div class="value">{{ event_queryset|length }}</div></div></div>
+  <div class="col-6 col-lg-3"><div class="metric-card"><div class="label">{% if status_filter == 'confirmed' %}Confirmed Orders{% elif status_filter == 'packed' %}Packed Orders{% elif status_filter == 'delivered' %}Delivered Orders{% elif status_filter == 'returned' %}Returned Orders{% elif status_filter == 'rejected' %}Rejected Orders{% else %}Orders{% endif %}</div><div class="value">{{ summary.orders|default:0 }}</div></div></div>
+  <div class="col-6 col-lg-3"><div class="metric-card"><div class="label">Avg Qty/Order</div><div class="value">{{ summary.avg_qty_per_order|default:0|floatformat:1 }}</div></div></div>
+  <div class="col-6 col-lg-3"><div class="metric-card"><div class="label">Qty Total</div><div class="value">{{ summary.qty_total|default:0|floatformat:0 }}</div></div></div>
+  <div class="col-6 col-lg-3"><div class="metric-card"><div class="label">Top Route</div><div class="value">{{ summary.top_route_name|default:"—" }}</div><div class="small text-body-secondary">{{ summary.top_route_count }} form{{ summary.top_route_count|pluralize }}</div></div></div>
 </div>
 
 <div class="card border-0 shadow-sm">
