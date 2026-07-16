@@ -6,7 +6,7 @@
 }
 
 body.bg-soft {
-  background: var(--kmm-slate);
+  background: var(--bs-secondary-bg);
 }
 
 .bg-navy {
@@ -613,7 +613,7 @@ body.sidebar-collapsed .app-sidebar {
 }
 
 .topbar-shell {
-  background: rgba(255, 255, 255, 0.88);
+  background: var(--bs-body-bg);
   backdrop-filter: blur(10px);
 }
 
