@@ -134,7 +134,7 @@
             <td>-</td>
             <td>-</td>
             <td>{{ summary.qty_total|default:0|floatformat:0 }} qty</td>
-            <td class="text-end">{{ summary.items|default:0 }} rows</td>
+            <td class="text-end">{{ summary.avg_qty_per_order|default:0|floatformat:1 }} avg</td>
           </tr>
         </tfoot>
       </table>
