@@ -186,7 +186,7 @@
       <div class="modal-body" id="statusConfirmBody"></div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <form method="post" id="statusConfirmForm" style="display:inline">
+        <form method="post" id="statusConfirmForm" data-ajax="1" style="display:inline">
           {% csrf_token %}
           <button type="submit" class="btn btn-success" id="statusConfirmBtn">Confirm</button>
         </form>
@@ -392,6 +392,39 @@
       }
       confirmModal.show();
     });
+
+    if (confirmForm && confirmForm.getAttribute('data-ajax') === '1') {
+      confirmForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var activeBtn = document.querySelector('.sheet-sort-btn.active');
+        if (activeBtn) {
+          sessionStorage.setItem('requirementsSortKey', activeBtn.getAttribute('data-sort-key'));
+          sessionStorage.setItem('requirementsSortDir', activeBtn.getAttribute('data-sort-dir') || 'asc');
+        }
+        var fd = new FormData(confirmForm);
+        fd.set('ajax', '1');
+        var btn = document.getElementById('statusConfirmBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+        fetch(confirmForm.action, { method: 'POST', body: fd })
+          .then(function(r) {
+            if (!r.ok) throw new Error('Server error');
+            return r.json();
+          })
+          .then(function(data) {
+            if (data.ok) {
+              location.reload();
+            } else {
+              btn.disabled = false;
+              btn.innerHTML = data.error || 'Error';
+            }
+          })
+          .catch(function() {
+            btn.disabled = false;
+            btn.innerHTML = 'Error';
+          });
+      });
+    }
   })();
 
   document.addEventListener('click', function(e) {

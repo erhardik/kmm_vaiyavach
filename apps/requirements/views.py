@@ -1607,9 +1607,13 @@ class RequirementStatusTransitionView(LoginRequiredMixin, View):
 
     def post(self, request, pk):
         header = get_object_or_404(RequirementHeader, pk=pk)
+        is_ajax = request.POST.get("ajax") == "1"
         transition = self.ALLOWED_TRANSITIONS.get(header.status)
         if not transition:
-            messages.error(request, "Status transition not allowed from current state.")
+            msg = "Status transition not allowed from current state."
+            if is_ajax:
+                return JsonResponse({"ok": False, "error": msg})
+            messages.error(request, msg)
             return redirect("requirements:header-list")
         header.status = transition["next_status"]
         if header.status in (RequirementStatus.IN_PROGRESS, RequirementStatus.PACKED):
@@ -1617,7 +1621,10 @@ class RequirementStatusTransitionView(LoginRequiredMixin, View):
             header.locked_at = timezone.now()
         header.updated_at = timezone.now()
         header.save(update_fields=["status", "is_locked", "locked_at", "updated_at"])
-        messages.success(request, f"Status updated to {header.get_status_display()}.")
+        msg = f"Status updated to {header.get_status_display()}."
+        if is_ajax:
+            return JsonResponse({"ok": True, "message": msg})
+        messages.success(request, msg)
         return redirect("requirements:header-list")
 
 
