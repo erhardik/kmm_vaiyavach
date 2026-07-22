@@ -1,6 +1,6 @@
 import json
 import uuid
-from collections import Counter, defaultdict
+from collections import defaultdict
 from io import BytesIO
 from pathlib import Path
 from xml.sax.saxutils import escape
@@ -9,6 +9,7 @@ from django.contrib import messages
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import models, transaction
+from django.db.models import Count, Sum
 from django.http import HttpResponse, JsonResponse
 from django.forms import formset_factory
 from django.shortcuts import get_object_or_404, redirect, render
@@ -230,6 +231,17 @@ def _variant_suffix(index):
 
 
 def _group_requirement_lines(lines):
+    parent_ids = set()
+    for line in lines:
+        if line.item.parent_item_id:
+            parent_ids.add(line.item.parent_item_id)
+    all_variants = Item.objects.filter(pk__in=parent_ids, is_active=True).prefetch_related("variants")
+    variant_map = {}
+    for parent in all_variants:
+        variant_map[parent.pk] = sorted(
+            [v for v in parent.variants.all() if v.is_active],
+            key=lambda v: (v.item_code or "", v.pk or 0),
+        )
     grouped = []
     current_key = None
     current_group = None
@@ -245,7 +257,7 @@ def _group_requirement_lines(lines):
             }
             grouped.append(current_group)
         if item.parent_item_id:
-            siblings = list(base_item.variants.filter(is_active=True).order_by("item_code", "pk"))
+            siblings = variant_map.get(base_item.pk, [])
             suffix_index = next((idx for idx, sibling in enumerate(siblings) if sibling.pk == item.pk), 0)
             serial_display = f"{base_item.standard_serial or base_item.pk}-{_variant_suffix(suffix_index)}"
             size_display = item.variant_name_gu or item.variant_name or item.default_size or ""
@@ -317,30 +329,58 @@ class RequirementHeaderListView(EventScopedListView):
         context["page_title"] = "Requirements"
         context["page_subtitle"] = "Collect new orders, review saved orders, and edit them when needed."
         context["create_url"] = reverse_lazy(self.create_url_name)
-        headers = list(self.object_list)
-        total_orders = len(headers)
-        total_qty = sum((line.required_qty for header in headers for line in header.lines.all()), start=0)
+
+        qs = self.object_list
+        agg = qs.aggregate(
+            total_qty=Sum("lines__required_qty"),
+            total_orders=Count("pk", distinct=True),
+        )
+        total_orders = agg["total_orders"] or 0
+        total_qty = agg["total_qty"] or 0
         avg_qty = total_qty / total_orders if total_orders else 0
-        route_counts = Counter(header.get_route_area_display() or "Unknown" for header in headers)
-        top_route = route_counts.most_common(1)
+
+        route_qs = qs.values("route_area").annotate(cnt=Count("pk"))
+        route_label_map = dict(RequirementHeader.RouteAreaChoices.choices)
+        route_counts = {}
+        for item in route_qs:
+            area = item["route_area"]
+            label = route_label_map.get(area, area or "Unknown")
+            route_counts[label] = item["cnt"]
+        top_route = max(route_counts.items(), key=lambda x: x[1]) if route_counts else None
+
         context["summary"] = {
             "orders": total_orders,
             "qty_total": total_qty,
             "avg_qty_per_order": avg_qty,
-            "top_route_name": top_route[0][0] if top_route else "—",
-            "top_route_count": top_route[0][1] if top_route else 0,
+            "top_route_name": top_route[0] if top_route else "—",
+            "top_route_count": top_route[1] if top_route else 0,
         }
+
         event = Event.objects.filter(is_current=True, is_active=True).first()
         event_id = self.request.GET.get("event")
         if event_id:
             event = Event.objects.filter(pk=event_id, is_active=True).first()
         if event:
             all_reqs = RequirementHeader.objects.filter(event=event, is_active=True).exclude(status=RequirementStatus.DRAFT)
+            status_counts = all_reqs.values("status").annotate(cnt=Count("pk"))
+            confirmed_statuses = {RequirementStatus.CONFIRMED, RequirementStatus.NOT_CONFIRMED}
+            packed_statuses = {RequirementStatus.PACKED, RequirementStatus.IN_PROGRESS}
+            delivered_statuses = {RequirementStatus.DELIVERED, RequirementStatus.CLOSED, RequirementStatus.RECEIVED_BY_MS}
+            confirmed = packed = delivered = 0
+            total = 0
+            for item in status_counts:
+                total += item["cnt"]
+                if item["status"] in confirmed_statuses:
+                    confirmed += item["cnt"]
+                elif item["status"] in packed_statuses:
+                    packed += item["cnt"]
+                elif item["status"] in delivered_statuses:
+                    delivered += item["cnt"]
             context["order_summary"] = {
-                "confirmed": all_reqs.filter(status__in=[RequirementStatus.CONFIRMED, RequirementStatus.NOT_CONFIRMED]).count(),
-                "packed": all_reqs.filter(status__in=[RequirementStatus.PACKED, RequirementStatus.IN_PROGRESS]).count(),
-                "delivered": all_reqs.filter(status__in=[RequirementStatus.DELIVERED, RequirementStatus.CLOSED, RequirementStatus.RECEIVED_BY_MS]).count(),
-                "total": all_reqs.count(),
+                "confirmed": confirmed,
+                "packed": packed,
+                "delivered": delivered,
+                "total": total,
             }
         context["status_filter"] = self.request.GET.get("status", "")
         return context
@@ -633,16 +673,22 @@ class RequirementCollectionView(View):
     def _get_items(self, event):
         base_items = list(
             Item.objects.filter(event=event, is_active=True, parent_item__isnull=True)
-            .prefetch_related("variants")
             .order_by("standard_serial", "pk")
         )
+        base_ids = [b.pk for b in base_items]
+        variant_items = Item.objects.filter(
+            event=event, is_active=True, parent_item_id__in=base_ids
+        ).select_related("parent_item").order_by("item_code", "pk")
+        variant_map = defaultdict(list)
+        for v in variant_items:
+            variant_map[v.parent_item_id].append(v)
         items = []
-        for item in base_items:
-            variants = list(item.variants.filter(is_active=True).order_by("item_code", "pk"))
+        for base in base_items:
+            variants = variant_map.get(base.pk, [])
             if variants:
                 items.extend(variants)
             else:
-                items.append(item)
+                items.append(base)
         return items
 
     def _resolve_upashray(self, event, upashray_name):
@@ -676,10 +722,7 @@ class RequirementCollectionView(View):
         variant_positions = {}
         for item in items:
             if item.parent_item_id:
-                siblings = variant_positions.get(item.parent_item_id)
-                if siblings is None:
-                    siblings = list(item.parent_item.variants.filter(is_active=True).order_by("item_code", "pk"))
-                    variant_positions[item.parent_item_id] = siblings
+                variant_positions.setdefault(item.parent_item_id, []).append(item)
         for item, form in zip(items, formset.forms, strict=False):
             serial = item.standard_serial or item.pk
             if item.parent_item_id:
@@ -1946,7 +1989,7 @@ class PublicRequirementListView(View):
     def get(self, request, token=None):
         event = self._get_event(token)
         headers = self._get_rows(event) if event else []
-        total_items = sum(h.lines.count() for h in headers) if headers else 0
+        total_items = sum(len(h.lines.all()) for h in headers) if headers else 0
         return render(
             request,
             self.template_name,

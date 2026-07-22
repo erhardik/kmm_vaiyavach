@@ -1,6 +1,7 @@
+from collections import defaultdict
 from decimal import Decimal
 
-from django.db.models import Sum
+from django.db.models import Count, Sum
 
 from apps.distribution.models import DistributionLine
 from apps.inventory.models import InventoryBalance, InventoryTransaction, InventoryTransactionType
@@ -239,7 +240,11 @@ def build_home_summary(event):
 
 
 def build_public_status_summary(event):
-    statuses = [
+    qs = RequirementHeader.objects.filter(event=event)
+    status_counts = qs.values("status").annotate(cnt=Count("pk"))
+    counts = {item["status"]: item["cnt"] for item in status_counts}
+
+    tracked_statuses = [
         RequirementStatus.DRAFT,
         RequirementStatus.SUBMITTED,
         RequirementStatus.IN_PROGRESS,
@@ -249,19 +254,19 @@ def build_public_status_summary(event):
         RequirementStatus.RETURN_DONE,
         RequirementStatus.RECEIVED_BY_MS,
     ]
-    qs = RequirementHeader.objects.filter(event=event)
     summary = {
-        "total_requests": qs.count(),
+        "total_requests": sum(counts.values()),
     }
-    for status in statuses:
-        summary[f"status_{status}"] = qs.filter(status=status).count()
-    summary["open_requests"] = qs.filter(status__in=[RequirementStatus.DRAFT, RequirementStatus.SUBMITTED]).count()
-    summary["packing_requests"] = qs.filter(status=RequirementStatus.IN_PROGRESS).count()
-    summary["on_route_requests"] = qs.filter(status=RequirementStatus.CLOSED).count()
-    summary["received_requests"] = qs.filter(status=RequirementStatus.RECEIVED_BY_MS).count()
-    summary["return_requests"] = qs.filter(status=RequirementStatus.RETURN_REQUESTED).count()
-    summary["return_done_requests"] = qs.filter(status=RequirementStatus.RETURN_DONE).count()
-    summary["rejected_requests"] = qs.filter(status=RequirementStatus.CANCELLED).count()
+    for status in tracked_statuses:
+        summary[f"status_{status}"] = counts.get(status, 0)
+
+    summary["open_requests"] = counts.get(RequirementStatus.DRAFT, 0) + counts.get(RequirementStatus.SUBMITTED, 0)
+    summary["packing_requests"] = counts.get(RequirementStatus.IN_PROGRESS, 0)
+    summary["on_route_requests"] = counts.get(RequirementStatus.CLOSED, 0)
+    summary["received_requests"] = counts.get(RequirementStatus.RECEIVED_BY_MS, 0)
+    summary["return_requests"] = counts.get(RequirementStatus.RETURN_REQUESTED, 0)
+    summary["return_done_requests"] = counts.get(RequirementStatus.RETURN_DONE, 0)
+    summary["rejected_requests"] = counts.get(RequirementStatus.CANCELLED, 0)
     return summary
 
 
@@ -272,13 +277,18 @@ def _item_size_gu(item):
 
 
 def build_public_item_preview(event):
-    rows = []
     def variant_suffix(index):
         alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         return alphabet[index] if index < len(alphabet) else f"X{index + 1}"
-    base_items = Item.objects.filter(event=event, is_active=True, parent_item__isnull=True).prefetch_related("variants").order_by("standard_serial", "pk")
+    base_items = list(Item.objects.filter(event=event, is_active=True, parent_item__isnull=True).order_by("standard_serial", "pk"))
+    base_ids = [b.pk for b in base_items]
+    variant_items = Item.objects.filter(event=event, is_active=True, parent_item_id__in=base_ids).order_by("item_code", "pk")
+    variant_map = defaultdict(list)
+    for v in variant_items:
+        variant_map[v.parent_item_id].append(v)
+    rows = []
     for item in base_items:
-        variants = list(item.variants.filter(is_active=True).order_by("item_code", "pk"))
+        variants = variant_map.get(item.pk, [])
         if variants:
             for index, variant in enumerate(variants):
                 rows.append(

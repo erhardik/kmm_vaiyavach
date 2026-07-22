@@ -82,7 +82,7 @@
                       <div class="small text-body-secondary">{{ header.requirement_date }}</div>
                     </td>
                     <td>{{ header.pujya_shri_name|default:"-" }}</td>
-                    <td>{{ header.lines.count }}</td>
+                    <td>{{ header.lines.all|length }}</td>
                     <td>{{ header.area|default:"-" }}</td>
                     <td>{{ header.volunteer_name|default:"-" }}</td>
                     <td><span class="badge text-bg-primary-subtle text-primary-emphasis">{{ header.get_status_display }}</span></td>

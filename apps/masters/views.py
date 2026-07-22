@@ -1,10 +1,11 @@
+from collections import defaultdict
 from decimal import Decimal
 from io import BytesIO
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.paginator import Paginator
-from django.db.models import Max, Q, Sum
+from django.db.models import Count, Max, Q, Sum
 from django.http import Http404, HttpResponse
 from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
@@ -338,14 +339,20 @@ class ItemListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
         return Event.objects.filter(is_current=True, is_active=True).first()
 
     def _expand_items(self, event):
-        base_items = (
+        base_items = list(
             Item.objects.filter(event=event, is_active=True, parent_item__isnull=True)
-            .prefetch_related("variants")
             .order_by("standard_serial", "pk")
         )
+        base_ids = [b.pk for b in base_items]
+        variant_items = Item.objects.filter(
+            event=event, is_active=True, parent_item_id__in=base_ids
+        ).order_by("item_code", "pk")
+        variant_map = defaultdict(list)
+        for v in variant_items:
+            variant_map[v.parent_item_id].append(v)
         items = []
         for base in base_items:
-            variants = list(base.variants.filter(is_active=True).order_by("item_code", "pk"))
+            variants = variant_map.get(base.pk, [])
             if variants:
                 items.extend(variants)
             else:
@@ -378,10 +385,9 @@ class ItemListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
         current_req_qs = RequirementLine.objects.filter(event=event, requirement_id__in=req_header_ids, item_id__in=item_ids).values("item_id").annotate(total=Sum("required_qty"))
         current_req_map = {r["item_id"]: r["total"] for r in current_req_qs}
         latest_lots = {}
-        for item_id in item_ids:
-            lot = PurchaseLot.objects.filter(event=event, item_id=item_id).order_by("-transaction_date", "-created_at").first()
-            if lot:
-                latest_lots[item_id] = lot
+        for lot in PurchaseLot.objects.filter(event=event, item_id__in=item_ids).order_by("-transaction_date", "-created_at"):
+            if lot.item_id not in latest_lots:
+                latest_lots[lot.item_id] = lot
 
         table_rows = []
         for item in all_items:
@@ -427,11 +433,25 @@ class ItemListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
         context["can_change"] = self.request.user.has_perm(self._perm("change"))
         context["can_delete"] = self.request.user.has_perm(self._perm("delete"))
         reqs = RequirementHeader.objects.filter(event=event, is_active=True).exclude(status=RequirementStatus.DRAFT)
+        req_status_counts = reqs.values("status").annotate(cnt=Count("pk"))
+        confirmed_statuses = {RequirementStatus.CONFIRMED, RequirementStatus.NOT_CONFIRMED}
+        packed_statuses = {RequirementStatus.PACKED, RequirementStatus.IN_PROGRESS}
+        delivered_statuses = {RequirementStatus.DELIVERED, RequirementStatus.CLOSED, RequirementStatus.RECEIVED_BY_MS}
+        confirmed = packed = delivered = 0
+        total = 0
+        for item in req_status_counts:
+            total += item["cnt"]
+            if item["status"] in confirmed_statuses:
+                confirmed += item["cnt"]
+            elif item["status"] in packed_statuses:
+                packed += item["cnt"]
+            elif item["status"] in delivered_statuses:
+                delivered += item["cnt"]
         context["order_summary"] = {
-            "confirmed": reqs.filter(status__in=[RequirementStatus.CONFIRMED, RequirementStatus.NOT_CONFIRMED]).count(),
-            "packed": reqs.filter(status__in=[RequirementStatus.PACKED, RequirementStatus.IN_PROGRESS]).count(),
-            "delivered": reqs.filter(status__in=[RequirementStatus.DELIVERED, RequirementStatus.CLOSED, RequirementStatus.RECEIVED_BY_MS]).count(),
-            "total": reqs.count(),
+            "confirmed": confirmed,
+            "packed": packed,
+            "delivered": delivered,
+            "total": total,
         }
         return context
 
@@ -443,10 +463,15 @@ class ItemListExportView(LoginRequiredMixin, View):
         if event is None:
             return HttpResponse("No active event found.", status=404)
 
-        base_items = Item.objects.filter(event=event, is_active=True, parent_item__isnull=True).prefetch_related("variants").order_by("standard_serial", "pk")
+        base_items = list(Item.objects.filter(event=event, is_active=True, parent_item__isnull=True).order_by("standard_serial", "pk"))
+        base_ids = [b.pk for b in base_items]
+        variant_items = Item.objects.filter(event=event, is_active=True, parent_item_id__in=base_ids).order_by("item_code", "pk")
+        variant_map = defaultdict(list)
+        for v in variant_items:
+            variant_map[v.parent_item_id].append(v)
         all_items = []
         for base in base_items:
-            variants = list(base.variants.filter(is_active=True).order_by("item_code", "pk"))
+            variants = variant_map.get(base.pk, [])
             if variants:
                 all_items.extend(variants)
             else:
@@ -469,10 +494,9 @@ class ItemListExportView(LoginRequiredMixin, View):
             delivered = delivered_map.get(item_id, 0) or 0
             stock_map[item_id] = int(acquired - packed - delivered) if (acquired - packed - delivered) == int(acquired - packed - delivered) else (acquired - packed - delivered)
         latest_lots = {}
-        for item_id in item_ids:
-            lot = PurchaseLot.objects.filter(event=event, item_id=item_id).order_by("-transaction_date", "-created_at").first()
-            if lot:
-                latest_lots[item_id] = lot
+        for lot in PurchaseLot.objects.filter(event=event, item_id__in=item_ids).order_by("-transaction_date", "-created_at"):
+            if lot.item_id not in latest_lots:
+                latest_lots[lot.item_id] = lot
 
         workbook = Workbook()
 
@@ -521,7 +545,7 @@ class ItemListExportView(LoginRequiredMixin, View):
         response_items = []
         item_serial_map = {}
         for base in base_items:
-            variants = list(base.variants.filter(is_active=True).order_by("item_code", "pk"))
+            variants = variant_map.get(base.pk, [])
             if variants:
                 for vi, variant in enumerate(variants):
                     suffix = alphabet[vi] if vi < 26 else f"X{vi+1}"
