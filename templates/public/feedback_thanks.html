@@ -31,7 +31,11 @@
   </div>
   <img src="{% static 'images/kmm.png' %}" alt="KMM" class="thanks-logo">
   <div class="thanks-team">- કલ્યાણ મિત્ર મંડળ -</div>
-  <a class="btn btn-outline-primary" href="{% url 'public-landing' %}">← {% if request.GET.lang == 'gu' %}હોમ પેજ પર જાઓ{% else %}Back to Home{% endif %}</a>
+  <div class="d-flex flex-wrap justify-content-center gap-2 mt-3">
+    <a class="btn btn-outline-dark btn-sm" href="https://instagram.com/jainkmm" target="_blank" rel="noopener"><i class="bi bi-instagram me-1"></i>Instagram</a>
+    <a class="btn btn-outline-dark btn-sm" href="https://facebook.com/jainkalyanmitramandal" target="_blank" rel="noopener"><i class="bi bi-facebook me-1"></i>Facebook</a>
+    <a class="btn btn-outline-dark btn-sm" href="http://www.youtube.com/@KalyanMitraMandalAhmedabad" target="_blank" rel="noopener"><i class="bi bi-youtube me-1"></i>YouTube</a>
+  </div>
 </div>
 <script>
 (function(){
