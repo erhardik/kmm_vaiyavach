@@ -137,27 +137,37 @@ class PublicFeedbackView(View):
         event = self.get_event()
         if not event:
             return redirect("public-landing")
+        errors = []
+        name = request.POST.get("volunteer_name", "").strip()
+        if not name:
+            errors.append("Please enter your name.")
+        event_feedback = request.POST.get("event_feedback", "").strip()
+        portal_feedback = request.POST.get("portal_feedback", "").strip()
+        if len(event_feedback.split()) < 3 and len(portal_feedback.split()) < 3:
+            errors.append("Please write at least 3 words in either Event or Portal feedback.")
         event_rating = request.POST.get("event_rating")
         portal_rating = request.POST.get("portal_rating")
         if not event_rating or not portal_rating:
-            messages.error(request, "Please provide both ratings.")
-            return render(request, self.template_name, {"event": event})
+            errors.append("Please provide both ratings.")
         try:
-            event_rating = int(event_rating)
-            portal_rating = int(portal_rating)
+            event_rating = int(event_rating) if event_rating else 0
+            portal_rating = int(portal_rating) if portal_rating else 0
             if event_rating < 1 or event_rating > 5 or portal_rating < 1 or portal_rating > 5:
                 raise ValueError
         except (ValueError, TypeError):
-            messages.error(request, "Ratings must be between 1 and 5.")
+            errors.append("Ratings must be between 1 and 5.")
+        if errors:
+            for err in errors:
+                messages.error(request, err)
             return render(request, self.template_name, {"event": event})
         Feedback.objects.create(
             event=event,
-            volunteer_name=request.POST.get("volunteer_name", "").strip(),
+            volunteer_name=name,
             volunteer_mobile=request.POST.get("volunteer_mobile", "").strip(),
             event_rating=event_rating,
             portal_rating=portal_rating,
-            event_feedback=request.POST.get("event_feedback", "").strip(),
-            portal_feedback=request.POST.get("portal_feedback", "").strip(),
+            event_feedback=event_feedback,
+            portal_feedback=portal_feedback,
         )
         return redirect("feedback-thanks")
 
