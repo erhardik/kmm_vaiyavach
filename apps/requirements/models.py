@@ -47,6 +47,7 @@ class RequirementHeader(EventScopedModel):
         A9 = "A9", "Area-9 Shahibag"
         A10 = "A10", "Area-10 Sabarmati-Chandkheda"
         A11 = "A11", "Area-11 Other Areas"
+        A12 = "A12", "Area-12 Outside AHD"
         NOT_IN_LIST = "NOT_IN_LIST", "NOT IN LIST"
 
     SUB_ROUTE_CHOICES = {
@@ -102,6 +103,13 @@ class RequirementHeader(EventScopedModel):
             ("11-B", "11-B - બોપલ / ગોતા / અદાણી શાંતિગ્રામ"),
             ("11-C", "11-C - સરખેજ / સાણંદ"),
             ("11-D", "11-D - બરોડા"),
+        ],
+        "A12": [
+            ("12-A", "12-A - પાલિતાણા"),
+            ("12-B", "12-B - શંખેશ્વર"),
+            ("12-C", "12-C - મહેસાણા"),
+            ("12-D", "12-D - વડોદરા"),
+            ("12-O", "12-O - અન્ય"),
         ],
     }
 
