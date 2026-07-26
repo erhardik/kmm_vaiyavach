@@ -6,70 +6,88 @@
   .fb-stat-card{background:var(--bs-body-bg);border:1px solid var(--bs-border-color);border-radius:1rem;padding:1rem 1.25rem;text-align:center}
   .fb-stat-card .num{font-size:1.8rem;font-weight:800}
   .fb-stat-card .lbl{font-size:.8rem;color:var(--bs-secondary-color)}
-  .fb-stars{color:#e8a84c;white-space:nowrap}
-  .fb-row td{vertical-align:middle}
-  .fb-name{font-weight:600}
-  .fb-meta{font-size:.82rem;color:var(--bs-secondary-color)}
+  .fb-stars{color:#e8a84c;white-space:nowrap;font-size:1.1rem;letter-spacing:2px}
+  .fb-review-card{border:1px solid var(--bs-border-color);border-radius:1rem;background:var(--bs-body-bg);overflow:hidden}
+  .fb-review-card .card-head{padding:.85rem 1.1rem;display:flex;justify-content:space-between;align-items:flex-start;gap:.75rem;flex-wrap:wrap}
+  .fb-review-card .card-body{padding:0 1.1rem .85rem}
+  .fb-reviewer{font-weight:600;font-size:.95rem}
+  .fb-reviewer small{font-weight:400;color:var(--bs-secondary-color);font-size:.8rem}
+  .fb-mobile{font-size:.8rem;color:var(--bs-secondary-color)}
+  .fb-date{font-size:.78rem;color:var(--bs-secondary-color);white-space:nowrap}
+  .fb-msg{border-radius:.75rem;padding:.7rem .9rem;margin-bottom:.5rem;font-size:.9rem;line-height:1.55}
+  .fb-msg:last-child{margin-bottom:0}
+  .fb-msg.event-msg{background:rgba(232,168,76,0.1)}
+  .fb-msg.portal-msg{background:rgba(13,110,253,0.07)}
+  .fb-msg .label{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--bs-secondary-color);margin-bottom:.15rem}
 </style>
 
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
   <h4 class="mb-0"><i class="bi bi-chat-dots-fill me-2"></i>Volunteer Feedback</h4>
 </div>
 
-<div class="row g-2 mb-3">
-  <div class="col-6 col-md-3">
+<div class="row g-2 mb-4">
+  <div class="col-4 col-md-3">
     <div class="fb-stat-card">
       <div class="num">{{ total }}</div>
-      <div class="lbl">Total Responses</div>
+      <div class="lbl">Total</div>
     </div>
   </div>
-  <div class="col-6 col-md-3">
+  <div class="col-4 col-md-3">
     <div class="fb-stat-card">
       <div class="num">{% if avg_event_rating %}{{ avg_event_rating }}{% else %}—{% endif %}</div>
-      <div class="lbl">Avg Event Rating <span class="fb-stars">★</span></div>
+      <div class="lbl">Event <span class="fb-stars">★</span></div>
     </div>
   </div>
-  <div class="col-6 col-md-3">
+  <div class="col-4 col-md-3">
     <div class="fb-stat-card">
       <div class="num">{% if avg_portal_rating %}{{ avg_portal_rating }}{% else %}—{% endif %}</div>
-      <div class="lbl">Avg Portal Rating <span class="fb-stars">★</span></div>
+      <div class="lbl">Portal <span class="fb-stars">★</span></div>
     </div>
   </div>
 </div>
 
-<div class="table-responsive">
-  <table class="table table-sm align-middle fb-row">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Volunteer</th>
-        <th>Event</th>
-        <th>Portal</th>
-        <th>Feedback</th>
-        <th>Date</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for fb in feedbacks %}
-        <tr>
-          <td class="text-body-secondary">{{ forloop.revcounter }}</td>
-          <td>
-            <div class="fb-name">{{ fb.volunteer_name|default:"Anonymous" }}</div>
-            {% if fb.volunteer_mobile %}<div class="fb-meta">{{ fb.volunteer_mobile }}</div>{% endif %}
-          </td>
-          <td><span class="fb-stars">{{ "★"|safe|rjust:fb.event_rating }}</span></td>
-          <td><span class="fb-stars">{{ "★"|safe|rjust:fb.portal_rating }}</span></td>
-          <td style="max-width:280px">
-            {% if fb.event_feedback %}<div class="fb-meta"><strong>Event:</strong> {{ fb.event_feedback|truncatechars:100 }}</div>{% endif %}
-            {% if fb.portal_feedback %}<div class="fb-meta"><strong>Portal:</strong> {{ fb.portal_feedback|truncatechars:100 }}</div>{% endif %}
-            {% if not fb.event_feedback and not fb.portal_feedback %}<span class="text-body-secondary">—</span>{% endif %}
-          </td>
-          <td class="fb-meta">{{ fb.created_at|date:"d-M-y" }}</td>
-        </tr>
-      {% empty %}
-        <tr><td colspan="6" class="text-center text-body-secondary py-4">No feedback yet.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
+{% for fb in feedbacks %}
+  <div class="fb-review-card mb-2">
+    <div class="card-head">
+      <div>
+        <div class="fb-reviewer">
+          {{ fb.volunteer_name|default:"Anonymous" }}
+          {% if fb.volunteer_mobile %}<small>{{ fb.volunteer_mobile }}</small>{% endif %}
+        </div>
+        <div class="d-flex align-items-center gap-3 mt-1">
+          <span class="fb-stars">
+            {% for i in "12345"|make_list %}{% if forloop.counter <= fb.event_rating %}★{% endif %}{% endfor %}
+          </span>
+          <span class="fb-stars">
+            {% for i in "12345"|make_list %}{% if forloop.counter <= fb.portal_rating %}★{% endif %}{% endfor %}
+          </span>
+          <span class="fb-date">{{ fb.created_at|date:"d M Y, h:i A" }}</span>
+        </div>
+      </div>
+      <form method="post" action="{% url 'dashboard:feedback-delete' pk=fb.pk %}" onsubmit="return confirm('Delete this feedback?')">
+        {% csrf_token %}
+        <button class="btn btn-sm btn-outline-danger" type="submit"><i class="bi bi-trash"></i></button>
+      </form>
+    </div>
+    <div class="card-body">
+      {% if fb.event_feedback %}
+        <div class="fb-msg event-msg">
+          <div class="label">Event</div>
+          {{ fb.event_feedback|linebreaksbr }}
+        </div>
+      {% endif %}
+      {% if fb.portal_feedback %}
+        <div class="fb-msg portal-msg">
+          <div class="label">Portal</div>
+          {{ fb.portal_feedback|linebreaksbr }}
+        </div>
+      {% endif %}
+      {% if not fb.event_feedback and not fb.portal_feedback %}
+        <div class="text-body-secondary small">No written feedback.</div>
+      {% endif %}
+    </div>
+  </div>
+{% empty %}
+  <div class="text-center text-body-secondary py-5">No feedback yet.</div>
+{% endfor %}
 {% endblock %}

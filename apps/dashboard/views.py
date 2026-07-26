@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Avg
 from django.http import JsonResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView, View
 
@@ -160,6 +160,14 @@ class PublicFeedbackView(View):
             portal_feedback=request.POST.get("portal_feedback", "").strip(),
         )
         return redirect("feedback-thanks")
+
+
+class FeedbackDeleteView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        fb = get_object_or_404(Feedback, pk=pk)
+        fb.delete()
+        messages.success(request, "Feedback deleted.")
+        return redirect("dashboard:feedback-list")
 
 
 class FeedbackListView(LoginRequiredMixin, TemplateView):
