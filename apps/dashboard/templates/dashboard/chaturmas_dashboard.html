@@ -533,19 +533,13 @@ function renderKPIs(filtered){
   var routes = new Set(filtered.map(function(r){return r.route;}).filter(Boolean));
   var subRoutes = new Set(filtered.map(function(r){return r.sub_route;}).filter(Boolean));
   var packed = filtered.filter(function(r){return r.status==='Packed';}).length;
-  var pending = filtered.filter(function(r){return r.status==='Confirmed' || r.status==='Not Confirmed';}).length;
-  var open = filtered.filter(function(r){
-    return r.status==='Open' || r.status==='Pending' || r.status==='Rejected by M.S.' || r.status==='Return Requested' || r.status==='Return Done';
-  }).length;
 
   var cards = [
     {label:'Total Submissions', value: fmtNum(filtered.length), foot: 'of ' + RECORDS.length + ' total', cls:'neutral'},
     {label:'Quantity Requested', value: fmtNum(totalQty) + ' units', foot: 'across selected filters', cls:'neutral'},
     {label:'Routes Covered', value: routes.size, foot: routes.size + ' of ' + (OPTS.route?OPTS.route.length:0) + ' routes', cls:'neutral'},
     {label:'Sub-Routes', value: subRoutes.size, foot: subRoutes.size + ' of ' + (OPTS.sub_route?OPTS.sub_route.length:0) + ' sub-routes', cls:'neutral'},
-    {label:'Open', value: fmtNum(open), foot: pct(open,filtered.length) + '% of view', cls: open? 'warn':'good', warn: open>0},
-    {label:'Packed', value: fmtNum(packed), foot: pct(packed,filtered.length) + '% of view', cls:'good', warn:false},
-    {label:'Pending Action', value: fmtNum(pending), foot: pending? 'awaiting confirm / pack' : 'nothing pending', cls: pending? 'warn':'good', warn: pending>0}
+    {label:'Packed', value: fmtNum(packed), foot: pct(packed,filtered.length) + '% of view', cls:'good', warn:false}
   ];
   kpiRow.innerHTML = '';
   cards.forEach(function(c){
