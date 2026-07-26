@@ -363,10 +363,10 @@ class RequirementHeaderListView(EventScopedListView):
         if event:
             all_reqs = RequirementHeader.objects.filter(event=event, is_active=True).exclude(status=RequirementStatus.DRAFT)
             status_counts = all_reqs.values("status").annotate(cnt=Count("pk"))
-            confirmed_statuses = {RequirementStatus.CONFIRMED, RequirementStatus.NOT_CONFIRMED}
+            confirmed_statuses = {RequirementStatus.CONFIRMED}
             packed_statuses = {RequirementStatus.PACKED, RequirementStatus.IN_PROGRESS}
             delivered_statuses = {RequirementStatus.DELIVERED, RequirementStatus.CLOSED, RequirementStatus.RECEIVED_BY_MS}
-            open_statuses = {RequirementStatus.SUBMITTED, RequirementStatus.CANCELLED, RequirementStatus.RETURN_REQUESTED, RequirementStatus.RETURN_DONE}
+            open_statuses = {RequirementStatus.SUBMITTED, RequirementStatus.NOT_CONFIRMED, RequirementStatus.CANCELLED, RequirementStatus.RETURN_REQUESTED, RequirementStatus.RETURN_DONE}
             confirmed = packed = delivered = open_count = 0
             total = 0
             for item in status_counts:
@@ -393,7 +393,9 @@ class RequirementHeaderListView(EventScopedListView):
         qs = super().get_queryset()
         status = self.request.GET.get("status", "")
         if status == "confirmed":
-            qs = qs.filter(status__in=[RequirementStatus.CONFIRMED, RequirementStatus.NOT_CONFIRMED])
+            qs = qs.filter(status=RequirementStatus.CONFIRMED)
+        elif status == "open":
+            qs = qs.filter(status__in=[RequirementStatus.SUBMITTED, RequirementStatus.NOT_CONFIRMED, RequirementStatus.CANCELLED, RequirementStatus.RETURN_REQUESTED, RequirementStatus.RETURN_DONE])
         elif status == "packed":
             qs = qs.filter(status__in=[RequirementStatus.PACKED, RequirementStatus.IN_PROGRESS])
         elif status == "delivered":
