@@ -321,7 +321,6 @@ def build_dashboard_data(event):
 
     headers = (
         RequirementHeader.objects.filter(event=event)
-        .exclude(status=RequirementStatus.DRAFT)
         .select_related("upashray")
         .prefetch_related("lines__item")
         .order_by("created_at")
