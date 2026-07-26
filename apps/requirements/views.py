@@ -366,7 +366,8 @@ class RequirementHeaderListView(EventScopedListView):
             confirmed_statuses = {RequirementStatus.CONFIRMED, RequirementStatus.NOT_CONFIRMED}
             packed_statuses = {RequirementStatus.PACKED, RequirementStatus.IN_PROGRESS}
             delivered_statuses = {RequirementStatus.DELIVERED, RequirementStatus.CLOSED, RequirementStatus.RECEIVED_BY_MS}
-            confirmed = packed = delivered = 0
+            open_statuses = {RequirementStatus.SUBMITTED, RequirementStatus.CANCELLED, RequirementStatus.RETURN_REQUESTED, RequirementStatus.RETURN_DONE}
+            confirmed = packed = delivered = open_count = 0
             total = 0
             for item in status_counts:
                 total += item["cnt"]
@@ -376,10 +377,13 @@ class RequirementHeaderListView(EventScopedListView):
                     packed += item["cnt"]
                 elif item["status"] in delivered_statuses:
                     delivered += item["cnt"]
+                elif item["status"] in open_statuses:
+                    open_count += item["cnt"]
             context["order_summary"] = {
                 "confirmed": confirmed,
                 "packed": packed,
                 "delivered": delivered,
+                "open": open_count,
                 "total": total,
             }
         context["status_filter"] = self.request.GET.get("status", "")
