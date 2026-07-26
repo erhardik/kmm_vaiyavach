@@ -68,7 +68,7 @@
 {% if user.is_staff or current_role_label == "manager" %}
   <div class="sidebar-section-label">Admin</div>
   <div class="sidebar-links">
-    <a class="sidebar-link" href="{% url 'admin:dashboard_feedback_changelist' %}" title="Feedback">
+      <a class="sidebar-link" href="{% url 'dashboard:feedback-list' %}" title="Feedback">
       <i class="bi bi-chat-dots-fill"></i><span class="sidebar-link-text">Feedback</span>
     </a>
   </div>

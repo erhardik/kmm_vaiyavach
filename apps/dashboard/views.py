@@ -2,6 +2,7 @@ import json
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Avg
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
@@ -159,6 +160,21 @@ class PublicFeedbackView(View):
             portal_feedback=request.POST.get("portal_feedback", "").strip(),
         )
         return redirect("feedback-thanks")
+
+
+class FeedbackListView(LoginRequiredMixin, TemplateView):
+    template_name = "dashboard/feedback_list.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        feedbacks = Feedback.objects.select_related("event").order_by("-created_at")
+        context["feedbacks"] = feedbacks
+        context["total"] = feedbacks.count()
+        avg_event = feedbacks.aggregate(avg=Avg("event_rating"))["avg"]
+        avg_portal = feedbacks.aggregate(avg=Avg("portal_rating"))["avg"]
+        context["avg_event_rating"] = round(avg_event, 1) if avg_event else None
+        context["avg_portal_rating"] = round(avg_portal, 1) if avg_portal else None
+        return context
 
 
 class FeedbackThankYouView(TemplateView):
