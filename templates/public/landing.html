@@ -38,26 +38,7 @@
 </head>
 <body class="bg-soft">
   <div class="public-landing">
-    <nav class="navbar navbar-expand-lg navbar-light public-site-nav">
-      <div class="container py-2">
-        <button class="navbar-toggler me-2" type="button" data-bs-toggle="collapse" data-bs-target="#publicNav" aria-controls="publicNav" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse order-3 order-lg-1" id="publicNav">
-          <div class="navbar-nav align-items-lg-center gap-lg-3">
-            <a class="nav-link" href="#about">અમારા વિશે</a>
-            <a class="nav-link" href="#past-events">સેવા કાર્યો</a>
-            <a class="nav-link" href="#contact">સંપર્ક</a>
-            <a class="nav-link" href="{% url 'feedback' %}">અભિપ્રાય</a>
-            <a class="btn btn-outline-primary btn-sm" href="{{ login_url }}">સભ્ય લોગિન</a>
-          </div>
-        </div>
-        <a class="navbar-brand d-flex align-items-center gap-2 ms-auto order-2" href="#top">
-          <span class="fw-semibold d-none d-sm-inline">કલ્યાણ મિત્ર મંડળ</span>
-          <img src="{% static 'images/kmm.png' %}" alt="KMM" class="public-nav-logo">
-        </a>
-      </div>
-    </nav>
+    {% include "public/_nav.html" %}
 
     <header id="top" class="public-carousel-wrap">
       <div id="kmmHeroCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel" data-bs-interval="4800">

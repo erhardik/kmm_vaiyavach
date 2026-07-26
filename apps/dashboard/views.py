@@ -131,7 +131,7 @@ class PublicFeedbackView(View):
         event = self.get_event()
         if not event:
             return redirect("public-landing")
-        return render(request, self.template_name, {"event": event})
+        return render(request, self.template_name, {"event": event, "login_url": reverse_lazy("login")})
 
     def post(self, request):
         event = self.get_event()
@@ -158,7 +158,7 @@ class PublicFeedbackView(View):
         if errors:
             for err in errors:
                 messages.error(request, err)
-            return render(request, self.template_name, {"event": event})
+            return render(request, self.template_name, {"event": event, "login_url": reverse_lazy("login")})
         Feedback.objects.create(
             event=event,
             volunteer_name=name,
