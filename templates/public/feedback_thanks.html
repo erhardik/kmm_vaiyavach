@@ -10,6 +10,11 @@
   .thanks-logo{width:72px;height:72px;object-fit:contain;border-radius:1rem;background:#fff;padding:.25rem;margin-bottom:.5rem}
   .thanks-team{font-size:.9rem;font-weight:600;color:var(--bs-secondary-color);margin-bottom:1.5rem}
   .thanks-michchhami{margin-top:1.5rem;padding:1rem;border-radius:1rem;background:rgba(232,168,76,0.1);font-size:.85rem;line-height:1.6}
+  .btn-brand{color:#fff;border:none;font-weight:600;padding:.4rem 1rem;font-size:.88rem;border-radius:2rem}
+  .btn-brand:hover{color:#fff;opacity:.85}
+  .btn-instagram{background:linear-gradient(135deg,#f58529,#dd2a7b,#8134af)}
+  .btn-facebook{background:#1877f2}
+  .btn-youtube{background:#ff0000}
   canvas#confetti-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999}
 </style>
 <canvas id="confetti-canvas"></canvas>
@@ -32,9 +37,9 @@
   <img src="{% static 'images/kmm.png' %}" alt="KMM" class="thanks-logo">
   <div class="thanks-team">- કલ્યાણ મિત્ર મંડળ -</div>
   <div class="d-flex flex-wrap justify-content-center gap-2 mt-3">
-    <a class="btn btn-outline-dark btn-sm" href="https://instagram.com/jainkmm" target="_blank" rel="noopener"><i class="bi bi-instagram me-1"></i>Follow on Instagram</a>
-    <a class="btn btn-outline-dark btn-sm" href="https://facebook.com/jainkalyanmitramandal" target="_blank" rel="noopener"><i class="bi bi-facebook me-1"></i>Like on Facebook</a>
-    <a class="btn btn-outline-dark btn-sm" href="http://www.youtube.com/@KalyanMitraMandalAhmedabad?sub_confirmation=1" target="_blank" rel="noopener"><i class="bi bi-youtube me-1"></i>Subscribe on YouTube</a>
+    <a class="btn btn-brand btn-instagram" href="https://instagram.com/jainkmm" target="_blank" rel="noopener"><i class="bi bi-instagram me-1"></i>Follow on Instagram</a>
+    <a class="btn btn-brand btn-facebook" href="https://facebook.com/jainkalyanmitramandal" target="_blank" rel="noopener"><i class="bi bi-facebook me-1"></i>Like on Facebook</a>
+    <a class="btn btn-brand btn-youtube" href="http://www.youtube.com/@KalyanMitraMandalAhmedabad?sub_confirmation=1" target="_blank" rel="noopener"><i class="bi bi-youtube me-1"></i>Subscribe on YouTube</a>
   </div>
 </div>
 <script>
