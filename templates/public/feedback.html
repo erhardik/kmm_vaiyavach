@@ -1,0 +1,103 @@
+{% extends "public/form_base.html" %}
+{% load static %}
+{% block title %}Feedback | KMM{% endblock %}
+{% block content %}
+{% with lang=request.GET.lang|default:"en" %}
+<style>
+  .fb-wrap{max-width:780px;margin:0 auto}
+  .fb-header{text-align:center;margin-bottom:2rem}
+  .fb-header h1{font-size:1.6rem;font-weight:800;margin-bottom:.35rem}
+  .fb-header p{color:var(--bs-secondary-color);font-size:.95rem}
+  .rating-row{display:flex;flex-direction:column;gap:.35rem;padding:1.25rem 1.5rem;border-radius:1rem;border:1px solid var(--bs-border-color);background:var(--bs-body-bg)}
+  .rating-row label{font-weight:600;font-size:.95rem}
+  .stars{display:flex;gap:.5rem;direction:ltr}
+  .stars input[type="radio"]{display:none}
+  .stars label{cursor:pointer;font-size:2rem;color:rgba(0,0,0,.12);transition:color .12s}
+  .stars label:hover,.stars label:hover~label{color:#e8a84c}
+  .stars label.active{color:#e8a84c}
+  .stars:not(:hover) label.active{color:#e8a84c}
+  .fb-textarea textarea{min-height:100px;resize:vertical}
+  .fb-submit{text-align:center;margin-top:1.5rem}
+  .fb-volunteer{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.5rem}
+  @media(max-width:576px){.fb-volunteer{grid-template-columns:1fr}}
+</style>
+
+<div class="fb-wrap">
+  <div class="fb-header">
+    <h1>{% if lang == "gu" %}તમારો પ્રતિસાદ{% else %}Your Feedback{% endif %}</h1>
+    <p class="mb-0">{% if lang == "gu" %}ચાતુર્માસ વૈયાવચ્ચ 2026 અને આ પોર્ટલ અંગે તમારો અભિપ્રાય અમારા માટે મૂલ્યવાન છે.{% else %}Your opinion about Chaturmas Vaiyavachch 2026 and this portal is valuable to us.{% endif %}</p>
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="lang" value="{{ lang }}">
+
+    <div class="fb-volunteer">
+      <div>
+        <label class="form-label small mb-1">{% if lang == "gu" %}તમારું નામ (વૈકલ્પિક){% else %}Your Name (optional){% endif %}</label>
+        <input type="text" class="form-control" name="volunteer_name" placeholder="{% if lang == 'gu' %}નામ{% else %}Name{% endif %}">
+      </div>
+      <div>
+        <label class="form-label small mb-1">{% if lang == "gu" %}મોબાઇલ નંબર (વૈકલ્પિક){% else %}Mobile No. (optional){% endif %}</label>
+        <input type="text" class="form-control" name="volunteer_mobile" placeholder="{% if lang == 'gu' %}મોબાઇલ{% else %}Mobile{% endif %}">
+      </div>
+    </div>
+
+    <div class="rating-row mb-3">
+      <label>{% if lang == "gu" %}ચાતુર્માસ વૈયાવચ્ચ 2026 - તમારો અનુભવ{% else %}Chaturmas Vaiyavachch 2026 — Your Experience{% endif %} *</label>
+      <div class="stars" data-rating-name="event_rating">
+        {% for i in "54321"|make_list %}
+          <input type="radio" name="event_rating" value="{{ i }}" id="er{{ i }}">
+          <label for="er{{ i }}" class="bi bi-star-fill" data-val="{{ i }}"></label>
+        {% endfor %}
+      </div>
+      <textarea class="form-control fb-textarea mt-2" name="event_feedback" rows="3" placeholder="{% if lang == 'gu' %}તમારા અનુભવ વિશે વધુ લખો...{% else %}Tell us more about your experience...{% endif %}"></textarea>
+    </div>
+
+    <div class="rating-row mb-3">
+      <label>{% if lang == "gu" %}આ પોર્ટલ - ઉપયોગ અને અનુભવ{% else %}This Portal — Usability & Experience{% endif %} *</label>
+      <div class="stars" data-rating-name="portal_rating">
+        {% for i in "54321"|make_list %}
+          <input type="radio" name="portal_rating" value="{{ i }}" id="pr{{ i }}">
+          <label for="pr{{ i }}" class="bi bi-star-fill" data-val="{{ i }}"></label>
+        {% endfor %}
+      </div>
+      <textarea class="form-control fb-textarea mt-2" name="portal_feedback" rows="3" placeholder="{% if lang == 'gu' %}કોઈ સમસ્યા કે સુધારણા સૂચનો...{% else %}Any issues or suggestions for improvement...{% endif %}"></textarea>
+    </div>
+
+    <div class="fb-submit">
+      <button type="submit" class="btn btn-warning text-white btn-lg px-5 fw-semibold">{% if lang == "gu" %}સબમિટ કરો{% else %}Submit Feedback{% endif %}</button>
+    </div>
+  </form>
+</div>
+
+<script>
+(function(){
+  document.querySelectorAll('.stars').forEach(function(container){
+    var labels = container.querySelectorAll('label');
+    labels.forEach(function(label){
+      label.addEventListener('click', function(){
+        var val = this.getAttribute('data-val');
+        var radio = container.querySelector('input[value="'+val+'"]');
+        if (radio) radio.checked = true;
+        labels.forEach(function(l){ l.classList.toggle('active', l.getAttribute('data-val') <= val); });
+      });
+      label.addEventListener('mouseenter', function(){
+        var val = this.getAttribute('data-val');
+        labels.forEach(function(l){ l.classList.toggle('active', l.getAttribute('data-val') <= val); });
+      });
+      label.addEventListener('mouseleave', function(){
+        var checked = container.querySelector('input:checked');
+        if (checked) {
+          var cv = checked.value;
+          labels.forEach(function(l){ l.classList.toggle('active', l.getAttribute('data-val') <= cv); });
+        } else {
+          labels.forEach(function(l){ l.classList.remove('active'); });
+        }
+      });
+    });
+  });
+})();
+</script>
+{% endwith %}
+{% endblock %}

@@ -7,7 +7,7 @@ from django.urls import include, path
 from django.shortcuts import redirect
 
 from apps.accounts.forms import BootstrapAuthenticationForm
-from apps.dashboard.views import PublicLandingView
+from apps.dashboard.views import FeedbackThankYouView, PublicFeedbackView, PublicLandingView
 from apps.masters.models import Event
 from apps.requirements.views import PublicRequirementListView
 from django.contrib.auth import views as auth_views
@@ -26,6 +26,8 @@ urlpatterns = [
     path("i18n/setlang/", set_language, name="set_language"),
     path("", PublicLandingView.as_view(), name="public-landing"),
     path("requests/", PublicRequirementListView.as_view(), name="public-requests"),
+    path("feedback/", PublicFeedbackView.as_view(), name="feedback"),
+    path("feedback/thanks/", FeedbackThankYouView.as_view(), name="feedback-thanks"),
     path("form", lambda r: redirect("requirements:public-collect", event_token=Event.objects.filter(is_current=True, is_active=True).first().public_form_token) if Event.objects.filter(is_current=True, is_active=True).first() else redirect("public-landing")),
     path("dashboard/", include("apps.dashboard.urls")),
     path("masters/", include("apps.masters.urls")),

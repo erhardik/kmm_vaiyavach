@@ -3,13 +3,14 @@ import json
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, View
 
 from apps.accounts.permissions import is_manager
 
 from apps.dashboard.forms import ItemControlFilterForm
+from apps.dashboard.models import Feedback
 from apps.dashboard.services import (
     build_dashboard_data,
     build_home_summary,
@@ -117,3 +118,48 @@ class ChaturmasDashboardView(LoginRequiredMixin, TemplateView):
         else:
             context["dashboard_json"] = json.dumps({"items_meta": [], "records": []})
         return context
+
+
+class PublicFeedbackView(View):
+    template_name = "public/feedback.html"
+
+    def get_event(self):
+        return Event.objects.filter(is_active=True).order_by("-is_current", "-start_date", "name").first()
+
+    def get(self, request):
+        event = self.get_event()
+        if not event:
+            return redirect("public-landing")
+        return render(request, self.template_name, {"event": event})
+
+    def post(self, request):
+        event = self.get_event()
+        if not event:
+            return redirect("public-landing")
+        event_rating = request.POST.get("event_rating")
+        portal_rating = request.POST.get("portal_rating")
+        if not event_rating or not portal_rating:
+            messages.error(request, "Please provide both ratings.")
+            return render(request, self.template_name, {"event": event})
+        try:
+            event_rating = int(event_rating)
+            portal_rating = int(portal_rating)
+            if event_rating < 1 or event_rating > 5 or portal_rating < 1 or portal_rating > 5:
+                raise ValueError
+        except (ValueError, TypeError):
+            messages.error(request, "Ratings must be between 1 and 5.")
+            return render(request, self.template_name, {"event": event})
+        Feedback.objects.create(
+            event=event,
+            volunteer_name=request.POST.get("volunteer_name", "").strip(),
+            volunteer_mobile=request.POST.get("volunteer_mobile", "").strip(),
+            event_rating=event_rating,
+            portal_rating=portal_rating,
+            event_feedback=request.POST.get("event_feedback", "").strip(),
+            portal_feedback=request.POST.get("portal_feedback", "").strip(),
+        )
+        return redirect("feedback-thanks")
+
+
+class FeedbackThankYouView(TemplateView):
+    template_name = "public/feedback_thanks.html"
