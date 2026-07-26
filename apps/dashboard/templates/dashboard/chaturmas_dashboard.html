@@ -1,9 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chaturmas Vaiyavachch {% if event %}{{ event.start_date|date:"Y" }}{% endif %} — Seva Coordination Dashboard</title>
+{% extends "base.html" %}
+{% load static i18n %}
+{% block title %}Seva Dashboard | KMM ERP{% endblock %}
+{% block extra_head %}
+{{ block.super }}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -34,85 +33,37 @@
   --shadow-md: 0 6px 18px rgba(58,20,32,0.10);
   --radius: 14px;
 }
-*{box-sizing:border-box;}
-html,body{margin:0;padding:0;}
-body{
-  background: var(--ivory-100);
-  color: var(--ink);
+.dashboard-wrap *{box-sizing:border-box;}
+.dashboard-wrap{
   font-family:'Inter',system-ui,sans-serif;
   font-size:14px;
   line-height:1.5;
   -webkit-font-smoothing:antialiased;
 }
-h1,h2,h3,.serif{font-family:'Fraunces',serif;}
-.tabular{font-variant-numeric: tabular-nums;}
+.dashboard-wrap h1,.dashboard-wrap h2,.dashboard-wrap h3,.dashboard-wrap .serif{font-family:'Fraunces',serif;}
+.dashboard-wrap .tabular{font-variant-numeric: tabular-nums;}
 
-.masthead{
-  background: radial-gradient(120% 180% at 15% 0%, var(--maroon-800) 0%, var(--maroon-900) 55%, var(--maroon-950) 100%);
-  color: var(--ivory-50);
-  padding: 30px 32px 20px;
-  position: relative;
-  overflow: hidden;
+.dashboard-wrap .section-title{
+  font-size:13px; text-transform:uppercase; letter-spacing:0.1em; font-weight:700; color:var(--maroon-800);
+  margin:34px 0 14px; display:flex; align-items:center; gap:10px;
 }
-.masthead::before{
-  content:"";
-  position:absolute; inset:0;
-  background-image: radial-gradient(circle at 90% 10%, rgba(217,144,31,0.18), transparent 45%);
-  pointer-events:none;
-}
-.masthead-inner{
-  max-width:1440px; margin:0 auto;
-  display:flex; align-items:flex-end; justify-content:space-between; gap:24px;
-  flex-wrap:wrap; position:relative; z-index:1;
-}
-.eyebrow{
-  text-transform:uppercase; letter-spacing:0.16em; font-size:11px; font-weight:600;
-  color: var(--gold-400); margin:0 0 8px;
-}
-.masthead h1{
-  font-size:30px; font-weight:600; margin:0 0 6px; color:#fff; letter-spacing:0.01em;
-}
-.masthead p.sub{
-  margin:0; color: rgba(251,246,236,0.72); font-size:13.5px; max-width:640px;
-}
-.masthead-stats{
-  display:flex; gap:26px; font-size:12px; color:rgba(251,246,236,0.75);
-}
-.masthead-stats b{ display:block; font-family:'Fraunces',serif; font-size:20px; color:#fff; font-weight:600; }
+.dashboard-wrap .section-title::after{ content:""; flex:1; height:1px; background:var(--line); }
 
-.upload-box{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-.upload-btn{
-  background: var(--saffron-600); color:#fff; font-weight:700; font-size:12.5px;
-  padding:9px 16px; border-radius:9px; cursor:pointer; border:1px solid rgba(255,255,255,0.25);
-  transition: background .15s ease; white-space:nowrap;
-}
-.upload-btn:hover{ background: var(--saffron-500); }
-.upload-status{ font-size:12px; color: rgba(251,246,236,0.75); }
-.upload-status.err{ color:#f3b3ab; font-weight:600; }
-.upload-status.ok{ color:#bfe0c4; font-weight:600; }
-
-.toran{ display:block; width:100%; height:34px; }
-.toran-wrap{ background:var(--maroon-950); }
-
-.filterbar{
+.dashboard-wrap .filterbar{
   position: sticky; top:0; z-index:50;
   background: var(--ivory-50);
   border-bottom:1px solid var(--line);
   box-shadow: var(--shadow-sm);
-}
-.filterbar-inner{
-  max-width:1440px; margin:0 auto;
-  padding:12px 32px;
+  margin: -16px -16px 16px;
+  padding: 12px 16px;
   display:flex; align-items:center; gap:10px; flex-wrap:wrap;
 }
-.filter-group{ display:flex; flex-direction:column; gap:3px; min-width:150px; }
-.filter-group label{
+.dashboard-wrap .filter-group{ display:flex; flex-direction:column; gap:3px; min-width:150px; }
+.dashboard-wrap .filter-group label{
   font-size:10px; text-transform:uppercase; letter-spacing:0.08em; font-weight:700; color:var(--ink-soft);
 }
-.filter-control{
-  position:relative;
-}
-.filter-btn{
+.dashboard-wrap .filter-control{ position:relative; }
+.dashboard-wrap .filter-btn{
   width:100%;
   border:1px solid var(--line); background:#fff; border-radius:9px;
   padding:7px 10px; font-size:12.5px; font-family:inherit; color:var(--ink);
@@ -120,193 +71,140 @@ h1,h2,h3,.serif{font-family:'Fraunces',serif;}
   transition: border-color .15s ease;
   white-space:nowrap; overflow:hidden;
 }
-.filter-btn:hover{ border-color: var(--saffron-600); }
-.filter-btn.active{ border-color: var(--saffron-600); background: var(--amber-100); }
-.filter-btn .count-badge{
+.dashboard-wrap .filter-btn:hover{ border-color: var(--saffron-600); }
+.dashboard-wrap .filter-btn.active{ border-color: var(--saffron-600); background: var(--amber-100); }
+.dashboard-wrap .filter-btn .count-badge{
   background:var(--maroon-800); color:#fff; font-size:10px; border-radius:99px; padding:1px 6px; font-weight:700;
 }
-.filter-btn .chev{ font-size:9px; color:var(--ink-soft); flex-shrink:0; }
-.dropdown-panel{
+.dashboard-wrap .filter-btn .chev{ font-size:9px; color:var(--ink-soft); flex-shrink:0; }
+.dashboard-wrap .dropdown-panel{
   position:absolute; top:calc(100% + 6px); left:0; z-index:60;
   background:#fff; border:1px solid var(--line); border-radius:10px; box-shadow: var(--shadow-md);
   padding:8px; min-width:230px; max-height:280px; overflow:auto; display:none;
 }
-.dropdown-panel.open{ display:block; }
-.dropdown-search{
+.dashboard-wrap .dropdown-panel.open{ display:block; }
+.dashboard-wrap .dropdown-search{
   width:100%; border:1px solid var(--line); border-radius:7px; padding:6px 8px; font-size:12px; margin-bottom:6px; font-family:inherit;
 }
-.dropdown-opt{
+.dashboard-wrap .dropdown-opt{
   display:flex; align-items:center; gap:7px; padding:5px 6px; border-radius:6px; cursor:pointer; font-size:12.5px;
 }
-.dropdown-opt:hover{ background: var(--ivory-100); }
-.dropdown-opt input{ accent-color: var(--maroon-800); }
-.dropdown-opt .n{ margin-left:auto; color:var(--ink-soft); font-size:11px; }
-.filter-reset{
+.dashboard-wrap .dropdown-opt:hover{ background: var(--ivory-100); }
+.dashboard-wrap .dropdown-opt input{ accent-color: var(--maroon-800); }
+.dashboard-wrap .dropdown-opt .n{ margin-left:auto; color:var(--ink-soft); font-size:11px; }
+.dashboard-wrap .filter-reset{
   border:1px solid var(--maroon-800); color:var(--maroon-800); background:none; border-radius:9px;
   padding:7px 14px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap;
 }
-.filter-reset:hover{ background:var(--maroon-800); color:#fff; }
-.match-counter{
+.dashboard-wrap .filter-reset:hover{ background:var(--maroon-800); color:#fff; }
+.dashboard-wrap .match-counter{
   margin-left:auto; font-size:12.5px; color:var(--ink-soft); white-space:nowrap;
 }
-.match-counter b{ color:var(--maroon-800); font-family:'Fraunces',serif; font-size:15px; }
+.dashboard-wrap .match-counter b{ color:var(--maroon-800); font-family:'Fraunces',serif; font-size:15px; }
 
-.page{ max-width:1440px; margin:0 auto; padding:24px 32px 60px; }
-.section-title{
-  font-size:13px; text-transform:uppercase; letter-spacing:0.1em; font-weight:700; color:var(--maroon-800);
-  margin:34px 0 14px; display:flex; align-items:center; gap:10px;
-}
-.section-title::after{ content:""; flex:1; height:1px; background:var(--line); }
-
-.kpi-row{
+.dashboard-wrap .kpi-row{
   display:grid; grid-template-columns:repeat(6,1fr); gap:14px;
 }
-.kpi-card{
+.dashboard-wrap .kpi-card{
   background:#fff; border:1px solid var(--line); border-radius: var(--radius);
   padding:16px 16px 14px; box-shadow: var(--shadow-sm); position:relative; overflow:hidden;
 }
-.kpi-card::before{
+.dashboard-wrap .kpi-card::before{
   content:""; position:absolute; top:0; left:0; width:4px; height:100%; background:var(--saffron-600);
 }
-.kpi-card.warn::before{ background: var(--amber-600); }
-.kpi-label{ font-size:11px; color:var(--ink-soft); font-weight:600; text-transform:uppercase; letter-spacing:0.04em; }
-.kpi-value{ font-family:'Fraunces',serif; font-size:26px; font-weight:600; color:var(--maroon-900); margin-top:4px; }
-.kpi-foot{ font-size:11px; margin-top:4px; font-weight:600; }
-.kpi-foot.good{ color:var(--green-600); }
-.kpi-foot.warn{ color:var(--amber-600); }
-.kpi-foot.neutral{ color:var(--ink-soft); }
+.dashboard-wrap .kpi-card.warn::before{ background: var(--amber-600); }
+.dashboard-wrap .kpi-label{ font-size:11px; color:var(--ink-soft); font-weight:600; text-transform:uppercase; letter-spacing:0.04em; }
+.dashboard-wrap .kpi-value{ font-family:'Fraunces',serif; font-size:26px; font-weight:600; color:var(--maroon-900); margin-top:4px; }
+.dashboard-wrap .kpi-foot{ font-size:11px; margin-top:4px; font-weight:600; }
+.dashboard-wrap .kpi-foot.good{ color:var(--green-600); }
+.dashboard-wrap .kpi-foot.warn{ color:var(--amber-600); }
+.dashboard-wrap .kpi-foot.neutral{ color:var(--ink-soft); }
 
-.charts-grid{
+.dashboard-wrap .charts-grid{
   display:grid; grid-template-columns: repeat(2, 1fr); gap:16px;
 }
-.chart-card{
+.dashboard-wrap .chart-card{
   background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:18px;
   box-shadow: var(--shadow-sm);
 }
-.chart-card.span2{ grid-column: 1 / -1; }
-.chart-card h3{
+.dashboard-wrap .chart-card.span2{ grid-column: 1 / -1; }
+.dashboard-wrap .chart-card h3{
   font-size:14.5px; font-weight:600; margin:0 0 2px; color:var(--maroon-900);
 }
-.chart-card .desc{ font-size:11.5px; color:var(--ink-soft); margin-bottom:10px; }
-.chart-canvas-wrap{ position:relative; height:280px; }
-.chart-canvas-wrap.tall{ height:360px; }
+.dashboard-wrap .chart-card .desc{ font-size:11.5px; color:var(--ink-soft); margin-bottom:10px; }
+.dashboard-wrap .chart-canvas-wrap{ position:relative; height:280px; }
+.dashboard-wrap .chart-canvas-wrap.tall{ height:360px; }
 
-.heatmap-table{ width:100%; border-collapse:collapse; font-size:11.5px; }
-.heatmap-table th{ text-align:left; font-weight:600; color:var(--ink-soft); padding:5px 8px; border-bottom:1px solid var(--line); }
-.heatmap-table td{ padding:5px 8px; text-align:center; border-bottom:1px solid var(--cream-200); font-weight:600; color:var(--maroon-950); }
-.heatmap-table td.rowlabel{ text-align:left; font-weight:600; color:var(--ink); white-space:nowrap; }
+.dashboard-wrap .heatmap-table{ width:100%; border-collapse:collapse; font-size:11.5px; }
+.dashboard-wrap .heatmap-table th{ text-align:left; font-weight:600; color:var(--ink-soft); padding:5px 8px; border-bottom:1px solid var(--line); }
+.dashboard-wrap .heatmap-table td{ padding:5px 8px; text-align:center; border-bottom:1px solid var(--cream-200); font-weight:600; color:var(--maroon-950); }
+.dashboard-wrap .heatmap-table td.rowlabel{ text-align:left; font-weight:600; color:var(--ink); white-space:nowrap; }
 
-.content-split{ display:grid; grid-template-columns: 1fr 300px; gap:16px; align-items:start; }
-.insights-col{ display:flex; flex-direction:column; gap:12px; position:sticky; top:78px; }
-.insight-card{
+.dashboard-wrap .content-split{ display:grid; grid-template-columns: 1fr 300px; gap:16px; align-items:start; }
+.dashboard-wrap .insights-col{ display:flex; flex-direction:column; gap:12px; position:sticky; top:78px; }
+.dashboard-wrap .insight-card{
   background:#fff; border:1px solid var(--line); border-left:4px solid var(--saffron-600);
   border-radius:10px; padding:12px 14px; font-size:12.5px; box-shadow: var(--shadow-sm);
 }
-.insight-card.warn{ border-left-color: var(--red-600); background: var(--red-100); }
-.insight-card.good{ border-left-color: var(--green-600); background: var(--green-100); }
-.insight-card .tag{
+.dashboard-wrap .insight-card.warn{ border-left-color: var(--red-600); background: var(--red-100); }
+.dashboard-wrap .insight-card.good{ border-left-color: var(--green-600); background: var(--green-100); }
+.dashboard-wrap .insight-card .tag{
   font-size:10px; text-transform:uppercase; font-weight:700; letter-spacing:0.06em; color:var(--maroon-800); display:block; margin-bottom:3px;
 }
-.insight-card.warn .tag{ color:var(--red-600); }
-.insight-card.good .tag{ color:var(--green-600); }
+.dashboard-wrap .insight-card.warn .tag{ color:var(--red-600); }
+.dashboard-wrap .insight-card.good .tag{ color:var(--green-600); }
 
-.explorer-toolbar{ display:flex; gap:10px; align-items:center; margin-bottom:10px; flex-wrap:wrap;}
-.search-input{
+.dashboard-wrap .explorer-toolbar{ display:flex; gap:10px; align-items:center; margin-bottom:10px; flex-wrap:wrap;}
+.dashboard-wrap .search-input{
   flex:1; min-width:220px; border:1px solid var(--line); border-radius:9px; padding:8px 12px; font-size:12.5px; font-family:inherit;
 }
-.table-wrap{ overflow:auto; border:1px solid var(--line); border-radius:var(--radius); background:#fff; max-height:520px; }
-table.data-table{ width:100%; border-collapse:collapse; font-size:12px; }
-table.data-table thead th{
+.dashboard-wrap .table-wrap{ overflow:auto; border:1px solid var(--line); border-radius:var(--radius); background:#fff; max-height:520px; }
+.dashboard-wrap table.data-table{ width:100%; border-collapse:collapse; font-size:12px; }
+.dashboard-wrap table.data-table thead th{
   position:sticky; top:0; background:var(--ivory-100); text-align:left; padding:9px 10px; font-weight:700; color:var(--maroon-900);
   border-bottom:1px solid var(--line); cursor:pointer; white-space:nowrap; user-select:none;
 }
-table.data-table thead th:hover{ color:var(--saffron-600); }
-table.data-table tbody td{ padding:8px 10px; border-bottom:1px solid var(--cream-200); vertical-align:top; }
-table.data-table tbody tr:hover{ background: var(--ivory-100); cursor:pointer; }
-.status-chip{ display:inline-block; padding:2px 8px; border-radius:99px; font-size:10.5px; font-weight:700; }
-.status-Packed{ background:var(--green-100); color:var(--green-600); }
-.status-Confirmed{ background:var(--amber-100); color:var(--amber-600); }
-.status-NotConfirmed{ background:var(--red-100); color:var(--red-600); }
-.status-Delivered{ background:#e2ecf5; color:#2f5f8a; }
-.status-Unknown{ background:var(--cream-200); color:var(--ink-soft); }
-.expand-row td{ background:var(--ivory-100); padding:12px 14px; }
-.item-pill-list{ display:flex; flex-wrap:wrap; gap:6px; }
-.item-pill{ background:#fff; border:1px solid var(--line); border-radius:7px; padding:3px 8px; font-size:11px; }
-.item-pill b{ color:var(--maroon-800); }
-
-.back-link{ display:inline-block; margin-bottom:8px; color:var(--gold-600); font-size:12px; font-weight:600; text-decoration:none; }
-.back-link:hover{ text-decoration:underline; color:var(--saffron-600); }
-
-footer{ text-align:center; padding:24px; font-size:11.5px; color:var(--ink-soft); }
+.dashboard-wrap table.data-table thead th:hover{ color:var(--saffron-600); }
+.dashboard-wrap table.data-table tbody td{ padding:8px 10px; border-bottom:1px solid var(--cream-200); vertical-align:top; }
+.dashboard-wrap table.data-table tbody tr:hover{ background: var(--ivory-100); cursor:pointer; }
+.dashboard-wrap .status-chip{ display:inline-block; padding:2px 8px; border-radius:99px; font-size:10.5px; font-weight:700; }
+.dashboard-wrap .status-Packed{ background:var(--green-100); color:var(--green-600); }
+.dashboard-wrap .status-Confirmed{ background:var(--amber-100); color:var(--amber-600); }
+.dashboard-wrap .status-NotConfirmed{ background:var(--red-100); color:var(--red-600); }
+.dashboard-wrap .status-Delivered{ background:#e2ecf5; color:#2f5f8a; }
+.dashboard-wrap .status-Unknown{ background:var(--cream-200); color:var(--ink-soft); }
+.dashboard-wrap .expand-row td{ background:var(--ivory-100); padding:12px 14px; }
+.dashboard-wrap .item-pill-list{ display:flex; flex-wrap:wrap; gap:6px; }
+.dashboard-wrap .item-pill{ background:#fff; border:1px solid var(--line); border-radius:7px; padding:3px 8px; font-size:11px; }
+.dashboard-wrap .item-pill b{ color:var(--maroon-800); }
 
 @media (max-width: 1180px){
-  .kpi-row{ grid-template-columns:repeat(3,1fr); }
-  .charts-grid{ grid-template-columns:1fr; }
-  .content-split{ grid-template-columns:1fr; }
-  .insights-col{ position:static; flex-direction:row; overflow-x:auto; }
-  .insight-card{ min-width:240px; }
+  .dashboard-wrap .kpi-row{ grid-template-columns:repeat(3,1fr); }
+  .dashboard-wrap .charts-grid{ grid-template-columns:1fr; }
+  .dashboard-wrap .content-split{ grid-template-columns:1fr; }
+  .dashboard-wrap .insights-col{ position:static; flex-direction:row; overflow-x:auto; }
+  .dashboard-wrap .insight-card{ min-width:240px; }
 }
 @media (max-width: 640px){
-  .kpi-row{ grid-template-columns:repeat(2,1fr); }
-  .masthead{ padding:22px 18px 16px; }
-  .page{ padding:18px 16px 40px; }
-  .filterbar-inner{ padding:10px 16px; }
+  .dashboard-wrap .kpi-row{ grid-template-columns:repeat(2,1fr); }
+  .dashboard-wrap .filterbar{ padding:10px 12px; margin:-12px -12px 12px; }
 }
 </style>
-</head>
-<body>
+{% endblock %}
 
-<div class="masthead">
-  <div class="masthead-inner">
-    <div>
-      <p class="eyebrow">Kalyan Mitra Mandal · Seva Coordination</p>
-      <h1>Chaturmas Vaiyavachch {% if event %}{{ event.start_date|date:"Y" }}{% endif %}</h1>
-      <p class="sub">Live view of volunteer-submitted requirement forms — what's been requested, what's packed, and where the seva is concentrated across Ahmedabad.</p>
-    </div>
-    <div class="masthead-stats">
-      <div><b id="stat-records">—</b>submissions</div>
-      <div><b id="stat-qty">—</b>units requested</div>
-      <div><b id="stat-routes">—</b>routes</div>
-    </div>
-  </div>
-  <div class="masthead-inner" style="margin-top:16px;">
-    <div class="upload-box">
-      <label for="file-upload" class="upload-btn">Upload latest export (.xlsx)</label>
-      <input type="file" id="file-upload" accept=".xlsx,.xls" style="display:none;">
-      <span class="upload-status" id="upload-status">Live data from database &middot; upload an Excel export to override</span>
-    </div>
-  </div>
-</div>
-<div class="toran-wrap">
-  <svg class="toran" viewBox="0 0 1440 34" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <pattern id="toranPattern" width="60" height="34" patternUnits="userSpaceOnUse">
-        <path d="M0,0 L60,0 L60,4 Q30,26 0,4 Z" fill="#d97a1f" opacity="0.9"/>
-        <path d="M22,4 Q30,20 38,4 Z" fill="#fbf6ec" opacity="0.85"/>
-        <circle cx="30" cy="24" r="2.4" fill="#b6862c"/>
-      </pattern>
-    </defs>
-    <rect width="1440" height="34" fill="url(#toranPattern)"/>
-  </svg>
-</div>
-
-<div class="filterbar">
-  <div class="filterbar-inner" id="filterbar-inner">
+{% block content %}
+<div class="dashboard-wrap">
+  <div class="filterbar" id="filterbar-inner">
     <button class="filter-reset" id="btn-reset">Reset filters</button>
     <div class="match-counter"><b id="match-count">0</b> of <span id="match-total">0</span> records match</div>
   </div>
-</div>
-
-<div class="page">
-  <a href="{% url 'dashboard:item_control_center' %}" class="back-link">&larr; Back to Dashboard</a>
 
   <div class="section-title">Overview</div>
   <div class="kpi-row" id="kpi-row"></div>
 
   <div class="section-title">Where the seva is going</div>
   <div class="content-split">
-    <div class="charts-grid" id="charts-grid">
-    </div>
+    <div class="charts-grid" id="charts-grid"></div>
     <div class="insights-col" id="insights-col"></div>
   </div>
 
@@ -332,10 +230,10 @@ footer{ text-align:center; padding:24px; font-size:11.5px; color:var(--ink-soft)
       <tbody id="table-body"></tbody>
     </table>
   </div>
-
-  <footer>Kalyan Mitra Mandal &mdash; Chaturmas Vaiyavachch {% if event %}{{ event.start_date|date:"Y" }}{% endif %} &middot; live data from KMM portal</footer>
 </div>
+{% endblock %}
 
+{% block extra_js %}
 <script id="dashboard-data" type="application/json">{{ dashboard_json|safe }}</script>
 <script>
 (function(){
@@ -602,9 +500,6 @@ function renderKPIs(filtered){
     el.innerHTML = '<div class="kpi-label">'+c.label+'</div><div class="kpi-value tabular">'+c.value+'</div><div class="kpi-foot '+c.cls+'">'+c.foot+'</div>';
     kpiRow.appendChild(el);
   });
-  document.getElementById('stat-records').textContent = RECORDS.length;
-  document.getElementById('stat-qty').textContent = fmtNum(RECORDS.reduce(function(s,r){return s+recQtyForCategories(r,new Set());},0));
-  document.getElementById('stat-routes').textContent = OPTS.route ? OPTS.route.length : 0;
   document.getElementById('match-count').textContent = filtered.length;
   document.getElementById('match-total').textContent = RECORDS.length;
 }
@@ -612,16 +507,16 @@ function renderKPIs(filtered){
 var chartsGrid = document.getElementById('charts-grid');
 var CHART_DEFS = [
   {id:'chartSubmissionsByRoute', title:'Submissions by Route', desc:'Number of forms received per route, ranked highest to lowest.', span:false},
-  {id:'chartQtyByRoute', title:'Quantity Requested by Route', desc:'Total item quantity requested per route \u2014 shows where packing capacity is needed most.', span:false},
+  {id:'chartQtyByRoute', title:'Quantity Requested by Route', desc:'Total item quantity requested per route.', span:false},
   {id:'chartStatusDonut', title:'Fulfillment Status', desc:'Share of submissions by current status.', span:false},
   {id:'chartStayTypeDonut', title:'Stay Type Split', desc:'Sthirvas vs Sangh Upashray.', span:false},
   {id:'chartCategoryByRoute', title:'Item Category Demand by Route', desc:'Quantity stacked by item category for each route.', span:true, tall:true},
   {id:'chartTop15Items', title:'Top 15 Items by Quantity', desc:'Highest-demand items across the current filter selection.', span:false, tall:true},
-  {id:'chartAreaConcentration', title:'Top 20 Areas by Quantity', desc:'Where requested quantity is concentrated geographically.', span:false, tall:true},
+  {id:'chartAreaConcentration', title:'Top 20 Areas by Quantity', desc:'Where requested quantity is concentrated.', span:false, tall:true},
   {id:'chartSubRouteDrilldown', title:'Sub-Route Breakdown', desc:'Sub-routes within the current filter, ranked by submissions.', span:false, tall:true},
   {id:'chartVolunteerContribution', title:'Top 20 Volunteers by Submissions', desc:'Number of forms submitted per volunteer.', span:false, tall:true},
-  {id:'chartFunnel', title:'Fulfillment Pipeline', desc:'Where records currently sit: Not Confirmed \u2192 Confirmed \u2192 Packed \u2192 Delivered.', span:true},
-  {id:'chartHeatmap', title:'Route \u00d7 Item Category Heatmap', desc:'Darker cells indicate higher requested quantity for that route/category combination.', span:true}
+  {id:'chartFunnel', title:'Fulfillment Pipeline', desc:'Not Confirmed \u2192 Confirmed \u2192 Packed \u2192 Delivered.', span:true},
+  {id:'chartHeatmap', title:'Route \u00d7 Item Category Heatmap', desc:'Darker cells indicate higher requested quantity.', span:true}
 ];
 CHART_DEFS.forEach(function(def){
   var card = document.createElement('div');
@@ -937,39 +832,7 @@ function loadData(records, itemsMeta){
   renderAll();
 }
 
-var fileInput = document.getElementById('file-upload');
-var uploadStatus = document.getElementById('upload-status');
-
-fileInput.addEventListener('change', function(e){
-  var file = e.target.files && e.target.files[0];
-  if (!file) return;
-  uploadStatus.className = 'upload-status';
-  uploadStatus.textContent = 'Reading ' + file.name + '\u2026';
-  var reader = new FileReader();
-  reader.onload = function(ev){
-    try{
-      var data = new Uint8Array(ev.target.result);
-      var wb = XLSX.read(data, { type: 'array' });
-      var parsed = parseWorkbookToRecords(wb);
-      if (!parsed.records.length) throw new Error('No form rows found in this file.');
-      loadData(parsed.records, parsed.items_meta);
-      uploadStatus.className = 'upload-status ok';
-      uploadStatus.textContent = '\u2713 Loaded ' + file.name + ' \u2014 ' + parsed.records.length + ' forms' + (parsed.skippedTotalRow ? ' (TOTAL row excluded)' : '');
-    } catch(err){
-      uploadStatus.className = 'upload-status err';
-      uploadStatus.textContent = '\u2717 Could not read this file: ' + err.message;
-    }
-  };
-  reader.onerror = function(){
-    uploadStatus.className = 'upload-status err';
-    uploadStatus.textContent = '\u2717 Failed to read the file.';
-  };
-  reader.readAsArrayBuffer(file);
-});
-
 loadData(RAW.records, RAW.items_meta);
-uploadStatus.textContent = RECORDS.length + ' forms \u00b7 Live data from database';
 })();
 </script>
-</body>
-</html>
+{% endblock %}
