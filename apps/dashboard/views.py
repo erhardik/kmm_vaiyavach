@@ -143,8 +143,7 @@ class PublicFeedbackView(View):
             errors.append("Please enter your name.")
         event_feedback = request.POST.get("event_feedback", "").strip()
         portal_feedback = request.POST.get("portal_feedback", "").strip()
-        if len(event_feedback.split()) < 3 and len(portal_feedback.split()) < 3:
-            errors.append("Please write at least 3 words in either Event or Portal feedback.")
+
         event_rating = request.POST.get("event_rating")
         portal_rating = request.POST.get("portal_rating")
         if not event_rating or not portal_rating:
