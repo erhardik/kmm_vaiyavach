@@ -20,7 +20,6 @@
     </div>
   {% endif %}
   <div class="container py-3 py-lg-4">
-{% with lang=request.GET.lang|default:"gu" %}
 <style>
   .fb-wrap{max-width:780px;margin:0 auto}
   .fb-header{text-align:center;margin-bottom:2rem}
@@ -40,59 +39,117 @@
 
 <div class="fb-wrap">
   <div class="fb-header">
-    <h1>{% if lang == "gu" %}તમારો અભિપ્રાય{% else %}Your Feedback{% endif %}</h1>
-    <p class="mb-0">{% if lang == "gu" %}ચાતુર્માસ વૈયાવચ્ચ 2026 અને આ પોર્ટલ અંગે તમારો અભિપ્રાય અમારા માટે મૂલ્યવાન છે.{% else %}Your opinion about Chaturmas Vaiyavachch 2026 and this portal is valuable to us.{% endif %}</p>
+    <h1 data-i18n="title">તમારો અભિપ્રાય</h1>
+    <p class="mb-0" data-i18n="subtitle">ચાતુર્માસ વૈયાવચ્ચ 2026 અને આ પોર્ટલ અંગે તમારો અભિપ્રાય અમારા માટે મૂલ્યવાન છે.</p>
     <div class="d-flex justify-content-center gap-2 mt-2">
-      <a class="btn btn-sm {% if lang == 'gu' %}btn-warning text-white{% else %}btn-outline-secondary{% endif %}" href="?lang=gu">ગુજરાતી</a>
-      <a class="btn btn-sm {% if lang == 'en' %}btn-warning text-white{% else %}btn-outline-secondary{% endif %}" href="?lang=en">English</a>
+      <button class="btn btn-sm btn-warning text-white" data-lang-btn="gu">ગુજરાતી</button>
+      <button class="btn btn-sm btn-outline-secondary" data-lang-btn="en">English</button>
     </div>
   </div>
 
   <form method="post">
     {% csrf_token %}
-    <input type="hidden" name="lang" value="{{ lang }}">
+    <input type="hidden" name="lang" value="gu">
 
     <div class="fb-volunteer">
       <div>
-        <label class="form-label small mb-1">{% if lang == "gu" %}તમારું નામ{% else %}Your Name{% endif %} <span class="text-danger">*</span></label>
-        <input type="text" class="form-control" name="volunteer_name" placeholder="{% if lang == 'gu' %}નામ{% else %}Name{% endif %}">
+        <label class="form-label small mb-1"><span data-i18n="name_label">તમારું નામ</span> <span class="text-danger">*</span></label>
+        <input type="text" class="form-control" name="volunteer_name" data-i18n-placeholder="name_placeholder" placeholder="નામ">
       </div>
       <div>
-        <label class="form-label small mb-1">{% if lang == "gu" %}મોબાઇલ નંબર (વૈકલ્પિક){% else %}Mobile No. (optional){% endif %}</label>
-        <input type="text" class="form-control" name="volunteer_mobile" placeholder="{% if lang == 'gu' %}મોબાઇલ{% else %}Mobile{% endif %}">
+        <label class="form-label small mb-1" data-i18n="mobile_label">મોબાઇલ નંબર (વૈકલ્પિક)</label>
+        <input type="text" class="form-control" name="volunteer_mobile" data-i18n-placeholder="mobile_placeholder" placeholder="મોબાઇલ">
       </div>
     </div>
 
     <div class="rating-row mb-3">
-      <label>{% if lang == "gu" %}ચાતુર્માસ વૈયાવચ્ચ 2026 - તમારો અનુભવ{% else %}Chaturmas Vaiyavachch 2026 — Your Experience{% endif %} *</label>
+      <label><span data-i18n="event_rating_label">ચાતુર્માસ વૈયાવચ્ચ 2026 - તમારો અનુભવ</span> *</label>
       <div class="stars" data-rating-name="event_rating">
         {% for i in "12345"|make_list %}
           <input type="radio" name="event_rating" value="{{ i }}" id="er{{ i }}">
           <label for="er{{ i }}" class="bi bi-star-fill" data-val="{{ i }}"></label>
         {% endfor %}
       </div>
-      <textarea class="form-control fb-textarea mt-2" name="event_feedback" rows="3" placeholder="{% if lang == 'gu' %}તમારા અનુભવ વિશે વધુ લખો...{% else %}Tell us more about your experience...{% endif %}"></textarea>
+      <textarea class="form-control fb-textarea mt-2" name="event_feedback" rows="3" data-i18n-placeholder="event_feedback_placeholder" placeholder="તમારા અનુભવ વિશે વધુ લખો..."></textarea>
     </div>
 
     <div class="rating-row mb-3">
-      <label>{% if lang == "gu" %}આ પોર્ટલ - ઉપયોગ અને અનુભવ{% else %}This Portal — Usability & Experience{% endif %} *</label>
+      <label><span data-i18n="portal_rating_label">આ પોર્ટલ - ઉપયોગ અને અનુભવ</span> *</label>
       <div class="stars" data-rating-name="portal_rating">
         {% for i in "12345"|make_list %}
           <input type="radio" name="portal_rating" value="{{ i }}" id="pr{{ i }}">
           <label for="pr{{ i }}" class="bi bi-star-fill" data-val="{{ i }}"></label>
         {% endfor %}
       </div>
-      <textarea class="form-control fb-textarea mt-2" name="portal_feedback" rows="3" placeholder="{% if lang == 'gu' %}કોઈ સમસ્યા કે સુધારણા સૂચનો...{% else %}Any issues or suggestions for improvement...{% endif %}"></textarea>
+      <textarea class="form-control fb-textarea mt-2" name="portal_feedback" rows="3" data-i18n-placeholder="portal_feedback_placeholder" placeholder="કોઈ સમસ્યા કે સુધારણા સૂચનો..."></textarea>
     </div>
 
     <div class="fb-submit">
-      <button type="submit" class="btn btn-warning text-white btn-lg px-5 fw-semibold">{% if lang == "gu" %}સબમિટ કરો{% else %}Submit Feedback{% endif %}</button>
+      <button type="submit" class="btn btn-warning text-white btn-lg px-5 fw-semibold" data-i18n="submit_btn">સબમિટ કરો</button>
     </div>
   </form>
 </div>
 
 <script>
 (function(){
+  var I18N = {
+    gu: {
+      title: 'તમારો અભિપ્રાય',
+      subtitle: 'ચાતુર્માસ વૈયાવચ્ચ 2026 અને આ પોર્ટલ અંગે તમારો અભિપ્રાય અમારા માટે મૂલ્યવાન છે.',
+      name_label: 'તમારું નામ',
+      name_placeholder: 'નામ',
+      mobile_label: 'મોબાઇલ નંબર (વૈકલ્પિક)',
+      mobile_placeholder: 'મોબાઇલ',
+      event_rating_label: 'ચાતુર્માસ વૈયાવચ્ચ 2026 - તમારો અનુભવ',
+      event_feedback_placeholder: 'તમારા અનુભવ વિશે વધુ લખો...',
+      portal_rating_label: 'આ પોર્ટલ - ઉપયોગ અને અનુભવ',
+      portal_feedback_placeholder: 'કોઈ સમસ્યા કે સુધારણા સૂચનો...',
+      submit_btn: 'સબમિટ કરો'
+    },
+    en: {
+      title: 'Your Feedback',
+      subtitle: 'Your opinion about Chaturmas Vaiyavachch 2026 and this portal is valuable to us.',
+      name_label: 'Your Name',
+      name_placeholder: 'Name',
+      mobile_label: 'Mobile No. (optional)',
+      mobile_placeholder: 'Mobile',
+      event_rating_label: 'Chaturmas Vaiyavachch 2026 — Your Experience',
+      event_feedback_placeholder: 'Tell us more about your experience...',
+      portal_rating_label: 'This Portal — Usability & Experience',
+      portal_feedback_placeholder: 'Any issues or suggestions for improvement...',
+      submit_btn: 'Submit Feedback'
+    }
+  };
+
+  var currentLang = 'gu';
+  var langInput = document.querySelector('input[name="lang"]');
+
+  function applyLang(lang) {
+    currentLang = lang;
+    var strings = I18N[lang] || I18N.gu;
+    document.querySelectorAll('[data-i18n]').forEach(function(el) {
+      var key = el.getAttribute('data-i18n');
+      if (strings[key]) el.textContent = strings[key];
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el) {
+      var key = el.getAttribute('data-i18n-placeholder');
+      if (strings[key]) el.placeholder = strings[key];
+    });
+    document.querySelectorAll('[data-lang-btn]').forEach(function(btn) {
+      var l = btn.getAttribute('data-lang-btn');
+      btn.className = 'btn btn-sm ' + (l === lang ? 'btn-warning text-white' : 'btn-outline-secondary');
+    });
+    if (langInput) langInput.value = lang;
+  }
+
+  document.querySelectorAll('[data-lang-btn]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      applyLang(this.getAttribute('data-lang-btn'));
+    });
+  });
+
+  applyLang('gu');
+
   document.querySelectorAll('.stars').forEach(function(container){
     var labels = container.querySelectorAll('label');
     labels.forEach(function(label){
@@ -119,7 +176,6 @@
   });
 })();
 </script>
-{% endwith %}
   </div>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
