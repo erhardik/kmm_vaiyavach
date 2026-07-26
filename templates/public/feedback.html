@@ -20,7 +20,7 @@
     </div>
   {% endif %}
   <div class="container py-3 py-lg-4">
-{% with lang=request.GET.lang|default:"en" %}
+{% with lang=request.GET.lang|default:"gu" %}
 <style>
   .fb-wrap{max-width:780px;margin:0 auto}
   .fb-header{text-align:center;margin-bottom:2rem}
@@ -42,6 +42,10 @@
   <div class="fb-header">
     <h1>{% if lang == "gu" %}તમારો અભિપ્રાય{% else %}Your Feedback{% endif %}</h1>
     <p class="mb-0">{% if lang == "gu" %}ચાતુર્માસ વૈયાવચ્ચ 2026 અને આ પોર્ટલ અંગે તમારો અભિપ્રાય અમારા માટે મૂલ્યવાન છે.{% else %}Your opinion about Chaturmas Vaiyavachch 2026 and this portal is valuable to us.{% endif %}</p>
+    <div class="d-flex justify-content-center gap-2 mt-2">
+      <a class="btn btn-sm {% if lang == 'gu' %}btn-warning text-white{% else %}btn-outline-secondary{% endif %}" href="?lang=gu">ગુજરાતી</a>
+      <a class="btn btn-sm {% if lang == 'en' %}btn-warning text-white{% else %}btn-outline-secondary{% endif %}" href="?lang=en">English</a>
+    </div>
   </div>
 
   <form method="post">

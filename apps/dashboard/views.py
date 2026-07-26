@@ -5,6 +5,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Avg
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView, View
 
@@ -168,7 +169,8 @@ class PublicFeedbackView(View):
             event_feedback=event_feedback,
             portal_feedback=portal_feedback,
         )
-        return redirect("feedback-thanks")
+        lang = request.POST.get("lang", "gu")
+        return redirect(f"{reverse('feedback-thanks')}?lang={lang}")
 
 
 class FeedbackDeleteView(LoginRequiredMixin, View):

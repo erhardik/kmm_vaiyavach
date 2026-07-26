@@ -37,9 +37,11 @@
   <img src="{% static 'images/kmm.png' %}" alt="KMM" class="thanks-logo">
   <div class="thanks-team">- કલ્યાણ મિત્ર મંડળ -</div>
   <div class="d-flex flex-wrap justify-content-center gap-2 mt-3">
-    <a class="btn btn-brand btn-instagram" href="https://instagram.com/jainkmm" target="_blank" rel="noopener"><i class="bi bi-instagram me-1"></i>Follow on Instagram</a>
-    <a class="btn btn-brand btn-facebook" href="https://facebook.com/jainkalyanmitramandal" target="_blank" rel="noopener"><i class="bi bi-facebook me-1"></i>Like on Facebook</a>
-    <a class="btn btn-brand btn-youtube" href="http://www.youtube.com/@KalyanMitraMandalAhmedabad?sub_confirmation=1" target="_blank" rel="noopener"><i class="bi bi-youtube me-1"></i>Subscribe on YouTube</a>
+    {% with lang=request.GET.lang|default:"gu" %}
+    <a class="btn btn-brand btn-instagram" href="https://instagram.com/jainkmm" target="_blank" rel="noopener"><i class="bi bi-instagram me-1"></i>{% if lang == "gu" %}Instagram પર ફોલો કરો{% else %}Follow on Instagram{% endif %}</a>
+    <a class="btn btn-brand btn-facebook" href="https://facebook.com/jainkalyanmitramandal" target="_blank" rel="noopener"><i class="bi bi-facebook me-1"></i>{% if lang == "gu" %}Facebook પર લાઈક કરો{% else %}Like on Facebook{% endif %}</a>
+    <a class="btn btn-brand btn-youtube" href="http://www.youtube.com/@KalyanMitraMandalAhmedabad?sub_confirmation=1" target="_blank" rel="noopener"><i class="bi bi-youtube me-1"></i>{% if lang == "gu" %}YouTube સબસ્ક્રાઈબ કરો{% else %}Subscribe on YouTube{% endif %}</a>
+    {% endwith %}
   </div>
 </div>
 <script>
