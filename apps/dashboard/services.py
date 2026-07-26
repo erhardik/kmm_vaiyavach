@@ -276,6 +276,93 @@ def _item_size_gu(item):
     return item.default_size_gu or item.default_size or "-"
 
 
+_DASHBOARD_CATEGORY_MAP = {
+    "General": "Personal Care & Hygiene",
+    "Stationery": "Stationery & Office Supplies",
+    "Medical": "Medical & Health",
+    "Ayurvedic": "Medical & Health",
+    "Color Material": "Utensils & Vihar Essentials",
+}
+
+
+def _dashboard_category(display_category):
+    return _DASHBOARD_CATEGORY_MAP.get(display_category, display_category)
+
+
+def build_dashboard_data(event):
+    """Build the full dashboard dataset matching the standalone dashboard JSON format."""
+    alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+    base_items = (
+        Item.objects.filter(event=event, is_active=True, parent_item__isnull=True)
+        .prefetch_related("variants")
+        .order_by("standard_serial", "pk")
+    )
+    all_items = []
+    item_serial_map = {}
+    for item in base_items:
+        variants = list(item.variants.filter(is_active=True).order_by("item_code", "pk"))
+        if variants:
+            for vi, variant in enumerate(variants):
+                suffix = alphabet[vi] if vi < 26 else f"X{vi+1}"
+                all_items.append(variant)
+                item_serial_map[variant.pk] = f"{item.standard_serial or item.pk}-{suffix}"
+        else:
+            all_items.append(item)
+            item_serial_map[item.pk] = str(item.standard_serial or item.pk)
+
+    items_meta = []
+    for item in all_items:
+        display_name = f"{item_serial_map[item.pk]}-{item.item_name_gu or item.item_name}"
+        items_meta.append({
+            "name": display_name,
+            "category": _dashboard_category(item.get_category_display()),
+        })
+
+    headers = (
+        RequirementHeader.objects.filter(event=event)
+        .exclude(status=RequirementStatus.DRAFT)
+        .select_related("upashray")
+        .prefetch_related("lines__item")
+        .order_by("created_at")
+    )
+
+    item_lookup = {item.pk: f"{item_serial_map[item.pk]}-{item.item_name_gu or item.item_name}" for item in all_items}
+
+    records = []
+    sr = 0
+    for header in headers:
+        sr += 1
+        items_dict = {}
+        total_qty = 0
+        lines = list(header.lines.all())
+        for line in lines:
+            item_name = item_lookup.get(line.item_id)
+            if item_name:
+                qty = float(line.required_qty)
+                items_dict[item_name] = qty
+                total_qty += qty
+
+        records.append({
+            "sr": sr,
+            "form_no": header.form_number or None,
+            "order_id": header.order_number or None,
+            "route": header.get_route_area_display() or None,
+            "sub_route": header.get_route_sub_area_display() or None,
+            "pujya_shri": header.pujya_shri_name or None,
+            "thana": header.thana_count,
+            "area": (header.area or "").strip() or "Unspecified",
+            "volunteer_name": header.volunteer_name or None,
+            "volunteer_mobile": header.volunteer_mobile or None,
+            "stay_type": header.get_stay_type_display() or None,
+            "status": header.get_status_display(),
+            "items": items_dict,
+            "total_qty": total_qty,
+        })
+
+    return {"items_meta": items_meta, "records": records}
+
+
 def build_public_item_preview(event):
     def variant_suffix(index):
         alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"

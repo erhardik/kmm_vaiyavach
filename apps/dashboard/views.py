@@ -1,5 +1,8 @@
+import json
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView
@@ -8,6 +11,7 @@ from apps.accounts.permissions import is_manager
 
 from apps.dashboard.forms import ItemControlFilterForm
 from apps.dashboard.services import (
+    build_dashboard_data,
     build_home_summary,
     build_item_control_center,
     build_public_item_preview,
@@ -86,4 +90,30 @@ class ItemControlCenterView(LoginRequiredMixin, TemplateView):
         context["rows"] = rows
         context["summary"] = summary
         context["event_queryset"] = event_queryset
+        return context
+
+
+class ChaturmasDashboardDataView(LoginRequiredMixin, TemplateView):
+    """JSON endpoint serving dashboard data in the format expected by the chart dashboard."""
+
+    def get(self, request, *args, **kwargs):
+        event = Event.objects.filter(is_active=True).order_by("-is_current", "-start_date", "name").first()
+        if not event:
+            return JsonResponse({"items_meta": [], "records": []})
+        data = build_dashboard_data(event)
+        return JsonResponse(data)
+
+
+class ChaturmasDashboardView(LoginRequiredMixin, TemplateView):
+    template_name = "dashboard/chaturmas_dashboard.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        event = Event.objects.filter(is_active=True).order_by("-is_current", "-start_date", "name").first()
+        context["event"] = event
+        if event:
+            data = build_dashboard_data(event)
+            context["dashboard_json"] = json.dumps(data)
+        else:
+            context["dashboard_json"] = json.dumps({"items_meta": [], "records": []})
         return context

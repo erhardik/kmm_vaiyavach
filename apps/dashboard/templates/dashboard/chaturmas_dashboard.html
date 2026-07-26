@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chaturmas Vaiyavachch {% if event %}{{ event.start_date|date:"Y" }}{% endif %} — Seva Coordination Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{
+  --maroon-950:#3a1420;
+  --maroon-900:#5c1c29;
+  --maroon-800:#6f2333;
+  --maroon-700:#8a2e40;
+  --saffron-600:#d97a1f;
+  --saffron-500:#e8901f;
+  --gold-600:#b6862c;
+  --gold-400:#d9b35c;
+  --ivory-100:#fbf6ec;
+  --ivory-50:#fdfaf3;
+  --cream-200:#f3e8d4;
+  --ink:#2c1a12;
+  --ink-soft:#5a463b;
+  --line:#e7d8b9;
+  --green-600:#3f7d4a;
+  --green-100:#e6f0e3;
+  --amber-600:#b9781f;
+  --amber-100:#f8ecd6;
+  --red-600:#a5372f;
+  --red-100:#f6e2df;
+  --shadow-sm: 0 1px 2px rgba(58,20,32,0.06), 0 1px 1px rgba(58,20,32,0.04);
+  --shadow-md: 0 6px 18px rgba(58,20,32,0.10);
+  --radius: 14px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background: var(--ivory-100);
+  color: var(--ink);
+  font-family:'Inter',system-ui,sans-serif;
+  font-size:14px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,.serif{font-family:'Fraunces',serif;}
+.tabular{font-variant-numeric: tabular-nums;}
+
+.masthead{
+  background: radial-gradient(120% 180% at 15% 0%, var(--maroon-800) 0%, var(--maroon-900) 55%, var(--maroon-950) 100%);
+  color: var(--ivory-50);
+  padding: 30px 32px 20px;
+  position: relative;
+  overflow: hidden;
+}
+.masthead::before{
+  content:"";
+  position:absolute; inset:0;
+  background-image: radial-gradient(circle at 90% 10%, rgba(217,144,31,0.18), transparent 45%);
+  pointer-events:none;
+}
+.masthead-inner{
+  max-width:1440px; margin:0 auto;
+  display:flex; align-items:flex-end; justify-content:space-between; gap:24px;
+  flex-wrap:wrap; position:relative; z-index:1;
+}
+.eyebrow{
+  text-transform:uppercase; letter-spacing:0.16em; font-size:11px; font-weight:600;
+  color: var(--gold-400); margin:0 0 8px;
+}
+.masthead h1{
+  font-size:30px; font-weight:600; margin:0 0 6px; color:#fff; letter-spacing:0.01em;
+}
+.masthead p.sub{
+  margin:0; color: rgba(251,246,236,0.72); font-size:13.5px; max-width:640px;
+}
+.masthead-stats{
+  display:flex; gap:26px; font-size:12px; color:rgba(251,246,236,0.75);
+}
+.masthead-stats b{ display:block; font-family:'Fraunces',serif; font-size:20px; color:#fff; font-weight:600; }
+
+.upload-box{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.upload-btn{
+  background: var(--saffron-600); color:#fff; font-weight:700; font-size:12.5px;
+  padding:9px 16px; border-radius:9px; cursor:pointer; border:1px solid rgba(255,255,255,0.25);
+  transition: background .15s ease; white-space:nowrap;
+}
+.upload-btn:hover{ background: var(--saffron-500); }
+.upload-status{ font-size:12px; color: rgba(251,246,236,0.75); }
+.upload-status.err{ color:#f3b3ab; font-weight:600; }
+.upload-status.ok{ color:#bfe0c4; font-weight:600; }
+
+.toran{ display:block; width:100%; height:34px; }
+.toran-wrap{ background:var(--maroon-950); }
+
+.filterbar{
+  position: sticky; top:0; z-index:50;
+  background: var(--ivory-50);
+  border-bottom:1px solid var(--line);
+  box-shadow: var(--shadow-sm);
+}
+.filterbar-inner{
+  max-width:1440px; margin:0 auto;
+  padding:12px 32px;
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+}
+.filter-group{ display:flex; flex-direction:column; gap:3px; min-width:150px; }
+.filter-group label{
+  font-size:10px; text-transform:uppercase; letter-spacing:0.08em; font-weight:700; color:var(--ink-soft);
+}
+.filter-control{
+  position:relative;
+}
+.filter-btn{
+  width:100%;
+  border:1px solid var(--line); background:#fff; border-radius:9px;
+  padding:7px 10px; font-size:12.5px; font-family:inherit; color:var(--ink);
+  cursor:pointer; text-align:left; display:flex; justify-content:space-between; align-items:center; gap:6px;
+  transition: border-color .15s ease;
+  white-space:nowrap; overflow:hidden;
+}
+.filter-btn:hover{ border-color: var(--saffron-600); }
+.filter-btn.active{ border-color: var(--saffron-600); background: var(--amber-100); }
+.filter-btn .count-badge{
+  background:var(--maroon-800); color:#fff; font-size:10px; border-radius:99px; padding:1px 6px; font-weight:700;
+}
+.filter-btn .chev{ font-size:9px; color:var(--ink-soft); flex-shrink:0; }
+.dropdown-panel{
+  position:absolute; top:calc(100% + 6px); left:0; z-index:60;
+  background:#fff; border:1px solid var(--line); border-radius:10px; box-shadow: var(--shadow-md);
+  padding:8px; min-width:230px; max-height:280px; overflow:auto; display:none;
+}
+.dropdown-panel.open{ display:block; }
+.dropdown-search{
+  width:100%; border:1px solid var(--line); border-radius:7px; padding:6px 8px; font-size:12px; margin-bottom:6px; font-family:inherit;
+}
+.dropdown-opt{
+  display:flex; align-items:center; gap:7px; padding:5px 6px; border-radius:6px; cursor:pointer; font-size:12.5px;
+}
+.dropdown-opt:hover{ background: var(--ivory-100); }
+.dropdown-opt input{ accent-color: var(--maroon-800); }
+.dropdown-opt .n{ margin-left:auto; color:var(--ink-soft); font-size:11px; }
+.filter-reset{
+  border:1px solid var(--maroon-800); color:var(--maroon-800); background:none; border-radius:9px;
+  padding:7px 14px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap;
+}
+.filter-reset:hover{ background:var(--maroon-800); color:#fff; }
+.match-counter{
+  margin-left:auto; font-size:12.5px; color:var(--ink-soft); white-space:nowrap;
+}
+.match-counter b{ color:var(--maroon-800); font-family:'Fraunces',serif; font-size:15px; }
+
+.page{ max-width:1440px; margin:0 auto; padding:24px 32px 60px; }
+.section-title{
+  font-size:13px; text-transform:uppercase; letter-spacing:0.1em; font-weight:700; color:var(--maroon-800);
+  margin:34px 0 14px; display:flex; align-items:center; gap:10px;
+}
+.section-title::after{ content:""; flex:1; height:1px; background:var(--line); }
+
+.kpi-row{
+  display:grid; grid-template-columns:repeat(6,1fr); gap:14px;
+}
+.kpi-card{
+  background:#fff; border:1px solid var(--line); border-radius: var(--radius);
+  padding:16px 16px 14px; box-shadow: var(--shadow-sm); position:relative; overflow:hidden;
+}
+.kpi-card::before{
+  content:""; position:absolute; top:0; left:0; width:4px; height:100%; background:var(--saffron-600);
+}
+.kpi-card.warn::before{ background: var(--amber-600); }
+.kpi-label{ font-size:11px; color:var(--ink-soft); font-weight:600; text-transform:uppercase; letter-spacing:0.04em; }
+.kpi-value{ font-family:'Fraunces',serif; font-size:26px; font-weight:600; color:var(--maroon-900); margin-top:4px; }
+.kpi-foot{ font-size:11px; margin-top:4px; font-weight:600; }
+.kpi-foot.good{ color:var(--green-600); }
+.kpi-foot.warn{ color:var(--amber-600); }
+.kpi-foot.neutral{ color:var(--ink-soft); }
+
+.charts-grid{
+  display:grid; grid-template-columns: repeat(2, 1fr); gap:16px;
+}
+.chart-card{
+  background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:18px;
+  box-shadow: var(--shadow-sm);
+}
+.chart-card.span2{ grid-column: 1 / -1; }
+.chart-card h3{
+  font-size:14.5px; font-weight:600; margin:0 0 2px; color:var(--maroon-900);
+}
+.chart-card .desc{ font-size:11.5px; color:var(--ink-soft); margin-bottom:10px; }
+.chart-canvas-wrap{ position:relative; height:280px; }
+.chart-canvas-wrap.tall{ height:360px; }
+
+.heatmap-table{ width:100%; border-collapse:collapse; font-size:11.5px; }
+.heatmap-table th{ text-align:left; font-weight:600; color:var(--ink-soft); padding:5px 8px; border-bottom:1px solid var(--line); }
+.heatmap-table td{ padding:5px 8px; text-align:center; border-bottom:1px solid var(--cream-200); font-weight:600; color:var(--maroon-950); }
+.heatmap-table td.rowlabel{ text-align:left; font-weight:600; color:var(--ink); white-space:nowrap; }
+
+.content-split{ display:grid; grid-template-columns: 1fr 300px; gap:16px; align-items:start; }
+.insights-col{ display:flex; flex-direction:column; gap:12px; position:sticky; top:78px; }
+.insight-card{
+  background:#fff; border:1px solid var(--line); border-left:4px solid var(--saffron-600);
+  border-radius:10px; padding:12px 14px; font-size:12.5px; box-shadow: var(--shadow-sm);
+}
+.insight-card.warn{ border-left-color: var(--red-600); background: var(--red-100); }
+.insight-card.good{ border-left-color: var(--green-600); background: var(--green-100); }
+.insight-card .tag{
+  font-size:10px; text-transform:uppercase; font-weight:700; letter-spacing:0.06em; color:var(--maroon-800); display:block; margin-bottom:3px;
+}
+.insight-card.warn .tag{ color:var(--red-600); }
+.insight-card.good .tag{ color:var(--green-600); }
+
+.explorer-toolbar{ display:flex; gap:10px; align-items:center; margin-bottom:10px; flex-wrap:wrap;}
+.search-input{
+  flex:1; min-width:220px; border:1px solid var(--line); border-radius:9px; padding:8px 12px; font-size:12.5px; font-family:inherit;
+}
+.table-wrap{ overflow:auto; border:1px solid var(--line); border-radius:var(--radius); background:#fff; max-height:520px; }
+table.data-table{ width:100%; border-collapse:collapse; font-size:12px; }
+table.data-table thead th{
+  position:sticky; top:0; background:var(--ivory-100); text-align:left; padding:9px 10px; font-weight:700; color:var(--maroon-900);
+  border-bottom:1px solid var(--line); cursor:pointer; white-space:nowrap; user-select:none;
+}
+table.data-table thead th:hover{ color:var(--saffron-600); }
+table.data-table tbody td{ padding:8px 10px; border-bottom:1px solid var(--cream-200); vertical-align:top; }
+table.data-table tbody tr:hover{ background: var(--ivory-100); cursor:pointer; }
+.status-chip{ display:inline-block; padding:2px 8px; border-radius:99px; font-size:10.5px; font-weight:700; }
+.status-Packed{ background:var(--green-100); color:var(--green-600); }
+.status-Confirmed{ background:var(--amber-100); color:var(--amber-600); }
+.status-NotConfirmed{ background:var(--red-100); color:var(--red-600); }
+.status-Delivered{ background:#e2ecf5; color:#2f5f8a; }
+.status-Unknown{ background:var(--cream-200); color:var(--ink-soft); }
+.expand-row td{ background:var(--ivory-100); padding:12px 14px; }
+.item-pill-list{ display:flex; flex-wrap:wrap; gap:6px; }
+.item-pill{ background:#fff; border:1px solid var(--line); border-radius:7px; padding:3px 8px; font-size:11px; }
+.item-pill b{ color:var(--maroon-800); }
+
+.back-link{ display:inline-block; margin-bottom:8px; color:var(--gold-600); font-size:12px; font-weight:600; text-decoration:none; }
+.back-link:hover{ text-decoration:underline; color:var(--saffron-600); }
+
+footer{ text-align:center; padding:24px; font-size:11.5px; color:var(--ink-soft); }
+
+@media (max-width: 1180px){
+  .kpi-row{ grid-template-columns:repeat(3,1fr); }
+  .charts-grid{ grid-template-columns:1fr; }
+  .content-split{ grid-template-columns:1fr; }
+  .insights-col{ position:static; flex-direction:row; overflow-x:auto; }
+  .insight-card{ min-width:240px; }
+}
+@media (max-width: 640px){
+  .kpi-row{ grid-template-columns:repeat(2,1fr); }
+  .masthead{ padding:22px 18px 16px; }
+  .page{ padding:18px 16px 40px; }
+  .filterbar-inner{ padding:10px 16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="masthead-inner">
+    <div>
+      <p class="eyebrow">Kalyan Mitra Mandal · Seva Coordination</p>
+      <h1>Chaturmas Vaiyavachch {% if event %}{{ event.start_date|date:"Y" }}{% endif %}</h1>
+      <p class="sub">Live view of volunteer-submitted requirement forms — what's been requested, what's packed, and where the seva is concentrated across Ahmedabad.</p>
+    </div>
+    <div class="masthead-stats">
+      <div><b id="stat-records">—</b>submissions</div>
+      <div><b id="stat-qty">—</b>units requested</div>
+      <div><b id="stat-routes">—</b>routes</div>
+    </div>
+  </div>
+  <div class="masthead-inner" style="margin-top:16px;">
+    <div class="upload-box">
+      <label for="file-upload" class="upload-btn">Upload latest export (.xlsx)</label>
+      <input type="file" id="file-upload" accept=".xlsx,.xls" style="display:none;">
+      <span class="upload-status" id="upload-status">Live data from database &middot; upload an Excel export to override</span>
+    </div>
+  </div>
+</div>
+<div class="toran-wrap">
+  <svg class="toran" viewBox="0 0 1440 34" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <pattern id="toranPattern" width="60" height="34" patternUnits="userSpaceOnUse">
+        <path d="M0,0 L60,0 L60,4 Q30,26 0,4 Z" fill="#d97a1f" opacity="0.9"/>
+        <path d="M22,4 Q30,20 38,4 Z" fill="#fbf6ec" opacity="0.85"/>
+        <circle cx="30" cy="24" r="2.4" fill="#b6862c"/>
+      </pattern>
+    </defs>
+    <rect width="1440" height="34" fill="url(#toranPattern)"/>
+  </svg>
+</div>
+
+<div class="filterbar">
+  <div class="filterbar-inner" id="filterbar-inner">
+    <button class="filter-reset" id="btn-reset">Reset filters</button>
+    <div class="match-counter"><b id="match-count">0</b> of <span id="match-total">0</span> records match</div>
+  </div>
+</div>
+
+<div class="page">
+  <a href="{% url 'dashboard:item_control_center' %}" class="back-link">&larr; Back to Dashboard</a>
+
+  <div class="section-title">Overview</div>
+  <div class="kpi-row" id="kpi-row"></div>
+
+  <div class="section-title">Where the seva is going</div>
+  <div class="content-split">
+    <div class="charts-grid" id="charts-grid">
+    </div>
+    <div class="insights-col" id="insights-col"></div>
+  </div>
+
+  <div class="section-title">Data explorer</div>
+  <div class="explorer-toolbar">
+    <input type="text" class="search-input" id="table-search" placeholder="Search by Pujya Shri, volunteer, area, form no...">
+  </div>
+  <div class="table-wrap">
+    <table class="data-table" id="data-table">
+      <thead>
+        <tr>
+          <th data-key="form_no">Form No.</th>
+          <th data-key="route">Route</th>
+          <th data-key="sub_route">Sub Route</th>
+          <th data-key="area">Area</th>
+          <th data-key="pujya_shri">Pujya Shri</th>
+          <th data-key="volunteer_name">Volunteer</th>
+          <th data-key="stay_type">Stay Type</th>
+          <th data-key="status">Status</th>
+          <th data-key="total_qty">Total Qty</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </div>
+
+  <footer>Kalyan Mitra Mandal &mdash; Chaturmas Vaiyavachch {% if event %}{{ event.start_date|date:"Y" }}{% endif %} &middot; live data from KMM portal</footer>
+</div>
+
+<script id="dashboard-data" type="application/json">{{ dashboard_json|safe }}</script>
+<script>
+(function(){
+"use strict";
+
+var RAW = JSON.parse(document.getElementById('dashboard-data').textContent);
+var CATEGORY_ORDER = ['Personal Care & Hygiene','Utensils & Vihar Essentials','Stationery & Office Supplies','Medical & Health'];
+var STATUS_ORDER = ['Not Confirmed','Confirmed','Packed','Delivered'];
+
+var CATEGORY_COLORS = {
+  'Personal Care & Hygiene': '#8a2e40',
+  'Utensils & Vihar Essentials': '#d97a1f',
+  'Stationery & Office Supplies': '#b6862c',
+  'Medical & Health': '#3f7d4a'
+};
+var STATUS_COLORS = {
+  'Packed': '#3f7d4a', 'Confirmed': '#b9781f', 'Not Confirmed': '#a5372f',
+  'Delivered': '#2f5f8a', 'Unknown': '#8a7a6a'
+};
+var ROUTE_PALETTE = ['#5c1c29','#8a2e40','#a5372f','#d97a1f','#e8901f','#b9781f','#b6862c','#d9b35c','#6f8a5c','#3f7d4a','#2f5f8a','#5a463b'];
+
+function disp(v){ return (v === null || v === undefined || v === '') ? '\u2014' : v; }
+function fmtNum(n){ return Math.round(n||0).toLocaleString('en-IN'); }
+function pct(n,d){ return d ? Math.round((n/d)*1000)/10 : 0; }
+
+var RECORDS = [];
+var ITEMS_META = [];
+var ITEM_CATEGORY = {};
+var OPTS = {};
+var filters = { route: new Set(), sub_route: new Set(), area: new Set(), stay_type: new Set(), status: new Set(), volunteer_name: new Set(), category: new Set() };
+var currentFiltered = [];
+
+function recQtyForCategories(rec, catSet){
+  var items = rec.items || {};
+  if (!catSet || catSet.size === 0){
+    var t = 0; for (var k in items){ t += items[k]; } return t;
+  }
+  var sum = 0;
+  for (var name in items){
+    var cat = ITEM_CATEGORY[name];
+    if (catSet.has(cat)) sum += items[name];
+  }
+  return sum;
+}
+
+function matches(rec){
+  if (filters.route.size && !filters.route.has(rec.route)) return false;
+  if (filters.sub_route.size && !filters.sub_route.has(rec.sub_route)) return false;
+  if (filters.area.size && !filters.area.has(rec.area)) return false;
+  if (filters.stay_type.size && !filters.stay_type.has(rec.stay_type)) return false;
+  if (filters.status.size && !filters.status.has(rec.status)) return false;
+  if (filters.volunteer_name.size && !filters.volunteer_name.has(rec.volunteer_name)) return false;
+  if (filters.category.size && recQtyForCategories(rec, filters.category) === 0) return false;
+  return true;
+}
+function getFiltered(){ return RECORDS.filter(matches); }
+
+function buildOptionCounts(keyFn){
+  var m = new Map();
+  RECORDS.forEach(function(r){
+    var v = keyFn(r);
+    if (v === null || v === undefined || v === '') return;
+    m.set(v, (m.get(v)||0)+1);
+  });
+  return Array.from(m.entries()).sort(function(a,b){ return b[1]-a[1]; });
+}
+
+function categorizeItem(name){
+  var m = /^(\d+)/.exec(name);
+  var n = m ? parseInt(m[1],10) : 999;
+  if (n>=1 && n<=19) return 'Personal Care & Hygiene';
+  if (n>=20 && n<=27) return 'Utensils & Vihar Essentials';
+  if (n>=28 && n<=55) return 'Stationery & Office Supplies';
+  return 'Medical & Health';
+}
+
+function normArea(v){
+  if (v===null || v===undefined || String(v).trim()==='') return 'Unspecified';
+  return String(v).trim().replace(/\s+/g,' ');
+}
+
+function parseWorkbookToRecords(wb){
+  var sheetName = wb.SheetNames.indexOf('Response Sheet') !== -1 ? 'Response Sheet' : wb.SheetNames[0];
+  var ws = wb.Sheets[sheetName];
+  var rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null, raw: true });
+  if (!rows.length) throw new Error('Sheet "' + sheetName + '" is empty.');
+
+  var header = rows[0].map(function(h){ return h===null ? '' : String(h).trim(); });
+  function findIdx(name){ return header.indexOf(name); }
+
+  var idx = {
+    sr: findIdx('Sr. No.'), form_no: findIdx('Form No.'), order_id: findIdx('Order ID'),
+    route: findIdx('Route'), sub_route: findIdx('Sub Route'), pujya_shri: findIdx('Pujya Shri'),
+    thana: findIdx('Thana'), area: findIdx('Area'), volunteer_name: findIdx('Volunteer Name'),
+    volunteer_mobile: findIdx('Volunteer Mobile'), stay_type: findIdx('Stay Type'),
+    status: findIdx('Status'), total_qty: findIdx('Total Qty')
+  };
+  var required = ['sr','status','total_qty'];
+  for (var ri=0; ri<required.length; ri++){
+    if (idx[required[ri]] === -1) throw new Error('Could not find expected column "' + required[ri] + '" in the sheet header.');
+  }
+
+  var itemStart = idx.status + 1;
+  var itemEnd = idx.total_qty;
+  if (itemEnd <= itemStart) throw new Error('Item columns between "Status" and "Total Qty" were not found as expected.');
+  var itemNames = header.slice(itemStart, itemEnd);
+  var itemsMeta = itemNames.map(function(n){ return { name: n, category: categorizeItem(n) }; });
+
+  var records = [];
+  var skippedTotalRow = false;
+  for (var i=1;i<rows.length;i++){
+    var r = rows[i];
+    if (!r) continue;
+    var srVal = r[idx.sr];
+    if (typeof srVal !== 'number'){
+      if (srVal !== null && srVal !== undefined && String(srVal).trim() !== '') skippedTotalRow = true;
+      continue;
+    }
+    var items = {};
+    for (var j=0;j<itemNames.length;j++){
+      var v = r[itemStart+j];
+      if (typeof v === 'number' && v > 0) items[itemNames[j]] = v;
+    }
+    var totalQtyCell = r[idx.total_qty];
+    var totalQty = typeof totalQtyCell === 'number' ? totalQtyCell : Object.values(items).reduce(function(a,b){return a+b;},0);
+    records.push({
+      sr: srVal,
+      form_no: idx.form_no!==-1 ? r[idx.form_no] : null,
+      order_id: idx.order_id!==-1 ? r[idx.order_id] : null,
+      route: idx.route!==-1 ? r[idx.route] : null,
+      sub_route: idx.sub_route!==-1 ? r[idx.sub_route] : null,
+      pujya_shri: idx.pujya_shri!==-1 ? r[idx.pujya_shri] : null,
+      thana: idx.thana!==-1 ? r[idx.thana] : null,
+      area: normArea(idx.area!==-1 ? r[idx.area] : null),
+      volunteer_name: idx.volunteer_name!==-1 ? r[idx.volunteer_name] : null,
+      volunteer_mobile: idx.volunteer_mobile!==-1 ? r[idx.volunteer_mobile] : null,
+      stay_type: idx.stay_type!==-1 ? r[idx.stay_type] : null,
+      status: r[idx.status] || 'Unknown',
+      items: items,
+      total_qty: totalQty
+    });
+  }
+  return { records: records, items_meta: itemsMeta, skippedTotalRow: skippedTotalRow };
+}
+
+var filterBar = document.getElementById('filterbar-inner');
+var resetBtn = document.getElementById('btn-reset');
+var dropdowns = {};
+var FILTER_DEFS = [
+  ['route','Route', false],
+  ['sub_route','Sub Route', true],
+  ['area','Area', true],
+  ['stay_type','Stay Type', false],
+  ['status','Status', false],
+  ['volunteer_name','Volunteer', true],
+  ['category','Item Category', false]
+];
+
+function makeDropdown(key, label, searchable){
+  var wrap = document.createElement('div');
+  wrap.className = 'filter-group';
+  var lab = document.createElement('label'); lab.textContent = label; wrap.appendChild(lab);
+  var ctrl = document.createElement('div'); ctrl.className = 'filter-control';
+  var btn = document.createElement('button'); btn.className = 'filter-btn'; btn.type = 'button';
+  var btnText = document.createElement('span'); btnText.textContent = 'All';
+  var chev = document.createElement('span'); chev.className = 'chev'; chev.textContent = '\u25BC';
+  btn.appendChild(btnText); btn.appendChild(chev);
+  var panel = document.createElement('div'); panel.className = 'dropdown-panel';
+  var search;
+  if (searchable){
+    search = document.createElement('input');
+    search.className = 'dropdown-search'; search.placeholder = 'Search ' + label.toLowerCase() + '...';
+    panel.appendChild(search);
+  }
+  var listEl = document.createElement('div');
+  panel.appendChild(listEl);
+  ctrl.appendChild(btn); ctrl.appendChild(panel);
+  wrap.appendChild(ctrl);
+
+  function renderList(filterText){
+    listEl.innerHTML = '';
+    var opts = OPTS[key] || [];
+    opts.forEach(function(pair){
+      var val = pair[0], count = pair[1];
+      if (filterText && String(val).toLowerCase().indexOf(filterText.toLowerCase()) === -1) return;
+      var row = document.createElement('label'); row.className = 'dropdown-opt';
+      var cb = document.createElement('input'); cb.type = 'checkbox';
+      cb.checked = filters[key].has(val);
+      cb.addEventListener('change', function(){
+        if (cb.checked) filters[key].add(val); else filters[key].delete(val);
+        updateBtnLabel(); renderAll();
+      });
+      var span = document.createElement('span'); span.textContent = val;
+      var n = document.createElement('span'); n.className = 'n'; n.textContent = count;
+      row.appendChild(cb); row.appendChild(span); row.appendChild(n);
+      listEl.appendChild(row);
+    });
+    if (!listEl.children.length){
+      var e = document.createElement('div'); e.style.fontSize='11.5px'; e.style.color='#8a7a6a'; e.style.padding='6px';
+      e.textContent = 'No matches'; listEl.appendChild(e);
+    }
+  }
+  function updateBtnLabel(){
+    var n = filters[key].size;
+    btn.classList.toggle('active', n>0);
+    btnText.textContent = n===0 ? 'All' : (n===1 ? String(Array.from(filters[key])[0]) : n + ' selected');
+  }
+  btn.addEventListener('click', function(e){
+    e.stopPropagation();
+    var wasOpen = panel.classList.contains('open');
+    document.querySelectorAll('.dropdown-panel.open').forEach(function(p){ p.classList.remove('open'); });
+    if (!wasOpen){ panel.classList.add('open'); renderList(''); if(search) search.focus(); }
+  });
+  if (search){
+    search.addEventListener('input', function(){ renderList(search.value); });
+    search.addEventListener('click', function(e){ e.stopPropagation(); });
+  }
+  panel.addEventListener('click', function(e){ e.stopPropagation(); });
+  renderList('');
+  updateBtnLabel();
+  return { el: wrap, refreshOptions: function(){ renderList(search?search.value:''); }, updateBtnLabel: updateBtnLabel };
+}
+
+document.addEventListener('click', function(){
+  document.querySelectorAll('.dropdown-panel.open').forEach(function(p){ p.classList.remove('open'); });
+});
+
+function rebuildFilterUI(){
+  Object.keys(dropdowns).forEach(function(k){ dropdowns[k].el.remove(); });
+  dropdowns = {};
+  FILTER_DEFS.forEach(function(cfg){
+    var d = makeDropdown(cfg[0], cfg[1], cfg[2]);
+    dropdowns[cfg[0]] = d;
+    filterBar.insertBefore(d.el, resetBtn);
+  });
+}
+
+resetBtn.addEventListener('click', function(){
+  Object.keys(filters).forEach(function(k){ filters[k].clear(); });
+  Object.keys(dropdowns).forEach(function(k){ dropdowns[k].updateBtnLabel(); dropdowns[k].refreshOptions(); });
+  renderAll();
+});
+
+var kpiRow = document.getElementById('kpi-row');
+function renderKPIs(filtered){
+  var totalQty = 0; filtered.forEach(function(r){ totalQty += recQtyForCategories(r, filters.category); });
+  var routes = new Set(filtered.map(function(r){return r.route;}).filter(Boolean));
+  var subRoutes = new Set(filtered.map(function(r){return r.sub_route;}).filter(Boolean));
+  var packed = filtered.filter(function(r){return r.status==='Packed';}).length;
+  var pending = filtered.filter(function(r){return r.status==='Confirmed' || r.status==='Not Confirmed';}).length;
+
+  var cards = [
+    {label:'Total Submissions', value: fmtNum(filtered.length), foot: 'of ' + RECORDS.length + ' total', cls:'neutral'},
+    {label:'Quantity Requested', value: fmtNum(totalQty) + ' units', foot: 'across selected filters', cls:'neutral'},
+    {label:'Routes Covered', value: routes.size, foot: routes.size + ' of ' + (OPTS.route?OPTS.route.length:0) + ' routes', cls:'neutral'},
+    {label:'Sub-Routes', value: subRoutes.size, foot: subRoutes.size + ' of ' + (OPTS.sub_route?OPTS.sub_route.length:0) + ' sub-routes', cls:'neutral'},
+    {label:'Packed', value: fmtNum(packed), foot: pct(packed,filtered.length) + '% of view', cls:'good', warn:false},
+    {label:'Pending Action', value: fmtNum(pending), foot: pending? 'awaiting confirm / pack' : 'nothing pending', cls: pending? 'warn':'good', warn: pending>0}
+  ];
+  kpiRow.innerHTML = '';
+  cards.forEach(function(c){
+    var el = document.createElement('div');
+    el.className = 'kpi-card' + (c.warn? ' warn':'');
+    el.innerHTML = '<div class="kpi-label">'+c.label+'</div><div class="kpi-value tabular">'+c.value+'</div><div class="kpi-foot '+c.cls+'">'+c.foot+'</div>';
+    kpiRow.appendChild(el);
+  });
+  document.getElementById('stat-records').textContent = RECORDS.length;
+  document.getElementById('stat-qty').textContent = fmtNum(RECORDS.reduce(function(s,r){return s+recQtyForCategories(r,new Set());},0));
+  document.getElementById('stat-routes').textContent = OPTS.route ? OPTS.route.length : 0;
+  document.getElementById('match-count').textContent = filtered.length;
+  document.getElementById('match-total').textContent = RECORDS.length;
+}
+
+var chartsGrid = document.getElementById('charts-grid');
+var CHART_DEFS = [
+  {id:'chartSubmissionsByRoute', title:'Submissions by Route', desc:'Number of forms received per route, ranked highest to lowest.', span:false},
+  {id:'chartQtyByRoute', title:'Quantity Requested by Route', desc:'Total item quantity requested per route \u2014 shows where packing capacity is needed most.', span:false},
+  {id:'chartStatusDonut', title:'Fulfillment Status', desc:'Share of submissions by current status.', span:false},
+  {id:'chartStayTypeDonut', title:'Stay Type Split', desc:'Sthirvas vs Sangh Upashray.', span:false},
+  {id:'chartCategoryByRoute', title:'Item Category Demand by Route', desc:'Quantity stacked by item category for each route.', span:true, tall:true},
+  {id:'chartTop15Items', title:'Top 15 Items by Quantity', desc:'Highest-demand items across the current filter selection.', span:false, tall:true},
+  {id:'chartAreaConcentration', title:'Top 20 Areas by Quantity', desc:'Where requested quantity is concentrated geographically.', span:false, tall:true},
+  {id:'chartSubRouteDrilldown', title:'Sub-Route Breakdown', desc:'Sub-routes within the current filter, ranked by submissions.', span:false, tall:true},
+  {id:'chartVolunteerContribution', title:'Top 20 Volunteers by Submissions', desc:'Number of forms submitted per volunteer.', span:false, tall:true},
+  {id:'chartFunnel', title:'Fulfillment Pipeline', desc:'Where records currently sit: Not Confirmed \u2192 Confirmed \u2192 Packed \u2192 Delivered.', span:true},
+  {id:'chartHeatmap', title:'Route \u00d7 Item Category Heatmap', desc:'Darker cells indicate higher requested quantity for that route/category combination.', span:true}
+];
+CHART_DEFS.forEach(function(def){
+  var card = document.createElement('div');
+  card.className = 'chart-card' + (def.span? ' span2':'');
+  var body = def.id === 'chartHeatmap'
+    ? '<div id="heatmapContainer" style="overflow:auto;"></div>'
+    : '<div class="chart-canvas-wrap' + (def.tall?' tall':'') + '"><canvas id="'+def.id+'"></canvas></div>';
+  card.innerHTML = '<h3>'+def.title+'</h3><div class="desc">'+def.desc+'</div>' + body;
+  chartsGrid.appendChild(card);
+});
+
+if (window.Chart){
+  Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
+  Chart.defaults.color = '#5a463b';
+  Chart.defaults.font.size = 11.5;
+}
+
+var chartInstances = {};
+function destroyChart(id){ if (chartInstances[id]){ chartInstances[id].destroy(); delete chartInstances[id]; } }
+
+function aggCount(records, keyFn){
+  var m = new Map();
+  records.forEach(function(r){
+    var v = keyFn(r); if (v===null||v===undefined||v==='') return;
+    m.set(v, (m.get(v)||0)+1);
+  });
+  return m;
+}
+function aggSum(records, keyFn, valFn){
+  var m = new Map();
+  records.forEach(function(r){
+    var v = keyFn(r); if (v===null||v===undefined||v==='') return;
+    m.set(v, (m.get(v)||0)+valFn(r));
+  });
+  return m;
+}
+function topN(map, n){
+  return Array.from(map.entries()).sort(function(a,b){return b[1]-a[1];}).slice(0,n);
+}
+
+function barChart(canvasId, labels, data, colors, horizontal, opts){
+  destroyChart(canvasId);
+  var ctx = document.getElementById(canvasId).getContext('2d');
+  chartInstances[canvasId] = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: labels, datasets: [{ data: data, backgroundColor: colors, borderRadius: 4, maxBarThickness: 26 }] },
+    options: Object.assign({
+      indexAxis: horizontal ? 'y' : 'x',
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display:false }, tooltip: { callbacks: { label: function(c){ return ' ' + fmtNum(c.parsed[horizontal?'x':'y']); } } } },
+      scales: { x: { grid: { color:'#f0e6cf' } }, y: { grid: { color:'#f0e6cf' } } }
+    }, opts||{})
+  });
+}
+function donutChart(canvasId, labels, data, colors){
+  destroyChart(canvasId);
+  var ctx = document.getElementById(canvasId).getContext('2d');
+  chartInstances[canvasId] = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels: labels, datasets: [{ data: data, backgroundColor: colors, borderWidth:2, borderColor:'#fff' }] },
+    options: {
+      responsive:true, maintainAspectRatio:false, cutout:'62%',
+      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, padding:10, font:{size:11} } },
+        tooltip:{ callbacks:{ label:function(c){ var total=c.dataset.data.reduce(function(a,b){return a+b;},0); return ' '+c.label+': '+fmtNum(c.parsed)+' ('+pct(c.parsed,total)+'%)'; } } } }
+    }
+  });
+}
+function stackedBar(canvasId, labels, seriesMap){
+  destroyChart(canvasId);
+  var ctx = document.getElementById(canvasId).getContext('2d');
+  var datasets = CATEGORY_ORDER.map(function(cat){
+    return { label: cat, data: labels.map(function(l){ return (seriesMap[l] && seriesMap[l][cat]) || 0; }), backgroundColor: CATEGORY_COLORS[cat], borderRadius:3 };
+  });
+  chartInstances[canvasId] = new Chart(ctx, {
+    type:'bar',
+    data: { labels: labels, datasets: datasets },
+    options: {
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{size:10.5} } },
+        tooltip:{ callbacks:{ label:function(c){ return ' '+c.dataset.label+': '+fmtNum(c.parsed.x); } } } },
+      scales:{ x:{ stacked:true, grid:{color:'#f0e6cf'} }, y:{ stacked:true, grid:{display:false} } }
+    }
+  });
+}
+function hexToRgb(hex){ var v = parseInt(hex.slice(1),16); return { r:(v>>16)&255, g:(v>>8)&255, b:v&255 }; }
+function renderHeatmap(records){
+  var routes = OPTS.route.map(function(p){return p[0];});
+  var matrix = {};
+  routes.forEach(function(r){ matrix[r] = {}; CATEGORY_ORDER.forEach(function(c){ matrix[r][c]=0; }); });
+  records.forEach(function(rec){
+    if (!rec.route || !matrix[rec.route]) return;
+    var items = rec.items||{};
+    for (var name in items){ matrix[rec.route][ITEM_CATEGORY[name]] += items[name]; }
+  });
+  var maxVal = 1;
+  routes.forEach(function(r){ CATEGORY_ORDER.forEach(function(c){ maxVal = Math.max(maxVal, matrix[r][c]); }); });
+  var html = '<table class="heatmap-table"><thead><tr><th>Route</th>';
+  CATEGORY_ORDER.forEach(function(c){ html += '<th>'+c+'</th>'; });
+  html += '</tr></thead><tbody>';
+  routes.forEach(function(r){
+    html += '<tr><td class="rowlabel">'+r+'</td>';
+    CATEGORY_ORDER.forEach(function(c){
+      var v = matrix[r][c];
+      var alpha = 0.08 + 0.72*(v/maxVal);
+      var rgb = hexToRgb(CATEGORY_COLORS[c]);
+      html += '<td style="background:rgba('+rgb.r+','+rgb.g+','+rgb.b+','+alpha.toFixed(2)+')">'+ (v? fmtNum(v): '\u2013') +'</td>';
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('heatmapContainer').innerHTML = html;
+}
+
+function shortItem(name){
+  var s = name.replace(/^[0-9]+-[A-Z]?-?/,'');
+  return s.length>34 ? s.slice(0,32)+'\u2026' : s;
+}
+
+function renderCharts(filtered){
+  var catSet = filters.category;
+
+  var byRoute = topN(aggCount(filtered, function(r){return r.route;}), 20);
+  barChart('chartSubmissionsByRoute', byRoute.map(function(p){return String(p[0]).replace('Area-','');}), byRoute.map(function(p){return p[1];}),
+    byRoute.map(function(p,i){return ROUTE_PALETTE[i % ROUTE_PALETTE.length];}), true);
+
+  var qtyByRoute = topN(aggSum(filtered, function(r){return r.route;}, function(r){return recQtyForCategories(r, catSet);}), 20);
+  barChart('chartQtyByRoute', qtyByRoute.map(function(p){return String(p[0]).replace('Area-','');}), qtyByRoute.map(function(p){return p[1];}),
+    qtyByRoute.map(function(p,i){return ROUTE_PALETTE[i % ROUTE_PALETTE.length];}), true);
+
+  var statusCounts = STATUS_ORDER.map(function(s){ return filtered.filter(function(r){return r.status===s;}).length; });
+  donutChart('chartStatusDonut', STATUS_ORDER, statusCounts, STATUS_ORDER.map(function(s){return STATUS_COLORS[s];}));
+
+  var stayTypes = (OPTS.stay_type||[]).map(function(p){return p[0];});
+  var stayCounts = stayTypes.map(function(s){ return filtered.filter(function(r){return r.stay_type===s;}).length; });
+  donutChart('chartStayTypeDonut', stayTypes, stayCounts, ['#8a2e40','#d97a1f','#b6862c']);
+
+  var routesForStack = topN(aggCount(filtered, function(r){return r.route;}), 12).map(function(p){return p[0];});
+  var seriesMap = {};
+  routesForStack.forEach(function(rt){ seriesMap[rt] = {}; CATEGORY_ORDER.forEach(function(c){seriesMap[rt][c]=0;}); });
+  filtered.forEach(function(rec){
+    if (!rec.route || !seriesMap[rec.route]) return;
+    var items = rec.items||{};
+    for (var name in items){ seriesMap[rec.route][ITEM_CATEGORY[name]] += items[name]; }
+  });
+  stackedBar('chartCategoryByRoute', routesForStack.map(function(r){return String(r).replace('Area-','');}), seriesMap);
+
+  var itemTotals = new Map();
+  filtered.forEach(function(rec){
+    var items = rec.items||{};
+    for (var name in items){
+      if (catSet.size && !catSet.has(ITEM_CATEGORY[name])) continue;
+      itemTotals.set(name, (itemTotals.get(name)||0) + items[name]);
+    }
+  });
+  var top15 = topN(itemTotals, 15);
+  barChart('chartTop15Items', top15.map(function(p){return shortItem(p[0]);}), top15.map(function(p){return p[1];}),
+    top15.map(function(p){return CATEGORY_COLORS[ITEM_CATEGORY[p[0]]];}), true);
+
+  var areaQty = topN(aggSum(filtered, function(r){return r.area;}, function(r){return recQtyForCategories(r, catSet);}), 20);
+  barChart('chartAreaConcentration', areaQty.map(function(p){return p[0];}), areaQty.map(function(p){return p[1];}), '#8a2e40', true);
+
+  var subCounts = topN(aggCount(filtered, function(r){return r.sub_route;}), 15);
+  barChart('chartSubRouteDrilldown', subCounts.map(function(p){return p[0];}), subCounts.map(function(p){return p[1];}), '#b6862c', true);
+
+  var volCounts = topN(aggCount(filtered, function(r){return r.volunteer_name;}), 20);
+  barChart('chartVolunteerContribution', volCounts.map(function(p){return p[0];}), volCounts.map(function(p){return p[1];}), '#3f7d4a', true);
+
+  barChart('chartFunnel', STATUS_ORDER, statusCounts, STATUS_ORDER.map(function(s){return STATUS_COLORS[s];}), true, { plugins:{ legend:{display:false} } });
+
+  renderHeatmap(filtered);
+}
+
+var insightsCol = document.getElementById('insights-col');
+function renderInsights(filtered){
+  insightsCol.innerHTML = '';
+  if (!filtered.length){
+    insightsCol.innerHTML = '<div class="insight-card warn"><span class="tag">No data</span>No records match the current filters.</div>';
+    return;
+  }
+  var cards = [];
+  var byRoute = topN(aggCount(filtered, function(r){return r.route;}), 1);
+  if (byRoute.length){
+    cards.push({tag:'Volume', cls:'', text: byRoute[0][0] + ' accounts for the highest submission volume at ' + byRoute[0][1] + ' forms (' + pct(byRoute[0][1], filtered.length) + '% of this view).'});
+  }
+  var pending = filtered.filter(function(r){return r.status==='Confirmed' || r.status==='Not Confirmed';});
+  if (pending.length){
+    cards.push({tag:'Follow-up needed', cls:'warn', text: pending.length + ' record' + (pending.length>1?'s':'') + ' still ' + (pending.length>1?'are':'is') + ' awaiting confirmation or packing.'});
+  } else {
+    cards.push({tag:'On track', cls:'good', text: 'Every record in this view is Packed or Delivered.'});
+  }
+  var itemTotals = new Map();
+  filtered.forEach(function(rec){
+    var items = rec.items||{};
+    for (var name in items){ itemTotals.set(name, (itemTotals.get(name)||0)+items[name]); }
+  });
+  var topItem = topN(itemTotals, 1);
+  if (topItem.length){
+    cards.push({tag:'Top item', cls:'', text: shortItem(topItem[0][0]) + ' is the most-requested item at ' + fmtNum(topItem[0][1]) + ' units in this view.'});
+  }
+  var catTotals = {}; CATEGORY_ORDER.forEach(function(c){catTotals[c]=0;});
+  var grandTotal = 0;
+  filtered.forEach(function(rec){
+    var items = rec.items||{};
+    for (var name in items){ var c = ITEM_CATEGORY[name]; catTotals[c]+=items[name]; grandTotal+=items[name]; }
+  });
+  var topCat = Object.entries(catTotals).sort(function(a,b){return b[1]-a[1];})[0];
+  if (topCat && grandTotal){
+    cards.push({tag:'Category mix', cls:'', text: topCat[0] + ' items make up the largest share of quantity at ' + pct(topCat[1], grandTotal) + '%.'});
+  }
+  var areaQty = topN(aggSum(filtered, function(r){return r.area;}, function(r){return recQtyForCategories(r, filters.category);}), 1);
+  if (areaQty.length){
+    cards.push({tag:'Hotspot', cls:'', text: areaQty[0][0] + ' has the highest requested quantity at ' + fmtNum(areaQty[0][1]) + ' units.'});
+  }
+  cards.forEach(function(c){
+    var el = document.createElement('div');
+    el.className = 'insight-card' + (c.cls? ' '+c.cls: '');
+    el.innerHTML = '<span class="tag">'+c.tag+'</span>'+c.text;
+    insightsCol.appendChild(el);
+  });
+}
+
+var tableBody = document.getElementById('table-body');
+var searchInput = document.getElementById('table-search');
+var sortState = { key:'form_no', dir:'asc' };
+var expanded = new Set();
+
+document.querySelectorAll('#data-table thead th').forEach(function(th){
+  th.addEventListener('click', function(){
+    var key = th.getAttribute('data-key');
+    if (sortState.key === key) sortState.dir = sortState.dir==='asc'?'desc':'asc';
+    else { sortState.key = key; sortState.dir = 'asc'; }
+    renderTable(currentFiltered);
+  });
+});
+searchInput.addEventListener('input', function(){ renderTable(currentFiltered); });
+
+function statusClass(s){ return 'status-' + String(s).replace(/\s+/g,''); }
+
+function renderTable(filtered){
+  var q = searchInput.value.trim().toLowerCase();
+  var rows = filtered.filter(function(r){
+    if (!q) return true;
+    return [r.form_no, r.pujya_shri, r.volunteer_name, r.area, r.route, r.sub_route].some(function(f){
+      return f && String(f).toLowerCase().indexOf(q) !== -1;
+    });
+  });
+  rows = rows.slice().sort(function(a,b){
+    var av = a[sortState.key], bv = b[sortState.key];
+    if (av===null||av===undefined) av='';
+    if (bv===null||bv===undefined) bv='';
+    var cmp = (typeof av === 'number' && typeof bv === 'number') ? av-bv : String(av).localeCompare(String(bv));
+    return sortState.dir==='asc' ? cmp : -cmp;
+  });
+
+  tableBody.innerHTML = '';
+  rows.forEach(function(r){
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td>'+disp(r.form_no)+'</td><td>'+disp(r.route)+'</td><td>'+disp(r.sub_route)+'</td>'+
+      '<td>'+disp(r.area)+'</td><td>'+disp(r.pujya_shri)+'</td><td>'+disp(r.volunteer_name)+'</td>'+
+      '<td>'+disp(r.stay_type)+'</td><td><span class="status-chip '+statusClass(r.status)+'">'+disp(r.status)+'</span></td>'+
+      '<td class="tabular">'+fmtNum(r.total_qty||0)+'</td>';
+    tr.addEventListener('click', function(){
+      var key = r.sr;
+      if (expanded.has(key)) expanded.delete(key); else expanded.add(key);
+      renderTable(filtered);
+    });
+    tableBody.appendChild(tr);
+    if (expanded.has(r.sr)){
+      var exTr = document.createElement('tr'); exTr.className = 'expand-row';
+      var td = document.createElement('td'); td.colSpan = 9;
+      var items = r.items || {};
+      var names = Object.keys(items);
+      if (!names.length){
+        td.innerHTML = '<em style="color:#8a7a6a;">No item quantities recorded for this submission.</em>';
+      } else {
+        var pills = names.sort(function(a,b){return items[b]-items[a];}).map(function(n){
+          return '<span class="item-pill">'+shortItem(n)+' &middot; <b>'+items[n]+'</b></span>';
+        }).join('');
+        td.innerHTML = '<div class="item-pill-list">'+pills+'</div>';
+      }
+      exTr.appendChild(td);
+      tableBody.appendChild(exTr);
+    }
+  });
+}
+
+function renderAll(){
+  currentFiltered = getFiltered();
+  renderKPIs(currentFiltered);
+  renderCharts(currentFiltered);
+  renderInsights(currentFiltered);
+  renderTable(currentFiltered);
+}
+
+function loadData(records, itemsMeta){
+  RECORDS = records;
+  ITEMS_META = itemsMeta;
+  ITEM_CATEGORY = {};
+  ITEMS_META.forEach(function(m){ ITEM_CATEGORY[m.name] = m.category; });
+  OPTS = {
+    route: buildOptionCounts(function(r){ return r.route; }),
+    sub_route: buildOptionCounts(function(r){ return r.sub_route; }),
+    area: buildOptionCounts(function(r){ return r.area; }),
+    stay_type: buildOptionCounts(function(r){ return r.stay_type; }),
+    status: buildOptionCounts(function(r){ return r.status; }),
+    volunteer_name: buildOptionCounts(function(r){ return r.volunteer_name; }),
+    category: CATEGORY_ORDER.map(function(c){ return [c, 0]; })
+  };
+  Object.keys(filters).forEach(function(k){ filters[k].clear(); });
+  sortState = { key:'form_no', dir:'asc' };
+  expanded = new Set();
+  rebuildFilterUI();
+  renderAll();
+}
+
+var fileInput = document.getElementById('file-upload');
+var uploadStatus = document.getElementById('upload-status');
+
+fileInput.addEventListener('change', function(e){
+  var file = e.target.files && e.target.files[0];
+  if (!file) return;
+  uploadStatus.className = 'upload-status';
+  uploadStatus.textContent = 'Reading ' + file.name + '\u2026';
+  var reader = new FileReader();
+  reader.onload = function(ev){
+    try{
+      var data = new Uint8Array(ev.target.result);
+      var wb = XLSX.read(data, { type: 'array' });
+      var parsed = parseWorkbookToRecords(wb);
+      if (!parsed.records.length) throw new Error('No form rows found in this file.');
+      loadData(parsed.records, parsed.items_meta);
+      uploadStatus.className = 'upload-status ok';
+      uploadStatus.textContent = '\u2713 Loaded ' + file.name + ' \u2014 ' + parsed.records.length + ' forms' + (parsed.skippedTotalRow ? ' (TOTAL row excluded)' : '');
+    } catch(err){
+      uploadStatus.className = 'upload-status err';
+      uploadStatus.textContent = '\u2717 Could not read this file: ' + err.message;
+    }
+  };
+  reader.onerror = function(){
+    uploadStatus.className = 'upload-status err';
+    uploadStatus.textContent = '\u2717 Failed to read the file.';
+  };
+  reader.readAsArrayBuffer(file);
+});
+
+loadData(RAW.records, RAW.items_meta);
+uploadStatus.textContent = RECORDS.length + ' forms \u00b7 Live data from database';
+})();
+</script>
+</body>
+</html>
