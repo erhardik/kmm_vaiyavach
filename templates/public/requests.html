@@ -59,7 +59,7 @@
       <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
           <div class="mb-3">
-            <input type="text" class="form-control" id="requestSearch" placeholder="{% if lang == 'gu' %}શોધો... ફોર્મ નં., પૂજ્ય શ્રી, સરનામું, વિસ્તાર વગેરે{% else %}Search... form no., pujya shri, address, area etc.{% endif %}" autocomplete="off">
+            <input type="text" class="form-control" id="requestSearch" placeholder="{% if lang == 'gu' %}શોધો... ફોર્મ નં., પૂજ્ય શ્રી, સરનામું, વિસ્તાર, નોંધ વગેરે{% else %}Search... form no., pujya shri, address, area, remarks etc.{% endif %}" autocomplete="off">
           </div>
           <div class="table-responsive">
             <table class="table table-hover align-middle mb-0" id="requestTable">
@@ -76,7 +76,7 @@
               </thead>
               <tbody>
                 {% for header in headers %}
-                  <tr data-search="{{ header.form_number }} {{ header.order_number }} {{ header.pujya_shri_name }} {{ header.area }} {{ header.volunteer_name }} {{ header.current_address }} {{ header.chaturmas_place_address }} {{ header.get_status_display }}" class="{% if header.status == 'PACKED' %}row-packed{% elif header.status == 'DELIVERED' %}row-delivered{% elif header.status == 'CANCELLED' or header.status == 'RETURN_REQUESTED' or header.status == 'RETURN_DONE' %}row-cancelled{% endif %}">
+                  <tr data-search="{{ header.form_number }} {{ header.order_number }} {{ header.pujya_shri_name }} {{ header.area }} {{ header.volunteer_name }} {{ header.current_address }} {{ header.chaturmas_place_address }} {{ header.remarks }} {{ header.get_status_display }}" class="{% if header.status == 'PACKED' %}row-packed{% elif header.status == 'DELIVERED' %}row-delivered{% elif header.status == 'CANCELLED' or header.status == 'RETURN_REQUESTED' or header.status == 'RETURN_DONE' %}row-cancelled{% endif %}">
                     <td>
                       <a class="fw-semibold text-decoration-none" href="{% url 'requirements:public-detail' token=header.public_view_token %}">{{ header.form_number|default:header.order_number|default:"Draft" }}</a>
                       <div class="small text-body-secondary">{{ header.requirement_date }}</div>
