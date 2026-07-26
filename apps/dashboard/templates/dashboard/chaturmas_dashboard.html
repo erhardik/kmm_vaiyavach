@@ -717,15 +717,19 @@ function renderCharts(filtered){
   var stayCounts = stayTypes.map(function(s){ return filtered.filter(function(r){return r.stay_type===s;}).length; });
   donutChart('chartStayTypeDonut', stayTypes, stayCounts, ['#8a2e40','#d97a1f','#b6862c']);
 
-  var routesForStack = topN(aggCount(filtered, function(r){return r.route;}), 12).map(function(p){return p[0];});
+  var routesForStack = topN(aggCount(filtered, function(r){return r.route;}), 12);
   var seriesMap = {};
-  routesForStack.forEach(function(rt){ seriesMap[rt] = {}; CATEGORY_ORDER.forEach(function(c){seriesMap[rt][c]=0;}); });
-  filtered.forEach(function(rec){
-    if (!rec.route || !seriesMap[rec.route]) return;
-    var items = rec.items||{};
-    for (var name in items){ seriesMap[rec.route][ITEM_CATEGORY[name]] += items[name]; }
+  routesForStack.forEach(function(pair){
+    var key = String(pair[0]).replace('Area-','');
+    seriesMap[key] = {}; CATEGORY_ORDER.forEach(function(c){seriesMap[key][c]=0;});
   });
-  stackedBar('chartCategoryByRoute', routesForStack.map(function(r){return String(r).replace('Area-','');}), seriesMap);
+  filtered.forEach(function(rec){
+    var rt = rec.route ? String(rec.route).replace('Area-','') : null;
+    if (!rt || !seriesMap[rt]) return;
+    var items = rec.items||{};
+    for (var name in items){ seriesMap[rt][ITEM_CATEGORY[name]] += items[name]; }
+  });
+  stackedBar('chartCategoryByRoute', routesForStack.map(function(p){return String(p[0]).replace('Area-','');}), seriesMap);
 
   var itemTotals = new Map();
   filtered.forEach(function(rec){
