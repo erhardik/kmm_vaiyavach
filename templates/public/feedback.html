@@ -46,7 +46,7 @@
     <div class="rating-row mb-3">
       <label>{% if lang == "gu" %}ચાતુર્માસ વૈયાવચ્ચ 2026 - તમારો અનુભવ{% else %}Chaturmas Vaiyavachch 2026 — Your Experience{% endif %} *</label>
       <div class="stars" data-rating-name="event_rating">
-        {% for i in "54321"|make_list %}
+        {% for i in "12345"|make_list %}
           <input type="radio" name="event_rating" value="{{ i }}" id="er{{ i }}">
           <label for="er{{ i }}" class="bi bi-star-fill" data-val="{{ i }}"></label>
         {% endfor %}
@@ -57,7 +57,7 @@
     <div class="rating-row mb-3">
       <label>{% if lang == "gu" %}આ પોર્ટલ - ઉપયોગ અને અનુભવ{% else %}This Portal — Usability & Experience{% endif %} *</label>
       <div class="stars" data-rating-name="portal_rating">
-        {% for i in "54321"|make_list %}
+        {% for i in "12345"|make_list %}
           <input type="radio" name="portal_rating" value="{{ i }}" id="pr{{ i }}">
           <label for="pr{{ i }}" class="bi bi-star-fill" data-val="{{ i }}"></label>
         {% endfor %}
