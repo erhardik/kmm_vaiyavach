@@ -17,55 +17,51 @@
 <div class="card border-0 shadow-sm">
   <div class="card-body">
     {% if event %}
-      <div class="alert alert-info d-flex justify-content-between align-items-center mb-3">
-        <div>
-          Registering remaining stock for <strong>{{ event.name }}</strong> ({{ event.start_date }} - {{ event.end_date }}).<br>
-          <span class="small">Enter the quantity of each item left over after the event. Leave blank to skip an item. Saving again updates existing entries.</span>
-        </div>
+      <div class="alert alert-info mb-3">
+        Registering remaining stock for <strong>{{ event.name }}</strong> ({{ event.start_date }} - {{ event.end_date }}).<br>
+        <span class="small">Enter the quantity of each item left over after the event. Use the Save button on each row to register/update that item.</span>
       </div>
-      <form method="post">
-        {% csrf_token %}
-        <input type="hidden" name="event" value="{{ event.pk }}">
-        <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Code</th>
+              <th>Item Name</th>
+              <th>Type / Size</th>
+              <th class="text-end">Remaining Stock</th>
+              <th>Comment</th>
+              <th class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows %}
               <tr>
-                <th>Item</th>
-                <th class="text-end">Current Stock</th>
-                <th class="text-end">Reserved</th>
-                <th style="width:140px" class="text-end">Remaining Qty</th>
-                <th style="width:280px">Remarks</th>
+                <td class="fw-semibold">{{ row.item_code }}</td>
+                <td>
+                  {{ row.display_name }}
+                  {% if row.existing %}<span class="badge text-bg-secondary-subtle text-secondary-emphasis">Registered</span>{% endif %}
+                </td>
+                <td>{{ row.type_size }}</td>
+                <td class="text-end">
+                  <input type="number" step="any" min="0" class="form-control form-control-sm text-end" style="width:110px;display:inline-block" name="item_{{ row.item.pk }}" value="{{ row.default_qty }}" form="rs-form-{{ row.item.pk }}">
+                </td>
+                <td>
+                  <input type="text" class="form-control form-control-sm" name="remarks_{{ row.item.pk }}" value="{{ row.default_remarks }}" placeholder="Optional note" form="rs-form-{{ row.item.pk }}">
+                </td>
+                <td class="text-end">
+                  <form method="post" id="rs-form-{{ row.item.pk }}" class="d-inline" onsubmit="return confirm('Save remaining stock for {{ row.display_name }}?')">
+                    {% csrf_token %}
+                    <input type="hidden" name="event" value="{{ event.pk }}">
+                    <button type="submit" class="btn btn-sm btn-primary">{{ row.existing|yesno:"Update,Save" }}</button>
+                  </form>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {% for row in rows %}
-                <tr>
-                  <td>
-                    {{ row.balance.item.display_name }}
-                    {% if row.existing %}<span class="badge text-bg-secondary-subtle text-secondary-emphasis">Registered</span>{% endif %}
-                  </td>
-                  <td class="text-end">{{ row.balance.current_stock }}</td>
-                  <td class="text-end">{{ row.balance.reserved_stock }}</td>
-                  <td>
-                    <input type="number" step="any" min="0" class="form-control form-control-sm text-end" name="item_{{ row.balance.item_id }}" value="{{ row.default_qty }}">
-                  </td>
-                  <td>
-                    <input type="text" class="form-control form-control-sm" name="remarks_{{ row.balance.item_id }}" value="{{ row.default_remarks }}" placeholder="Optional note">
-                  </td>
-                </tr>
-              {% empty %}
-                <tr><td colspan="5" class="text-center py-4 text-body-secondary">No inventory balances found for this event.</td></tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-        {% if rows %}
-          <div class="d-flex gap-2 mt-3">
-            <button type="submit" class="btn btn-primary">Save Remaining Stock</button>
-            <a class="btn btn-outline-secondary" href="{{ list_url }}">Cancel</a>
-          </div>
-        {% endif %}
-      </form>
+            {% empty %}
+              <tr><td colspan="6" class="text-center py-4 text-body-secondary">No items found for this event.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     {% else %}
       <div class="text-center py-4 text-body-secondary">Please select an event to register remaining stock.</div>
     {% endif %}

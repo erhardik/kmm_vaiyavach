@@ -1,4 +1,5 @@
 from decimal import Decimal
+from collections import defaultdict
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
@@ -299,23 +300,51 @@ class RemainingStockRegisterView(LoginRequiredMixin, PermissionRequiredMixin, Te
             return Event.objects.filter(pk=event_id, is_active=True).first()
         return Event.objects.filter(is_current=True, is_active=True).first()
 
-    def get_balance_rows(self, event):
+    def _expand_items(self, event):
+        base_items = list(
+            Item.objects.filter(event=event, is_active=True, parent_item__isnull=True)
+            .order_by("standard_serial", "pk")
+        )
+        base_ids = [b.pk for b in base_items]
+        variant_items = Item.objects.filter(
+            event=event, is_active=True, parent_item_id__in=base_ids
+        ).order_by("item_code", "pk")
+        variant_map = defaultdict(list)
+        for v in variant_items:
+            variant_map[v.parent_item_id].append(v)
+        items = []
+        for base in base_items:
+            variants = variant_map.get(base.pk, [])
+            if variants:
+                items.extend(variants)
+            else:
+                items.append(base)
+        return items
+
+    def get_item_rows(self, event):
         if event is None:
             return []
-        balances = list(
-            InventoryBalance.objects.filter(event=event, item__is_active=True)
-            .select_related("item")
-            .order_by("item__standard_serial", "item__item_name")
-        )
+        items = self._expand_items(event)
+        item_ids = [i.pk for i in items]
+        balances = {
+            b.item_id: b
+            for b in InventoryBalance.objects.filter(event=event, item_id__in=item_ids)
+        }
         existing = {r.item_id: r for r in RemainingStock.objects.filter(event=event)}
         rows = []
-        for balance in balances:
-            rec = existing.get(balance.item_id)
+        for item in items:
+            bal = balances.get(item.pk)
+            rec = existing.get(item.pk)
+            current_stock = bal.current_stock if bal else Decimal("0")
             rows.append(
                 {
-                    "balance": balance,
+                    "item": item,
+                    "item_code": item.item_code,
+                    "display_name": item.display_name(),
+                    "type_size": item.variant_name_gu or item.variant_name or item.default_size_gu or item.default_size or "",
+                    "current_stock": current_stock,
                     "existing": rec,
-                    "default_qty": rec.qty if rec else balance.current_stock,
+                    "default_qty": rec.qty if rec else current_stock,
                     "default_remarks": rec.remarks if rec else "",
                 }
             )
@@ -325,7 +354,7 @@ class RemainingStockRegisterView(LoginRequiredMixin, PermissionRequiredMixin, Te
         context = super().get_context_data(**kwargs)
         event = self.get_event()
         context["event"] = event
-        context["rows"] = self.get_balance_rows(event)
+        context["rows"] = self.get_item_rows(event)
         context["page_title"] = "Register Remaining Stock"
         context["event_queryset"] = Event.objects.filter(is_active=True).order_by("-is_current", "-start_date", "name")
         context["list_url"] = reverse_lazy("inventory:remaining-stock-list")
@@ -369,7 +398,7 @@ class RemainingStockRegisterView(LoginRequiredMixin, PermissionRequiredMixin, Te
                 )
                 saved += 1
         messages.success(request, f"Registered remaining stock for {saved} item(s).")
-        return redirect(f"{reverse('inventory:remaining-stock-list')}?event={event.pk}")
+        return redirect(f"{reverse('inventory:remaining-stock-register')}?event={event.pk}")
 
 
 class RemainingStockCarryForwardView(LoginRequiredMixin, PermissionRequiredMixin, View):
