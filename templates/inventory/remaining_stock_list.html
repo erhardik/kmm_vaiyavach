@@ -2,9 +2,7 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
   <div>
-    <div class="d-flex flex-wrap align-items-center gap-2">
-      <h1 class="h3 mb-0">{{ page_title }}</h1>
-    </div>
+    <h1 class="h3 mb-0">{{ page_title }}</h1>
     {% if page_subtitle %}<p class="text-body-secondary mb-0">{{ page_subtitle }}</p>{% endif %}
   </div>
   <div class="d-flex gap-2">
@@ -17,60 +15,56 @@
   <div class="card-body">
     <form method="get" class="row g-2 align-items-end mb-3">
       <div class="col-12 col-md-4">
-        <input type="search" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Search item / event / remarks">
-      </div>
-      <div class="col-12 col-md-4">
-        <select name="event" class="form-select">
-          <option value="">All Events</option>
-          {% for event in event_queryset %}
-            <option value="{{ event.pk }}" {% if request.GET.event == event.pk|stringformat:'s' %}selected{% endif %}>{{ event.name }}</option>
+        <select name="event" class="form-select" onchange="this.form.submit()">
+          <option value="">Current Event</option>
+          {% for ev in event_queryset %}
+            <option value="{{ ev.pk }}" {% if event and event.pk == ev.pk %}selected{% endif %}>{{ ev.name }}</option>
           {% endfor %}
         </select>
-      </div>
-      <div class="col-12 col-md-2 d-grid">
-        <button type="submit" class="btn btn-outline-secondary">Filter</button>
       </div>
     </form>
     <div class="table-responsive">
       <table class="table table-hover align-middle mb-0">
         <thead class="table-light">
           <tr>
-            <th>Event</th>
-            <th>Item</th>
-            <th class="text-end">Qty</th>
-            <th>Remarks</th>
-            <th>Carried Forward To</th>
+            <th>Code</th>
+            <th>Item Name</th>
+            <th>Type / Size</th>
+            <th class="text-end">Remaining Stock</th>
+            <th>Comment</th>
             <th class="text-end">Actions</th>
           </tr>
         </thead>
         <tbody>
-          {% for rs in object_list %}
+          {% for row in object_list %}
             <tr>
-              <td>{{ rs.event.name }}<div class="small text-body-secondary">{{ rs.event.start_date }} - {{ rs.event.end_date }}</div></td>
-              <td>{{ rs.item.display_name }}</td>
-              <td class="text-end fw-semibold">{{ rs.qty }}</td>
-              <td class="text-body-secondary">{{ rs.remarks|default:"-" }}</td>
-              <td>
-                {% if rs.is_carried %}
-                  <span class="badge text-bg-success-subtle text-success-emphasis">{{ rs.carried_to_event.name }}</span>
-                  <div class="small text-body-secondary">{{ rs.carried_at|date:"d M Y H:i" }}</div>
+              <td class="fw-semibold">{{ row.item_code }}</td>
+              <td>{{ row.display_name }}</td>
+              <td>{{ row.type_size }}</td>
+              <td class="text-end">
+                {% if row.record %}
+                  <span class="fw-semibold">{{ row.qty }}</span>
+                  {% if row.record.is_carried %}
+                    <span class="badge text-bg-success-subtle text-success-emphasis">Carried</span>
+                  {% endif %}
                 {% else %}
-                  <span class="badge text-bg-warning-subtle text-warning-emphasis">Not carried</span>
+                  <span class="text-body-secondary">-</span>
                 {% endif %}
               </td>
+              <td class="text-body-secondary">{{ row.remarks|default:"-" }}</td>
               <td class="text-end">
                 <div class="d-inline-flex flex-wrap gap-2 justify-content-end">
-                  {% if can_carry and not rs.is_carried %}
-                    <a class="btn btn-sm btn-outline-primary" href="{% url 'inventory:remaining-stock-carry-forward' rs.pk %}">Carry Forward</a>
+                  {% if can_carry and row.record and not row.record.is_carried %}
+                    <a class="btn btn-sm btn-outline-primary" href="{% url 'inventory:remaining-stock-carry-forward' row.record.pk %}">Carry Forward</a>
                   {% endif %}
-                  {% if perms.inventory.delete_remainingstock %}
-                    <a class="btn btn-sm btn-outline-danger" href="{% url 'inventory:remaining-stock-delete' rs.pk %}">Delete</a>
+                  {% if can_delete and row.record %}
+                    <a class="btn btn-sm btn-outline-danger" href="{% url 'inventory:remaining-stock-delete' row.record.pk %}">Delete</a>
                   {% endif %}
                 </div>
               </td>
             </tr>
           {% empty %}
-            <tr><td colspan="6" class="text-center py-4 text-body-secondary">No remaining stock registered yet.</td></tr>
+            <tr><td colspan="6" class="text-center py-4 text-body-secondary">No items found for this event.</td></tr>
           {% endfor %}
         </tbody>
       </table>
@@ -79,11 +73,11 @@
       <nav class="mt-3">
         <ul class="pagination pagination-sm mb-0">
           {% if page_obj.has_previous %}
-            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.event %}&event={{ request.GET.event }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Prev</a></li>
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.event %}&event={{ request.GET.event }}{% endif %}">Prev</a></li>
           {% endif %}
           <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
           {% if page_obj.has_next %}
-            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.event %}&event={{ request.GET.event }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Next</a></li>
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.event %}&event={{ request.GET.event }}{% endif %}">Next</a></li>
           {% endif %}
         </ul>
       </nav>

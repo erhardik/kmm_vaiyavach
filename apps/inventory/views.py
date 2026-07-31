@@ -4,7 +4,6 @@ from collections import defaultdict
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.db import transaction
-from django.db.models import Q
 from django.forms import formset_factory
 from django.http import Http404, JsonResponse, HttpResponseRedirect
 from django.shortcuts import redirect, render
@@ -264,29 +263,68 @@ class RemainingStockListView(LoginRequiredMixin, PermissionRequiredMixin, ListVi
     raise_exception = True
     paginate_by = 50
 
-    def get_queryset(self):
-        qs = super().get_queryset().select_related("event", "item", "carried_to_event", "carried_to_item")
+    def get_event(self):
         event_id = self.request.GET.get("event")
         if event_id:
-            qs = qs.filter(event_id=event_id)
-        search = self.request.GET.get("q")
-        if search:
-            qs = qs.filter(
-                Q(item__item_name__icontains=search)
-                | Q(item__item_name_gu__icontains=search)
-                | Q(event__name__icontains=search)
-                | Q(remarks__icontains=search)
+            return Event.objects.filter(pk=event_id, is_active=True).first()
+        return Event.objects.filter(is_current=True, is_active=True).first()
+
+    def get_item_rows(self, event):
+        if event is None:
+            return []
+        items = expand_event_items(event)
+        existing = {r.item_id: r for r in RemainingStock.objects.filter(event=event)}
+        rows = []
+        for item in items:
+            rec = existing.get(item.pk)
+            rows.append(
+                {
+                    "item": item,
+                    "item_code": item.item_code,
+                    "display_name": item.display_name(),
+                    "type_size": item.variant_name_gu or item.variant_name or item.default_size_gu or item.default_size or "",
+                    "qty": int(rec.qty) if rec else None,
+                    "remarks": rec.remarks if rec else "",
+                    "record": rec,
+                }
             )
-        return qs
+        return rows
+
+    def get_queryset(self):
+        return self.get_item_rows(self.get_event())
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["event"] = self.get_event()
         context["page_title"] = "Remaining Stock"
         context["page_subtitle"] = "Leftover stock registered when events close; carry forward to future events"
         context["event_queryset"] = Event.objects.filter(is_active=True).order_by("-is_current", "-start_date", "name")
         context["can_register"] = self.request.user.has_perm("inventory.add_remainingstock")
         context["can_carry"] = self.request.user.has_perm("inventory.change_remainingstock")
+        context["can_delete"] = self.request.user.has_perm("inventory.delete_remainingstock")
         return context
+
+
+def expand_event_items(event):
+    base_items = list(
+        Item.objects.filter(event=event, is_active=True, parent_item__isnull=True)
+        .order_by("standard_serial", "pk")
+    )
+    base_ids = [b.pk for b in base_items]
+    variant_items = Item.objects.filter(
+        event=event, is_active=True, parent_item_id__in=base_ids
+    ).order_by("item_code", "pk")
+    variant_map = defaultdict(list)
+    for v in variant_items:
+        variant_map[v.parent_item_id].append(v)
+    items = []
+    for base in base_items:
+        variants = variant_map.get(base.pk, [])
+        if variants:
+            items.extend(variants)
+        else:
+            items.append(base)
+    return items
 
 
 class RemainingStockRegisterView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
@@ -300,31 +338,10 @@ class RemainingStockRegisterView(LoginRequiredMixin, PermissionRequiredMixin, Te
             return Event.objects.filter(pk=event_id, is_active=True).first()
         return Event.objects.filter(is_current=True, is_active=True).first()
 
-    def _expand_items(self, event):
-        base_items = list(
-            Item.objects.filter(event=event, is_active=True, parent_item__isnull=True)
-            .order_by("standard_serial", "pk")
-        )
-        base_ids = [b.pk for b in base_items]
-        variant_items = Item.objects.filter(
-            event=event, is_active=True, parent_item_id__in=base_ids
-        ).order_by("item_code", "pk")
-        variant_map = defaultdict(list)
-        for v in variant_items:
-            variant_map[v.parent_item_id].append(v)
-        items = []
-        for base in base_items:
-            variants = variant_map.get(base.pk, [])
-            if variants:
-                items.extend(variants)
-            else:
-                items.append(base)
-        return items
-
     def get_item_rows(self, event):
         if event is None:
             return []
-        items = self._expand_items(event)
+        items = expand_event_items(event)
         item_ids = [i.pk for i in items]
         balances = {
             b.item_id: b
