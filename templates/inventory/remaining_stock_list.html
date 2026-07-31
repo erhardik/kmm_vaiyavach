@@ -8,6 +8,7 @@
   <div class="d-flex gap-2">
     {% if can_register %}
       <a class="btn btn-primary" href="{% url 'inventory:remaining-stock-register' %}">Register Remaining Stock</a>
+      <a class="btn btn-warning" href="{% url 'inventory:remaining-stock-extra' %}">Register Remaining Extra Items</a>
     {% endif %}
   </div>
 </div>
