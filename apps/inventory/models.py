@@ -107,3 +107,16 @@ class RemainingStock(EventScopedModel):
 
     def is_carried(self) -> bool:
         return bool(self.carried_at)
+
+
+class RemainingExtraItem(EventScopedModel):
+    item_name = models.CharField(max_length=200)
+    item_type = models.CharField(max_length=120, blank=True, default="")
+    qty = models.PositiveIntegerField(default=0)
+    remarks = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["-created_at", "pk"]
+
+    def __str__(self) -> str:
+        return f"{self.event} - {self.item_name} - {self.qty}"

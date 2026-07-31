@@ -9,7 +9,7 @@ from apps.requirements.models import RequirementHeader, RequirementLine, Special
 from apps.sponsorship.models import SponsorMaterialReceipt, SponsorshipCommitment
 from apps.vendors.models import VendorQuote
 from apps.procurement.models import GoodsReceipt, PurchaseOrder, PurchaseOrderLine
-from apps.inventory.models import InventoryBalance, InventoryTransaction, RemainingStock
+from apps.inventory.models import InventoryBalance, InventoryTransaction, RemainingStock, RemainingExtraItem
 from apps.distribution.models import DistributionBatch, DistributionLine
 from apps.funds.models import Donation, FundTransaction
 from apps.auditlog.models import ActivityLog
@@ -41,6 +41,7 @@ MODEL_CLASSES = [
     InventoryTransaction,
     InventoryBalance,
     RemainingStock,
+    RemainingExtraItem,
     DistributionBatch,
     DistributionLine,
     Donation,

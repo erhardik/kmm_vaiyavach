@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h1 class="h3 mb-0">{{ page_title }}</h1>
+    <p class="text-body-secondary mb-0">Register leftover items that are not in the item master</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary" href="{% url 'inventory:remaining-stock-register' %}">Register Remaining Stock</a>
+    <a class="btn btn-outline-secondary" href="{{ list_url }}">View Remaining Stock</a>
+  </div>
+</div>
+<div class="card border-0 shadow-sm">
+  <div class="card-body">
+    <form method="get" class="row g-2 align-items-end mb-3">
+      <div class="col-12 col-md-4">
+        <select name="event" class="form-select" onchange="this.form.submit()">
+          <option value="">Current Event</option>
+          {% for ev in event_queryset %}
+            <option value="{{ ev.pk }}" {% if event and event.pk == ev.pk %}selected{% endif %}>{{ ev.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </form>
+    {% if event %}
+      <div class="alert alert-info mb-3">
+        Extra items for <strong>{{ event.name }}</strong> ({{ event.start_date }} - {{ event.end_date }}).<br>
+        <span class="small">Each row saves instantly. Use "Add Item" to add more rows. Enter 0 and save to keep a record; use the trash icon to delete a row.</span>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" id="extra-table">
+          <thead class="table-light">
+            <tr>
+              <th style="width:60px">Sr. No.</th>
+              <th>Extra Item Name</th>
+              <th style="width:130px">Type</th>
+              <th style="width:110px" class="text-end">Remaining Qty</th>
+              <th>Comment</th>
+              <th class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for rec in records %}
+              {% include "inventory/_extra_row.html" with rec=rec sr_no=forloop.counter %}
+            {% empty %}
+              <tr class="extra-empty-row"><td colspan="6" class="text-center py-4 text-body-secondary">No extra items registered yet. Click "Add Item" to add one.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="mt-3">
+        {% if can_save %}
+          <button type="button" class="btn btn-outline-primary" id="add-item">+ Add Item</button>
+        {% endif %}
+      </div>
+    {% else %}
+      <div class="text-center py-4 text-body-secondary">Please select an event to manage extra items.</div>
+    {% endif %}
+  </div>
+</div>
+
+<div style="display:none">
+  <table><tbody id="extra-template">
+    {% include "inventory/_extra_row.html" %}
+  </tbody></table>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+(function() {
+  var table = document.getElementById("extra-table");
+  var addBtn = document.getElementById("add-item");
+  var template = document.getElementById("extra-template");
+  var canSave = {{ can_save|yesno:"true,false" }};
+  var canDelete = {{ can_delete|yesno:"true,false" }};
+
+  function renumber() {
+    var rows = table.querySelectorAll("tbody tr");
+    rows.forEach(function(row, idx) {
+      var sr = row.querySelector(".sr-no");
+      if (sr) sr.textContent = String(idx + 1).padStart(2, "0");
+    });
+  }
+
+  function wireRow(row) {
+    if (!canSave) return;
+    var form = row.querySelector("[data-extra-form]");
+    if (form && !form.dataset.bound) {
+      form.dataset.bound = "1";
+      form.addEventListener("submit", function(e) {
+        e.preventDefault();
+        var btn = form.querySelector('button[type="submit"]');
+        var original = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = "Saving...";
+        var body = new FormData(form);
+        fetch(form.action, {
+          method: "POST",
+          body: body,
+          headers: { "X-Requested-With": "XMLHttpRequest" }
+        })
+          .then(function(r) { return r.json().then(function(j) { return { ok: r.ok, body: j }; }); })
+          .then(function(res) {
+            if (res.ok && res.body.ok) {
+              var idInput = form.querySelector('input[name="id"]');
+              if (idInput && !idInput.value) idInput.value = res.body.id;
+              btn.innerHTML = "Update";
+              var nameCell = row.querySelector("td:nth-child(2)");
+              nameCell.querySelector(".extra-badge") && nameCell.querySelector(".extra-badge").remove();
+            } else {
+              btn.innerHTML = original;
+              window.alert(res.body.error || "Save failed");
+            }
+          })
+          .catch(function() { btn.innerHTML = original; window.alert("Save failed. Check your connection."); })
+          .finally(function() { btn.disabled = false; });
+      });
+    }
+    var delBtn = row.querySelector("[data-extra-delete]");
+    if (delBtn && !delBtn.dataset.bound) {
+      delBtn.dataset.bound = "1";
+      delBtn.addEventListener("click", function() {
+        var id = delBtn.getAttribute("data-extra-delete");
+        if (!id) { row.remove(); renumber(); return; }
+        if (!window.confirm("Delete this extra item?")) return;
+        fetch(delBtn.getAttribute("data-url"), {
+          method: "POST",
+          headers: { "X-CSRFToken": form.querySelector('input[name="csrfmiddlewaretoken"]').value, "X-Requested-With": "XMLHttpRequest" }
+        })
+          .then(function(r) { return r.json(); })
+          .then(function(res) {
+            if (res.ok) {
+              row.remove();
+              renumber();
+              var empty = table.querySelector(".extra-empty-row");
+              if (!table.querySelectorAll("tbody tr").length && empty) empty.style.display = "";
+            } else {
+              window.alert(res.error || "Delete failed");
+            }
+          })
+          .catch(function() { window.alert("Delete failed. Check your connection."); });
+      });
+    }
+  }
+
+  var rowCounter = 1000;
+
+  function newRow() {
+    var clone = template.cloneNode(true).querySelector("tr");
+    var form = clone.querySelector("[data-extra-form]");
+    var fid = "extra-form-" + (++rowCounter);
+    if (form) form.id = fid;
+    clone.querySelectorAll('input[name="item_name"], input[name="item_type"], input[name="qty"], input[name="remarks"]').forEach(function(el) {
+      el.setAttribute("form", fid);
+      el.value = "";
+    });
+    clone.querySelector('input[name="qty"]').value = "0";
+    clone.querySelector('input[name="id"]').value = "";
+    var badge = clone.querySelector(".extra-badge");
+    if (badge) badge.remove();
+    var btn = clone.querySelector('button[type="submit"]');
+    if (btn) btn.innerHTML = "Save";
+    var emptyRow = table.querySelector(".extra-empty-row");
+    if (emptyRow) emptyRow.remove();
+    table.querySelector("tbody").appendChild(clone);
+    wireRow(clone);
+    renumber();
+    return clone;
+  }
+
+  if (addBtn) {
+    addBtn.addEventListener("click", function() {
+      var row = newRow();
+      var firstInput = row.querySelector('input[name="item_name"]');
+      if (firstInput) firstInput.focus();
+    });
+  }
+
+  table.querySelectorAll("tr").forEach(wireRow);
+  if (canSave && !table.querySelectorAll("tbody tr").length) {
+    addBtn && addBtn.click();
+  }
+})();
+</script>
+{% endblock %}

@@ -20,6 +20,7 @@ from apps.inventory.models import (
     InventoryTransactionType,
     PurchaseLot,
     RemainingStock,
+    RemainingExtraItem,
 )
 from apps.inventory.services import (
     carry_forward_remaining_stock,
@@ -501,4 +502,98 @@ class RemainingStockDeleteView(EventScopedDeleteView):
         context = super().get_context_data(**kwargs)
         context["list_url"] = self.success_url
         return context
+
+
+class RemainingExtraItemView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
+    template_name = "inventory/remaining_stock_extra.html"
+    permission_required = "inventory.view_remainingextraitem"
+    raise_exception = True
+
+    def get_event(self):
+        event_id = self.request.GET.get("event") or self.request.POST.get("event")
+        if event_id:
+            return Event.objects.filter(pk=event_id, is_active=True).first()
+        return Event.objects.filter(is_current=True, is_active=True).first()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        event = self.get_event()
+        context["event"] = event
+        context["records"] = list(
+            RemainingExtraItem.objects.filter(event=event).order_by("created_at", "pk")
+        ) if event else []
+        context["page_title"] = "Remaining Extra Items"
+        context["event_queryset"] = Event.objects.filter(is_active=True).order_by("-is_current", "-start_date", "name")
+        context["list_url"] = reverse_lazy("inventory:remaining-stock-list")
+        context["can_save"] = self.request.user.has_perm("inventory.add_remainingextraitem")
+        context["can_delete"] = self.request.user.has_perm("inventory.delete_remainingextraitem")
+        return context
+
+    def post(self, request, *args, **kwargs):
+        event = self.get_event()
+        is_ajax = request.headers.get("x-requested-with") == "XMLHttpRequest"
+
+        def fail(msg, status=400):
+            if is_ajax:
+                return JsonResponse({"ok": False, "error": msg}, status=status)
+            messages.error(request, msg)
+            return redirect(f"{reverse('inventory:remaining-stock-extra')}?event={event.pk if event else ''}")
+
+        if event is None:
+            return fail("Please select an event.")
+        pk = request.POST.get("id")
+        item_name = request.POST.get("item_name", "").strip()
+        item_type = request.POST.get("item_type", "").strip()
+        remarks = request.POST.get("remarks", "").strip()
+        qty_str = (request.POST.get("qty") or "").strip()
+        if not item_name:
+            return fail("Item name is required.")
+        try:
+            qty = int(qty_str)
+            if qty < 0:
+                raise ValueError
+        except (TypeError, ValueError):
+            return fail("Quantity must be a whole number (0 or more).")
+        if pk:
+            rec = RemainingExtraItem.objects.filter(pk=pk, event=event).first()
+            if rec is None:
+                return fail("Record not found.")
+            rec.item_name = item_name
+            rec.item_type = item_type
+            rec.qty = qty
+            rec.remarks = remarks
+            rec.updated_by = request.user
+            rec.save()
+            data = {"ok": True, "id": rec.pk, "created": False}
+        else:
+            rec = RemainingExtraItem.objects.create(
+                event=event,
+                item_name=item_name,
+                item_type=item_type,
+                qty=qty,
+                remarks=remarks,
+                created_by=request.user,
+                updated_by=request.user,
+            )
+            data = {"ok": True, "id": rec.pk, "created": True}
+        if is_ajax:
+            return JsonResponse(data)
+        messages.success(request, f"Saved extra item: {rec.item_name} ({qty}).")
+        return redirect(f"{reverse('inventory:remaining-stock-extra')}?event={event.pk}")
+
+
+class RemainingExtraItemDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = "inventory.delete_remainingextraitem"
+    raise_exception = True
+
+    def post(self, request, *args, **kwargs):
+        rec = RemainingExtraItem.objects.filter(pk=kwargs.get("pk")).first()
+        if rec is None:
+            return JsonResponse({"ok": False, "error": "Record not found."}, status=404)
+        event_id = rec.event_id
+        rec.delete()
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return JsonResponse({"ok": True})
+        messages.success(request, "Extra item deleted.")
+        return redirect(f"{reverse('inventory:remaining-stock-extra')}?event={event_id}")
 

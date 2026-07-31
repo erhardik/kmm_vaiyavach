@@ -1,0 +1,27 @@
+<tr class="extra-editable-row" data-extra-row>
+  <td class="fw-semibold sr-no">{{ sr_no|stringformat:"02d" }}</td>
+  <td>
+    {% if rec %}<span class="extra-badge badge text-bg-secondary-subtle text-secondary-emphasis">Registered</span>{% endif %}
+    <input type="text" class="form-control form-control-sm" name="item_name" value="{{ rec.item_name|default:'' }}" placeholder="Extra item name" form="extra-form-{% if rec %}{{ rec.pk }}{% else %}new{% endif %}">
+  </td>
+  <td>
+    <input type="text" class="form-control form-control-sm" name="item_type" value="{{ rec.item_type|default:'' }}" placeholder="e.g. 500 gm" form="extra-form-{% if rec %}{{ rec.pk }}{% else %}new{% endif %}">
+  </td>
+  <td class="text-end">
+    <input type="number" step="1" min="0" inputmode="numeric" class="form-control form-control-sm text-end" name="qty" value="{{ rec.qty|default:0 }}" form="extra-form-{% if rec %}{{ rec.pk }}{% else %}new{% endif %}">
+  </td>
+  <td>
+    <input type="text" class="form-control form-control-sm" name="remarks" value="{{ rec.remarks|default:'' }}" placeholder="Optional note" form="extra-form-{% if rec %}{{ rec.pk }}{% else %}new{% endif %}">
+  </td>
+  <td class="text-end">
+    <form method="post" action="{% url 'inventory:remaining-stock-extra' %}" data-extra-form id="extra-form-{% if rec %}{{ rec.pk }}{% else %}new{% endif %}" class="d-inline">
+      {% csrf_token %}
+      <input type="hidden" name="event" value="{{ event.pk }}">
+      <input type="hidden" name="id" value="{{ rec.pk|default:'' }}">
+      <button type="submit" class="btn btn-sm btn-primary">{{ rec|yesno:"Update,Save" }}</button>
+    </form>
+    {% if rec %}
+      <button type="button" class="btn btn-sm btn-outline-danger" data-extra-delete="{{ rec.pk }}" data-url="{% url 'inventory:remaining-stock-extra-delete' rec.pk %}">Delete</button>
+    {% endif %}
+  </td>
+</tr>
