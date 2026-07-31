@@ -13,6 +13,7 @@ from apps.inventory.views import (
     RemainingExtraItemView,
     RemainingStockCarryForwardView,
     RemainingStockDeleteView,
+    RemainingStockExportView,
     RemainingStockListView,
     RemainingStockRegisterView,
 )
@@ -29,6 +30,7 @@ urlpatterns = [
     path("purchase-entry/", PurchaseEntryView.as_view(), name="purchase-entry"),
     path("purchase-history/", PurchaseHistoryView.as_view(), name="purchase-history"),
     path("remaining-stock/", RemainingStockListView.as_view(), name="remaining-stock-list"),
+    path("remaining-stock/export/", RemainingStockExportView.as_view(), name="remaining-stock-export"),
     path("remaining-stock/register/", RemainingStockRegisterView.as_view(), name="remaining-stock-register"),
     path("remaining-stock/extra/", RemainingExtraItemView.as_view(), name="remaining-stock-extra"),
     path("remaining-stock/extra/<int:pk>/delete/", RemainingExtraItemDeleteView.as_view(), name="remaining-stock-extra-delete"),

@@ -6,6 +6,7 @@
     <p class="text-body-secondary mb-0">Register leftover items that are not in the item master</p>
   </div>
   <div class="d-flex gap-2">
+    <a class="btn btn-outline-success" href="{% url 'inventory:remaining-stock-export' %}?event={{ event.pk|default:'' }}">Download Excel</a>
     <a class="btn btn-outline-secondary" href="{% url 'inventory:remaining-stock-register' %}">Register Remaining Stock</a>
     <a class="btn btn-outline-secondary" href="{{ list_url }}">View Remaining Stock</a>
   </div>

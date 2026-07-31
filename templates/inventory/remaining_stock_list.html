@@ -10,6 +10,7 @@
       <a class="btn btn-primary" href="{% url 'inventory:remaining-stock-register' %}">Register Remaining Stock</a>
       <a class="btn btn-warning" href="{% url 'inventory:remaining-stock-extra' %}">Register Remaining Extra Items</a>
     {% endif %}
+    <a class="btn btn-outline-success" href="{% url 'inventory:remaining-stock-export' %}?event={{ event.pk|default:'' }}">Download Excel</a>
   </div>
 </div>
 <div class="card border-0 shadow-sm">

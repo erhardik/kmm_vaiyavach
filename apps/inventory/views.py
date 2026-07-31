@@ -1,16 +1,20 @@
 from decimal import Decimal
 from collections import defaultdict
+from io import BytesIO
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.db import transaction
 from django.forms import formset_factory
-from django.http import Http404, JsonResponse, HttpResponseRedirect
+from django.http import Http404, HttpResponse, JsonResponse, HttpResponseRedirect
 from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views import View
 from django.views.generic import ListView, TemplateView
+
+from openpyxl import Workbook
+from openpyxl.styles import Alignment, Font, PatternFill
 
 from apps.common.views import EventScopedCreateView, EventScopedDeleteView, EventScopedListView, EventScopedUpdateView
 from apps.inventory.forms import InventoryBalanceForm, InventoryTransactionForm, PurchaseEntryForm, PurchaseLotLineForm
@@ -596,4 +600,82 @@ class RemainingExtraItemDeleteView(LoginRequiredMixin, PermissionRequiredMixin, 
             return JsonResponse({"ok": True})
         messages.success(request, "Extra item deleted.")
         return redirect(f"{reverse('inventory:remaining-stock-extra')}?event={event_id}")
+
+
+class RemainingStockExportView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = "inventory.view_remainingstock"
+    raise_exception = True
+
+    def get(self, request, *args, **kwargs):
+        event_id = request.GET.get("event")
+        event = Event.objects.filter(pk=event_id, is_active=True).first() if event_id else Event.objects.filter(is_current=True, is_active=True).first()
+        if event is None:
+            messages.error(request, "Please select an event.")
+            return redirect("inventory:remaining-stock-list")
+
+        workbook = Workbook()
+        center = Alignment(horizontal="center", vertical="center")
+        wrap_left = Alignment(horizontal="left", vertical="center", wrap_text=True)
+        header_fill = PatternFill("solid", fgColor="DCE9F5")
+        bold = Font(bold=True)
+
+        # --- Sheet 1: Remaining Stock (listed items) ---
+        ws = workbook.active
+        ws.title = "Remaining Stock"
+        headers1 = ["Code", "Item Name", "Type / Size", "Remaining Stock", "Comment"]
+        for col, h in enumerate(headers1, 1):
+            cell = ws.cell(row=1, column=col, value=h)
+            cell.fill = header_fill
+            cell.font = bold
+            cell.alignment = center
+
+        items = expand_event_items(event)
+        existing = {r.item_id: r for r in RemainingStock.objects.filter(event=event)}
+        row = 2
+        for item in items:
+            rec = existing.get(item.pk)
+            ws.cell(row=row, column=1, value=item.item_code)
+            ws.cell(row=row, column=2, value=item.display_name())
+            ws.cell(row=row, column=3, value=item.variant_name_gu or item.variant_name or item.default_size_gu or item.default_size or "")
+            ws.cell(row=row, column=4, value=int(rec.qty) if rec else "")
+            ws.cell(row=row, column=5, value=rec.remarks if rec else "")
+            row += 1
+        ws.freeze_panes = "A2"
+        for col_letter, w in [("A", 14), ("B", 50), ("C", 18), ("D", 16), ("E", 40)]:
+            ws.column_dimensions[col_letter].width = w
+        for ws_row in ws.iter_rows(min_row=2, max_row=ws.max_row):
+            for cell in ws_row:
+                cell.alignment = wrap_left
+
+        # --- Sheet 2: Extra Items ---
+        ws2 = workbook.create_sheet("Extra Items")
+        headers2 = ["Sr. No.", "Extra Item Name", "Type", "Remaining Qty", "Comment"]
+        for col, h in enumerate(headers2, 1):
+            cell = ws2.cell(row=1, column=col, value=h)
+            cell.fill = header_fill
+            cell.font = bold
+            cell.alignment = center
+
+        extras = RemainingExtraItem.objects.filter(event=event).order_by("created_at", "pk")
+        row = 2
+        for idx, rec in enumerate(extras, 1):
+            ws2.cell(row=row, column=1, value=idx)
+            ws2.cell(row=row, column=2, value=rec.item_name)
+            ws2.cell(row=row, column=3, value=rec.item_type)
+            ws2.cell(row=row, column=4, value=int(rec.qty))
+            ws2.cell(row=row, column=5, value=rec.remarks)
+            row += 1
+        ws2.freeze_panes = "A2"
+        for col_letter, w in [("A", 8), ("B", 40), ("C", 18), ("D", 14), ("E", 40)]:
+            ws2.column_dimensions[col_letter].width = w
+        for ws_row in ws2.iter_rows(min_row=2, max_row=ws2.max_row):
+            for cell in ws_row:
+                cell.alignment = wrap_left
+
+        buffer = BytesIO()
+        workbook.save(buffer)
+        response = HttpResponse(buffer.getvalue(), content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        safe_name = "".join(c for c in str(event.name) if c.isalnum() or c in (" ", "-", "_")).strip()
+        response["Content-Disposition"] = f'attachment; filename="remaining_stock_{safe_name}.xlsx"'
+        return response
 
