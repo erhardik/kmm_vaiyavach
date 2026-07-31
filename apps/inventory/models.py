@@ -15,6 +15,7 @@ class InventoryTransactionType(models.TextChoices):
     DAMAGE = "DAMAGE", "Damage"
     RESERVATION = "RESERVATION", "Reservation"
     RELEASE = "RELEASE", "Release"
+    OPENING_BALANCE = "OPENING_BALANCE", "Opening Balance"
 
 
 class PurchaseLot(EventScopedModel):
@@ -78,3 +79,31 @@ class InventoryBalance(EventScopedModel):
 
     def __str__(self) -> str:
         return f"{self.item} - {self.current_stock}"
+
+
+class RemainingStock(EventScopedModel):
+    item = models.ForeignKey("masters.Item", on_delete=models.CASCADE, related_name="remaining_stock_records")
+    qty = models.DecimalField(max_digits=12, decimal_places=3)
+    remarks = models.TextField(blank=True)
+    carried_to_event = models.ForeignKey(
+        "masters.Event", on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
+    carried_to_item = models.ForeignKey(
+        "masters.Item", on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
+    carried_at = models.DateTimeField(null=True, blank=True)
+    carried_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
+
+    class Meta:
+        ordering = ["-event__start_date", "item__standard_serial", "pk"]
+        constraints = [
+            models.UniqueConstraint(fields=["event", "item"], name="unique_remaining_stock_event_item"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.event} - {self.item} - {self.qty}"
+
+    def is_carried(self) -> bool:
+        return bool(self.carried_at)

@@ -4,7 +4,7 @@ from django.utils import timezone
 
 from django.db import transaction
 
-from apps.inventory.models import InventoryBalance, InventoryTransaction, InventoryTransactionType
+from apps.inventory.models import InventoryBalance, InventoryTransaction, InventoryTransactionType, RemainingStock
 from apps.masters.models import Item
 
 
@@ -14,6 +14,7 @@ POSITIVE_TYPES = {
     InventoryTransactionType.SPONSORSHIP_RECEIPT,
     InventoryTransactionType.RETURN,
     InventoryTransactionType.ADJUSTMENT,
+    InventoryTransactionType.OPENING_BALANCE,
 }
 
 NEGATIVE_TYPES = {
@@ -116,3 +117,26 @@ def apply_requirement_packing(requirement, *, created_by=None):
     requirement.packing_stock_applied_at = timezone.now()
     requirement.save(update_fields=["packing_stock_applied_at", "updated_at"])
     return True
+
+
+@transaction.atomic
+def carry_forward_remaining_stock(remaining_stock, *, target_event, target_item, created_by=None):
+    if remaining_stock.is_carried():
+        return None
+    create_inventory_transaction(
+        event=target_event,
+        item=target_item,
+        transaction_type=InventoryTransactionType.OPENING_BALANCE,
+        qty=remaining_stock.qty,
+        source_module="inventory",
+        reference_id=str(remaining_stock.pk),
+        reference_label=f"Carried from {remaining_stock.event.name}",
+        remarks=f"Remaining stock of {remaining_stock.item} carried forward from {remaining_stock.event.name}",
+        created_by=created_by,
+    )
+    remaining_stock.carried_to_event = target_event
+    remaining_stock.carried_to_item = target_item
+    remaining_stock.carried_at = timezone.now()
+    remaining_stock.carried_by = created_by
+    remaining_stock.save(update_fields=["carried_to_event", "carried_to_item", "carried_at", "carried_by", "updated_at"])
+    return remaining_stock

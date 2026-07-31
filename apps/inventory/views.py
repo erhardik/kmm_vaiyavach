@@ -1,9 +1,12 @@
+from decimal import Decimal
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.db import transaction
+from django.db.models import Q
 from django.forms import formset_factory
-from django.http import JsonResponse, HttpResponseRedirect
-from django.shortcuts import redirect
+from django.http import Http404, JsonResponse, HttpResponseRedirect
+from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views import View
@@ -11,9 +14,19 @@ from django.views.generic import ListView, TemplateView
 
 from apps.common.views import EventScopedCreateView, EventScopedDeleteView, EventScopedListView, EventScopedUpdateView
 from apps.inventory.forms import InventoryBalanceForm, InventoryTransactionForm, PurchaseEntryForm, PurchaseLotLineForm
-from apps.inventory.models import InventoryBalance, InventoryTransaction, InventoryTransactionType, PurchaseLot
-from apps.inventory.services import create_inventory_transaction, recalculate_inventory_balance
-from apps.masters.models import Event
+from apps.inventory.models import (
+    InventoryBalance,
+    InventoryTransaction,
+    InventoryTransactionType,
+    PurchaseLot,
+    RemainingStock,
+)
+from apps.inventory.services import (
+    carry_forward_remaining_stock,
+    create_inventory_transaction,
+    recalculate_inventory_balance,
+)
+from apps.masters.models import Event, Item
 
 
 class InventoryTransactionListView(EventScopedListView):
@@ -241,4 +254,188 @@ class PurchaseHistoryView(LoginRequiredMixin, View):
                 "rate": rate,
             })
         return JsonResponse(data, safe=False)
+
+
+class RemainingStockListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
+    model = RemainingStock
+    template_name = "inventory/remaining_stock_list.html"
+    permission_required = "inventory.view_remainingstock"
+    raise_exception = True
+    paginate_by = 50
+
+    def get_queryset(self):
+        qs = super().get_queryset().select_related("event", "item", "carried_to_event", "carried_to_item")
+        event_id = self.request.GET.get("event")
+        if event_id:
+            qs = qs.filter(event_id=event_id)
+        search = self.request.GET.get("q")
+        if search:
+            qs = qs.filter(
+                Q(item__item_name__icontains=search)
+                | Q(item__item_name_gu__icontains=search)
+                | Q(event__name__icontains=search)
+                | Q(remarks__icontains=search)
+            )
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["page_title"] = "Remaining Stock"
+        context["page_subtitle"] = "Leftover stock registered when events close; carry forward to future events"
+        context["event_queryset"] = Event.objects.filter(is_active=True).order_by("-is_current", "-start_date", "name")
+        context["can_register"] = self.request.user.has_perm("inventory.add_remainingstock")
+        context["can_carry"] = self.request.user.has_perm("inventory.change_remainingstock")
+        return context
+
+
+class RemainingStockRegisterView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
+    template_name = "inventory/remaining_stock_register.html"
+    permission_required = "inventory.add_remainingstock"
+    raise_exception = True
+
+    def get_event(self):
+        event_id = self.request.GET.get("event") or self.request.POST.get("event")
+        if event_id:
+            return Event.objects.filter(pk=event_id, is_active=True).first()
+        return Event.objects.filter(is_current=True, is_active=True).first()
+
+    def get_balance_rows(self, event):
+        if event is None:
+            return []
+        balances = list(
+            InventoryBalance.objects.filter(event=event, item__is_active=True)
+            .select_related("item")
+            .order_by("item__standard_serial", "item__item_name")
+        )
+        existing = {r.item_id: r for r in RemainingStock.objects.filter(event=event)}
+        rows = []
+        for balance in balances:
+            rec = existing.get(balance.item_id)
+            rows.append(
+                {
+                    "balance": balance,
+                    "existing": rec,
+                    "default_qty": rec.qty if rec else balance.current_stock,
+                    "default_remarks": rec.remarks if rec else "",
+                }
+            )
+        return rows
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        event = self.get_event()
+        context["event"] = event
+        context["rows"] = self.get_balance_rows(event)
+        context["page_title"] = "Register Remaining Stock"
+        context["event_queryset"] = Event.objects.filter(is_active=True).order_by("-is_current", "-start_date", "name")
+        context["list_url"] = reverse_lazy("inventory:remaining-stock-list")
+        return context
+
+    def post(self, request, *args, **kwargs):
+        event = self.get_event()
+        if event is None:
+            messages.error(request, "Please select an event.")
+            return redirect("inventory:remaining-stock-register")
+        saved = 0
+        with transaction.atomic():
+            for key, value in request.POST.items():
+                if not key.startswith("item_"):
+                    continue
+                try:
+                    item_id = int(key.split("_", 1)[1])
+                except (TypeError, ValueError):
+                    continue
+                qty_str = (value or "").strip()
+                if not qty_str:
+                    continue
+                try:
+                    qty = Decimal(qty_str)
+                except (TypeError, ValueError):
+                    continue
+                if qty <= 0:
+                    continue
+                remarks = request.POST.get(f"remarks_{item_id}", "").strip()
+                RemainingStock.objects.update_or_create(
+                    event=event,
+                    item_id=item_id,
+                    defaults={
+                        "qty": qty,
+                        "remarks": remarks,
+                        "created_by": request.user,
+                        "updated_by": request.user,
+                        "is_active": True,
+                        "is_deleted": False,
+                    },
+                )
+                saved += 1
+        messages.success(request, f"Registered remaining stock for {saved} item(s).")
+        return redirect(f"{reverse('inventory:remaining-stock-list')}?event={event.pk}")
+
+
+class RemainingStockCarryForwardView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = "inventory.change_remainingstock"
+    raise_exception = True
+
+    def get_remaining(self):
+        return RemainingStock.objects.select_related("event", "item").filter(pk=self.kwargs["pk"]).first()
+
+    def get(self, request, *args, **kwargs):
+        remaining = self.get_remaining()
+        if remaining is None:
+            raise Http404
+        if remaining.is_carried():
+            messages.info(request, "This remaining stock has already been carried forward.")
+            return redirect("inventory:remaining-stock-list")
+        context = {
+            "page_title": "Carry Forward Remaining Stock",
+            "remaining": remaining,
+            "event_queryset": Event.objects.filter(is_active=True).exclude(pk=remaining.event_id).order_by("-start_date", "name"),
+            "list_url": reverse_lazy("inventory:remaining-stock-list"),
+        }
+        event_id = request.GET.get("event")
+        target_event = None
+        if event_id:
+            target_event = Event.objects.filter(pk=event_id, is_active=True).exclude(pk=remaining.event_id).first()
+        if target_event:
+            context["target_event"] = target_event
+            context["target_items"] = list(
+                Item.objects.filter(event=target_event, is_active=True).order_by("standard_serial", "item_name")
+            )
+        return render(request, "inventory/remaining_stock_carry_forward.html", context)
+
+    def post(self, request, *args, **kwargs):
+        remaining = self.get_remaining()
+        if remaining is None:
+            raise Http404
+        if remaining.is_carried():
+            messages.info(request, "This remaining stock has already been carried forward.")
+            return redirect("inventory:remaining-stock-list")
+        target_event = Event.objects.filter(pk=request.POST.get("event"), is_active=True).first()
+        target_item = Item.objects.filter(pk=request.POST.get("item"), event=target_event, is_active=True).first() if target_event else None
+        if target_event is None or target_item is None:
+            messages.error(request, "Please select a target event and item.")
+            return redirect("inventory:remaining-stock-carry-forward", pk=remaining.pk)
+        carried = carry_forward_remaining_stock(
+            remaining,
+            target_event=target_event,
+            target_item=target_item,
+            created_by=request.user,
+        )
+        if carried is None:
+            messages.info(request, "This remaining stock has already been carried forward.")
+        else:
+            messages.success(request, f"Carried forward {remaining.qty} x {remaining.item} to {target_event.name}.")
+        return redirect("inventory:remaining-stock-list")
+
+
+class RemainingStockDeleteView(EventScopedDeleteView):
+    model = RemainingStock
+    template_name = "common/confirm_delete.html"
+    success_url = reverse_lazy("inventory:remaining-stock-list")
+    permission_action = "delete"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["list_url"] = self.success_url
+        return context
 

@@ -9,6 +9,10 @@ from apps.inventory.views import (
     InventoryTransactionUpdateView,
     PurchaseEntryView,
     PurchaseHistoryView,
+    RemainingStockCarryForwardView,
+    RemainingStockDeleteView,
+    RemainingStockListView,
+    RemainingStockRegisterView,
 )
 
 app_name = "inventory"
@@ -22,5 +26,9 @@ urlpatterns = [
     path("balances/", InventoryBalanceListView.as_view(), name="balance-list"),
     path("purchase-entry/", PurchaseEntryView.as_view(), name="purchase-entry"),
     path("purchase-history/", PurchaseHistoryView.as_view(), name="purchase-history"),
+    path("remaining-stock/", RemainingStockListView.as_view(), name="remaining-stock-list"),
+    path("remaining-stock/register/", RemainingStockRegisterView.as_view(), name="remaining-stock-register"),
+    path("remaining-stock/<int:pk>/carry-forward/", RemainingStockCarryForwardView.as_view(), name="remaining-stock-carry-forward"),
+    path("remaining-stock/<int:pk>/delete/", RemainingStockDeleteView.as_view(), name="remaining-stock-delete"),
 ]
 

@@ -25,6 +25,11 @@
   <a class="sidebar-link" href="{% url 'masters:event-list' %}" title="Events">
     <i class="bi bi-calendar-event"></i><span class="sidebar-link-text">Events</span>
   </a>
+  {% if perms.inventory.view_remainingstock %}
+    <a class="sidebar-link" href="{% url 'inventory:remaining-stock-list' %}" title="Remaining Stock">
+      <i class="bi bi-box-seam"></i><span class="sidebar-link-text">Remaining Stock</span>
+    </a>
+  {% endif %}
 </div>
 
 <div class="sidebar-section-label">Events</div>

@@ -26,6 +26,7 @@ EVENT_MENU_ITEMS = [
     {"label": "Procurement", "url_name": "procurement:po-list", "permission": "procurement.view_purchaseorder", "icon": "cart"},
     {"label": "Inventory", "url_name": "inventory:transaction-list", "permission": "inventory.view_inventorytransaction", "icon": "archive"},
     {"label": "Purchase Entry", "url_name": "inventory:purchase-entry", "permission": "inventory.add_inventorytransaction", "icon": "cart-plus"},
+    {"label": "Remaining Stock", "url_name": "inventory:remaining-stock-list", "permission": "inventory.view_remainingstock", "icon": "box-seam"},
     {"label": "Distribution", "url_name": "distribution:batch-list", "permission": "distribution.view_distributionbatch", "icon": "arrow-left-right"},
     {"label": "Funds", "url_name": "funds:donation-list", "permission": "funds.view_donation", "icon": "wallet2"},
     {"label": "Reports", "url_name": "reports:report-home", "permission": None, "icon": "graph-up", "manager_exclude": True},

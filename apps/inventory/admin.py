@@ -1,6 +1,7 @@
 from django.contrib import admin
-from .models import InventoryBalance, InventoryTransaction, PurchaseLot
+from .models import InventoryBalance, InventoryTransaction, PurchaseLot, RemainingStock
 
 admin.site.register(InventoryTransaction)
 admin.site.register(InventoryBalance)
 admin.site.register(PurchaseLot)
+admin.site.register(RemainingStock)
