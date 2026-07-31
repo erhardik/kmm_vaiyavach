@@ -344,7 +344,7 @@ class RemainingStockRegisterView(LoginRequiredMixin, PermissionRequiredMixin, Te
                     "type_size": item.variant_name_gu or item.variant_name or item.default_size_gu or item.default_size or "",
                     "current_stock": current_stock,
                     "existing": rec,
-                    "default_qty": rec.qty if rec else current_stock,
+                    "default_qty": int(rec.qty) if rec else 0,
                     "default_remarks": rec.remarks if rec else "",
                 }
             )
@@ -362,42 +362,59 @@ class RemainingStockRegisterView(LoginRequiredMixin, PermissionRequiredMixin, Te
 
     def post(self, request, *args, **kwargs):
         event = self.get_event()
+        is_ajax = request.headers.get("x-requested-with") == "XMLHttpRequest"
         if event is None:
+            if is_ajax:
+                return JsonResponse({"ok": False, "error": "Please select an event."}, status=400)
             messages.error(request, "Please select an event.")
             return redirect("inventory:remaining-stock-register")
-        saved = 0
-        with transaction.atomic():
-            for key, value in request.POST.items():
-                if not key.startswith("item_"):
-                    continue
-                try:
-                    item_id = int(key.split("_", 1)[1])
-                except (TypeError, ValueError):
-                    continue
-                qty_str = (value or "").strip()
-                if not qty_str:
-                    continue
-                try:
-                    qty = Decimal(qty_str)
-                except (TypeError, ValueError):
-                    continue
-                if qty <= 0:
-                    continue
-                remarks = request.POST.get(f"remarks_{item_id}", "").strip()
-                RemainingStock.objects.update_or_create(
-                    event=event,
-                    item_id=item_id,
-                    defaults={
-                        "qty": qty,
-                        "remarks": remarks,
-                        "created_by": request.user,
-                        "updated_by": request.user,
-                        "is_active": True,
-                        "is_deleted": False,
-                    },
-                )
-                saved += 1
-        messages.success(request, f"Registered remaining stock for {saved} item(s).")
+        try:
+            item_id = int(request.POST.get("item_id", ""))
+        except (TypeError, ValueError):
+            if is_ajax:
+                return JsonResponse({"ok": False, "error": "Invalid item."}, status=400)
+            messages.error(request, "Invalid item.")
+            return redirect(f"{reverse('inventory:remaining-stock-register')}?event={event.pk}")
+        item = Item.objects.filter(pk=item_id, event=event, is_active=True).first()
+        if item is None:
+            if is_ajax:
+                return JsonResponse({"ok": False, "error": "Invalid item."}, status=400)
+            messages.error(request, "Invalid item.")
+            return redirect(f"{reverse('inventory:remaining-stock-register')}?event={event.pk}")
+        qty_str = (request.POST.get("qty") or "").strip()
+        try:
+            qty = int(qty_str)
+            if qty < 0:
+                raise ValueError
+        except (TypeError, ValueError):
+            if is_ajax:
+                return JsonResponse({"ok": False, "error": "Quantity must be a whole number (0 or more)."}, status=400)
+            messages.error(request, "Quantity must be a whole number (0 or more).")
+            return redirect(f"{reverse('inventory:remaining-stock-register')}?event={event.pk}")
+        remarks = request.POST.get("remarks", "").strip()
+        rec = RemainingStock.objects.filter(event=event, item=item).first()
+        if qty == 0:
+            if rec is not None:
+                rec.delete()
+            if is_ajax:
+                return JsonResponse({"ok": True, "cleared": True, "qty": 0})
+            messages.success(request, "Remaining stock entry removed for this item.")
+            return redirect(f"{reverse('inventory:remaining-stock-register')}?event={event.pk}")
+        rec, _ = RemainingStock.objects.update_or_create(
+            event=event,
+            item=item,
+            defaults={
+                "qty": qty,
+                "remarks": remarks,
+                "created_by": request.user,
+                "updated_by": request.user,
+                "is_active": True,
+                "is_deleted": False,
+            },
+        )
+        if is_ajax:
+            return JsonResponse({"ok": True, "qty": qty, "remarks": remarks})
+        messages.success(request, f"Registered {qty} x {item.display_name()}.")
         return redirect(f"{reverse('inventory:remaining-stock-register')}?event={event.pk}")
 
 

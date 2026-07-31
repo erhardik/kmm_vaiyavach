@@ -19,7 +19,7 @@
     {% if event %}
       <div class="alert alert-info mb-3">
         Registering remaining stock for <strong>{{ event.name }}</strong> ({{ event.start_date }} - {{ event.end_date }}).<br>
-        <span class="small">Enter the quantity of each item left over after the event. Use the Save button on each row to register/update that item.</span>
+        <span class="small">Enter the quantity left over and click Save. It saves instantly without reloading. Entering 0 removes a saved entry.</span>
       </div>
       <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
@@ -39,19 +39,20 @@
                 <td class="fw-semibold">{{ row.item_code }}</td>
                 <td>
                   {{ row.display_name }}
-                  {% if row.existing %}<span class="badge text-bg-secondary-subtle text-secondary-emphasis">Registered</span>{% endif %}
+                  {% if row.existing %}<span class="badge text-bg-secondary-subtle text-secondary-emphasis rs-badge">Registered</span>{% endif %}
                 </td>
                 <td>{{ row.type_size }}</td>
                 <td class="text-end">
-                  <input type="number" step="any" min="0" class="form-control form-control-sm text-end" style="width:110px;display:inline-block" name="item_{{ row.item.pk }}" value="{{ row.default_qty }}" form="rs-form-{{ row.item.pk }}">
+                  <input type="number" step="1" min="0" inputmode="numeric" class="form-control form-control-sm text-end rs-qty" style="width:110px;display:inline-block" name="qty" value="{{ row.default_qty }}" form="rs-form-{{ row.item.pk }}">
                 </td>
                 <td>
-                  <input type="text" class="form-control form-control-sm" name="remarks_{{ row.item.pk }}" value="{{ row.default_remarks }}" placeholder="Optional note" form="rs-form-{{ row.item.pk }}">
+                  <input type="text" class="form-control form-control-sm rs-remarks" name="remarks" value="{{ row.default_remarks }}" placeholder="Optional note" form="rs-form-{{ row.item.pk }}">
                 </td>
                 <td class="text-end">
-                  <form method="post" id="rs-form-{{ row.item.pk }}" class="d-inline" onsubmit="return confirm('Save remaining stock for {{ row.display_name }}?')">
+                  <form method="post" action="{% url 'inventory:remaining-stock-register' %}" data-rs-form data-item-id="{{ row.item.pk }}" class="d-inline">
                     {% csrf_token %}
                     <input type="hidden" name="event" value="{{ event.pk }}">
+                    <input type="hidden" name="item_id" value="{{ row.item.pk }}">
                     <button type="submit" class="btn btn-sm btn-primary">{{ row.existing|yesno:"Update,Save" }}</button>
                   </form>
                 </td>
@@ -67,4 +68,56 @@
     {% endif %}
   </div>
 </div>
+{% endblock %}
+{% block extra_js %}
+<script>
+(function() {
+  var forms = document.querySelectorAll("[data-rs-form]");
+  forms.forEach(function(form) {
+    form.addEventListener("submit", function(e) {
+      e.preventDefault();
+      var btn = form.querySelector('button[type="submit"]');
+      var original = btn.innerHTML;
+      var row = form.closest("tr");
+      var qtyInput = row.querySelector(".rs-qty");
+      var remarksInput = row.querySelector(".rs-remarks");
+      btn.disabled = true;
+      btn.innerHTML = "Saving...";
+      var body = new FormData(form);
+      body.set("qty", qtyInput ? qtyInput.value : "");
+      body.set("remarks", remarksInput ? remarksInput.value : "");
+      fetch(form.action, {
+        method: "POST",
+        body: body,
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+      })
+        .then(function(r) {
+          return r.json().then(function(j) { return { ok: r.ok, body: j }; });
+        })
+        .then(function(res) {
+          if (res.ok && res.body.ok) {
+            btn.innerHTML = "Update";
+            if (!row.querySelector(".rs-badge")) {
+              var nameCell = row.querySelector("td:nth-child(2)");
+              var span = document.createElement("span");
+              span.className = "badge text-bg-secondary-subtle text-secondary-emphasis rs-badge";
+              span.textContent = "Registered";
+              nameCell.appendChild(span);
+            }
+          } else {
+            btn.innerHTML = original;
+            window.alert(res.body.error || "Save failed");
+          }
+        })
+        .catch(function() {
+          btn.innerHTML = original;
+          window.alert("Save failed. Check your connection.");
+        })
+        .finally(function() {
+          btn.disabled = false;
+        });
+    });
+  });
+})();
+</script>
 {% endblock %}
