@@ -24,7 +24,7 @@
         <select name="event" class="form-select">
           <option value="">Current Event</option>
           {% for event in event_queryset %}
-            <option value="{{ event.pk }}" {% if request.GET.event == event.pk|stringformat:'s' %}selected{% endif %}>{{ event.name }}</option>
+            <option value="{{ event.pk }}" {% if request.GET.event == event.pk|stringformat:'s' %}selected{% endif %}>{{ event.name }}{% if not event.is_active %} (Inactive){% endif %}{% if event.is_current %} (Current){% endif %}</option>
           {% endfor %}
         </select>
       </div>

@@ -10,14 +10,30 @@ from apps.auditlog.services import log_activity, serialize_instance
 from apps.masters.models import Event
 
 
+def all_events_queryset():
+    """All events (active and inactive) for logged-in event scoping, current first."""
+    return Event.objects.order_by("-is_current", "-start_date", "name")
+
+
+def resolve_event(request, field_name="event"):
+    """Resolve the event for a logged-in page.
+
+    Uses an explicit ?event= id if given (any event, active or not); otherwise
+    falls back to the current event, then the most recent event.
+    """
+    event_id = request.GET.get(field_name) or request.POST.get(field_name)
+    if event_id:
+        event = Event.objects.filter(pk=event_id).first()
+        if event:
+            return event
+    return all_events_queryset().first()
+
+
 class CurrentEventMixin:
     event_field_name = "event"
 
     def get_current_event(self):
-        event_id = self.request.GET.get("event") or self.request.POST.get("event")
-        if event_id:
-            return Event.objects.filter(pk=event_id, is_active=True).first()
-        return Event.objects.filter(is_current=True, is_active=True).first()
+        return resolve_event(self.request)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -63,7 +79,7 @@ class EventScopedListView(LoginRequiredMixin, PermissionRequiredMixin, ListView)
         if event_id and has_event_field:
             qs = qs.filter(event_id=event_id)
         elif has_event_field:
-            current_event = Event.objects.filter(is_current=True, is_active=True).first()
+            current_event = all_events_queryset().first()
             if current_event:
                 qs = qs.filter(event=current_event)
         search = self.request.GET.get("q")
@@ -93,7 +109,7 @@ class EventScopedListView(LoginRequiredMixin, PermissionRequiredMixin, ListView)
         context = super().get_context_data(**kwargs)
         context["table_rows"] = self.get_table_rows()
         context["table_headers"] = self.get_table_headers()
-        context["event_queryset"] = Event.objects.filter(is_active=True).order_by("-is_current", "-start_date", "name")
+        context["event_queryset"] = all_events_queryset()
         context["can_add"] = self.request.user.has_perm(self._perm("add"))
         context["can_change"] = self.request.user.has_perm(self._perm("change"))
         context["can_delete"] = self.request.user.has_perm(self._perm("delete"))

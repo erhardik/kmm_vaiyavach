@@ -4,9 +4,17 @@
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
   <div>
     <h1 class="h3 mb-1">Dashboard</h1>
-    <p class="text-body-secondary mb-0">{% if event %}{{ event.name }}{% else %}No active event found{% endif %}</p>
+    <p class="text-body-secondary mb-0">{% if event %}{{ event.name }}{% else %}No event found{% endif %}</p>
   </div>
-  <div class="small text-body-secondary">Quick actions first</div>
+  <form method="get" class="d-flex align-items-center gap-2">
+    <label for="dashboard-event-select" class="small text-body-secondary mb-0">Event</label>
+    <select id="dashboard-event-select" name="event" class="form-select form-select-sm" onchange="this.form.submit()">
+      {% for ev in event_queryset %}
+        <option value="{{ ev.pk }}" {% if selected_event and ev.pk == selected_event.pk %}selected{% endif %}>{{ ev.name }}{% if not ev.is_active %} (Inactive){% endif %}{% if ev.is_current %} (Current){% endif %}</option>
+      {% endfor %}
+    </select>
+    <noscript><button class="btn btn-sm btn-outline-primary" type="submit">Go</button></noscript>
+  </form>
 </div>
 
 <div class="row g-3 mb-4 dashboard-quick-cards">
@@ -66,7 +74,7 @@
       <a class="btn btn-outline-primary" href="{% url 'masters:item-list' %}">Item Summary</a>
       <a class="btn btn-outline-primary" href="{% url 'requirements:collect' %}">Collect Requirements</a>
       <a class="btn btn-outline-primary" href="{% url 'requirements:header-list' %}">Requirement Orders</a>
-      <a class="btn" style="background:#6f42c1;border-color:#6f42c1;color:#fff;" href="{% url 'requirements:header-export' %}">Download Response Sheet</a>
+      <a class="btn" style="background:#6f42c1;border-color:#6f42c1;color:#fff;" href="{% url 'requirements:header-export' %}{% if event %}?event={{ event.pk }}{% endif %}">Download Response Sheet</a>
       <a class="btn btn-outline-primary" href="{% url 'sponsorship:commitment-list' %}">Sponsorship</a>
       <a class="btn btn-outline-primary" href="{% url 'funds:donation-list' %}">Donations</a>
       <a class="btn btn-outline-primary" href="{% url 'funds:transaction-list' %}">Fund Transactions</a>
@@ -85,8 +93,8 @@
 <div class="card border-0 shadow-sm">
   <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-3">
     <div>
-      <div class="fw-semibold">Active Event</div>
-      <div class="text-body-secondary">{% if event %}{{ event.name }}{% else %}Not set{% endif %}</div>
+      <div class="fw-semibold">Selected Event</div>
+      <div class="text-body-secondary">{% if event %}{{ event.name }}{% if not event.is_active %} (Inactive){% endif %}{% else %}Not set{% endif %}</div>
     </div>
     {% if event %}
       <div class="text-body-secondary small">

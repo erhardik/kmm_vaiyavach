@@ -245,6 +245,17 @@
 {% block content %}
 <div class="dashboard-wrap">
   <div class="filterbar" id="filterbar-inner">
+    <form method="get" class="d-flex align-items-center gap-2" style="margin-bottom:0;">
+      <div class="filter-group">
+        <label for="seva-event-select">Event</label>
+        <select id="seva-event-select" name="event" class="filter-btn" style="width:auto;min-width:180px;" onchange="this.form.submit()">
+          {% for ev in event_queryset %}
+            <option value="{{ ev.pk }}" {% if event and ev.pk == event.pk %}selected{% endif %}>{{ ev.name }}{% if not ev.is_active %} (Inactive){% endif %}{% if ev.is_current %} (Current){% endif %}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <noscript><button type="submit" class="filter-reset">Go</button></noscript>
+    </form>
     <button class="filter-reset" id="btn-reset">Reset filters</button>
     <div class="match-counter"><b id="match-count">0</b> of <span id="match-total">0</span> records match</div>
   </div>

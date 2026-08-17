@@ -20,6 +20,7 @@ from apps.dashboard.services import (
     build_public_item_preview,
     build_public_status_summary,
     get_dashboard_event_queryset,
+    resolve_dashboard_event,
 )
 from apps.masters.models import Event
 
@@ -49,8 +50,10 @@ class DashboardHomeView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        event = Event.objects.filter(is_active=True).order_by("-is_current", "-start_date").first()
+        event = resolve_dashboard_event(self.request)
         context["event"] = event
+        context["selected_event"] = event
+        context["event_queryset"] = get_dashboard_event_queryset()
         context["summary"] = build_home_summary(event) if event else {}
         context["item_control_url"] = reverse_lazy("dashboard:item_control_center")
         return context
@@ -100,7 +103,7 @@ class ChaturmasDashboardDataView(LoginRequiredMixin, TemplateView):
     """JSON endpoint serving dashboard data in the format expected by the chart dashboard."""
 
     def get(self, request, *args, **kwargs):
-        event = Event.objects.filter(is_active=True).order_by("-is_current", "-start_date", "name").first()
+        event = resolve_dashboard_event(request)
         if not event:
             return JsonResponse({"items_meta": [], "records": []})
         data = build_dashboard_data(event)
@@ -112,8 +115,9 @@ class ChaturmasDashboardView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        event = Event.objects.filter(is_active=True).order_by("-is_current", "-start_date", "name").first()
+        event = resolve_dashboard_event(self.request)
         context["event"] = event
+        context["event_queryset"] = get_dashboard_event_queryset()
         if event:
             data = build_dashboard_data(event)
             context["dashboard_json"] = json.dumps(data)

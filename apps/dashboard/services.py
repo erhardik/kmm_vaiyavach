@@ -29,7 +29,17 @@ def _first_value_by_item(queryset, item_attr: str, value_getter):
 
 
 def get_dashboard_event_queryset():
-    return Event.objects.filter(is_active=True).order_by("-is_current", "-start_date", "name")
+    return Event.objects.order_by("-is_current", "-start_date", "name")
+
+
+def resolve_dashboard_event(request):
+    """Event for dashboards: explicit ?event= id wins, else current/latest event."""
+    event_id = request.GET.get("event")
+    if event_id:
+        event = Event.objects.filter(pk=event_id).first()
+        if event:
+            return event
+    return get_dashboard_event_queryset().first()
 
 
 def _item_display_rows(event, active_only=True):

@@ -16,7 +16,7 @@ from django.views.generic import ListView, TemplateView
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font, PatternFill
 
-from apps.common.views import EventScopedCreateView, EventScopedDeleteView, EventScopedListView, EventScopedUpdateView
+from apps.common.views import EventScopedCreateView, EventScopedDeleteView, EventScopedListView, EventScopedUpdateView, all_events_queryset, resolve_event
 from apps.inventory.forms import InventoryBalanceForm, InventoryTransactionForm, PurchaseEntryForm, PurchaseLotLineForm
 from apps.inventory.models import (
     InventoryBalance,
@@ -166,10 +166,7 @@ class PurchaseEntryView(LoginRequiredMixin, PermissionRequiredMixin, TemplateVie
     LotLineFormset = formset_factory(PurchaseLotLineForm, extra=2, max_num=20, can_delete=True)
 
     def get_event(self):
-        event_id = self.request.GET.get("event") or self.request.POST.get("event")
-        if event_id:
-            return Event.objects.filter(pk=event_id, is_active=True).first()
-        return Event.objects.filter(is_current=True, is_active=True).first()
+        return resolve_event(self.request)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -178,7 +175,7 @@ class PurchaseEntryView(LoginRequiredMixin, PermissionRequiredMixin, TemplateVie
         context["page_title"] = "Purchase Entry"
         context["form"] = kwargs.get("form", PurchaseEntryForm(event=event, user=self.request.user))
         context["lot_formset"] = kwargs.get("lot_formset", self.LotLineFormset(prefix="lots", form_kwargs={"event": event}))
-        context["event_queryset"] = Event.objects.filter(is_active=True).order_by("-is_current", "-start_date", "name")
+        context["event_queryset"] = all_events_queryset()
         return context
 
     def post(self, request, *args, **kwargs):
@@ -269,10 +266,7 @@ class RemainingStockListView(LoginRequiredMixin, PermissionRequiredMixin, ListVi
     paginate_by = 50
 
     def get_event(self):
-        event_id = self.request.GET.get("event")
-        if event_id:
-            return Event.objects.filter(pk=event_id, is_active=True).first()
-        return Event.objects.filter(is_current=True, is_active=True).first()
+        return resolve_event(self.request)
 
     def get_item_rows(self, event):
         if event is None:
@@ -303,7 +297,7 @@ class RemainingStockListView(LoginRequiredMixin, PermissionRequiredMixin, ListVi
         context["event"] = self.get_event()
         context["page_title"] = "Remaining Stock"
         context["page_subtitle"] = "Leftover stock registered when events close; carry forward to future events"
-        context["event_queryset"] = Event.objects.filter(is_active=True).order_by("-is_current", "-start_date", "name")
+        context["event_queryset"] = all_events_queryset()
         context["can_register"] = self.request.user.has_perm("inventory.add_remainingstock")
         context["can_carry"] = self.request.user.has_perm("inventory.change_remainingstock")
         context["can_delete"] = self.request.user.has_perm("inventory.delete_remainingstock")
@@ -338,10 +332,7 @@ class RemainingStockRegisterView(LoginRequiredMixin, PermissionRequiredMixin, Te
     raise_exception = True
 
     def get_event(self):
-        event_id = self.request.GET.get("event") or self.request.POST.get("event")
-        if event_id:
-            return Event.objects.filter(pk=event_id, is_active=True).first()
-        return Event.objects.filter(is_current=True, is_active=True).first()
+        return resolve_event(self.request)
 
     def get_item_rows(self, event):
         if event is None:
@@ -378,7 +369,7 @@ class RemainingStockRegisterView(LoginRequiredMixin, PermissionRequiredMixin, Te
         context["event"] = event
         context["rows"] = self.get_item_rows(event)
         context["page_title"] = "Register Remaining Stock"
-        context["event_queryset"] = Event.objects.filter(is_active=True).order_by("-is_current", "-start_date", "name")
+        context["event_queryset"] = all_events_queryset()
         context["list_url"] = reverse_lazy("inventory:remaining-stock-list")
         return context
 
@@ -457,13 +448,13 @@ class RemainingStockCarryForwardView(LoginRequiredMixin, PermissionRequiredMixin
         context = {
             "page_title": "Carry Forward Remaining Stock",
             "remaining": remaining,
-            "event_queryset": Event.objects.filter(is_active=True).exclude(pk=remaining.event_id).order_by("-start_date", "name"),
+            "event_queryset": all_events_queryset().exclude(pk=remaining.event_id),
             "list_url": reverse_lazy("inventory:remaining-stock-list"),
         }
         event_id = request.GET.get("event")
         target_event = None
         if event_id:
-            target_event = Event.objects.filter(pk=event_id, is_active=True).exclude(pk=remaining.event_id).first()
+            target_event = all_events_queryset().filter(pk=event_id).exclude(pk=remaining.event_id).first()
         if target_event:
             context["target_event"] = target_event
             context["target_items"] = list(
@@ -478,7 +469,7 @@ class RemainingStockCarryForwardView(LoginRequiredMixin, PermissionRequiredMixin
         if remaining.is_carried():
             messages.info(request, "This remaining stock has already been carried forward.")
             return redirect("inventory:remaining-stock-list")
-        target_event = Event.objects.filter(pk=request.POST.get("event"), is_active=True).first()
+        target_event = Event.objects.filter(pk=request.POST.get("event")).first()
         target_item = Item.objects.filter(pk=request.POST.get("item"), event=target_event, is_active=True).first() if target_event else None
         if target_event is None or target_item is None:
             messages.error(request, "Please select a target event and item.")
@@ -514,10 +505,7 @@ class RemainingExtraItemView(LoginRequiredMixin, PermissionRequiredMixin, Templa
     raise_exception = True
 
     def get_event(self):
-        event_id = self.request.GET.get("event") or self.request.POST.get("event")
-        if event_id:
-            return Event.objects.filter(pk=event_id, is_active=True).first()
-        return Event.objects.filter(is_current=True, is_active=True).first()
+        return resolve_event(self.request)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -527,7 +515,7 @@ class RemainingExtraItemView(LoginRequiredMixin, PermissionRequiredMixin, Templa
             RemainingExtraItem.objects.filter(event=event).order_by("created_at", "pk")
         ) if event else []
         context["page_title"] = "Remaining Extra Items"
-        context["event_queryset"] = Event.objects.filter(is_active=True).order_by("-is_current", "-start_date", "name")
+        context["event_queryset"] = all_events_queryset()
         context["list_url"] = reverse_lazy("inventory:remaining-stock-list")
         context["can_save"] = self.request.user.has_perm("inventory.add_remainingextraitem")
         context["can_delete"] = self.request.user.has_perm("inventory.delete_remainingextraitem")
@@ -608,7 +596,7 @@ class RemainingStockExportView(LoginRequiredMixin, PermissionRequiredMixin, View
 
     def get(self, request, *args, **kwargs):
         event_id = request.GET.get("event")
-        event = Event.objects.filter(pk=event_id, is_active=True).first() if event_id else Event.objects.filter(is_current=True, is_active=True).first()
+        event = Event.objects.filter(pk=event_id).first() if event_id else all_events_queryset().first()
         if event is None:
             messages.error(request, "Please select an event.")
             return redirect("inventory:remaining-stock-list")

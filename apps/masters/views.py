@@ -28,7 +28,7 @@ class EventContextMixin:
     def get_event(self):
         event_pk = self.kwargs.get("event_pk")
         if event_pk:
-            return Event.objects.filter(pk=event_pk, is_active=True).first()
+            return Event.objects.filter(pk=event_pk).first()
         return None
 
 
@@ -210,7 +210,7 @@ class EventManagerContactCreateView(EventContextMixin, LoginRequiredMixin, Permi
     raise_exception = True
 
     def get_event(self):
-        return super().get_event() or Event.objects.filter(is_current=True, is_active=True).first()
+        return super().get_event() or Event.objects.order_by("-is_current", "-start_date", "name").first()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -346,8 +346,8 @@ class ItemListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     def _get_event(self):
         event_id = self.request.GET.get("event")
         if event_id:
-            return Event.objects.filter(pk=event_id, is_active=True).first()
-        return Event.objects.filter(is_current=True, is_active=True).first()
+            return Event.objects.filter(pk=event_id).first()
+        return Event.objects.order_by("-is_current", "-start_date", "name").first()
 
     def _expand_items(self, event):
         base_items = list(
@@ -439,7 +439,7 @@ class ItemListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
         context["table_rows"] = page_obj.object_list
         context["page_obj"] = page_obj
         context["paginator"] = paginator
-        context["event_queryset"] = Event.objects.filter(is_active=True).order_by("-is_current", "-start_date", "name")
+        context["event_queryset"] = Event.objects.order_by("-is_current", "-start_date", "name")
         context["can_add"] = self.request.user.has_perm(self._perm("add"))
         context["can_change"] = self.request.user.has_perm(self._perm("change"))
         context["can_delete"] = self.request.user.has_perm(self._perm("delete"))
@@ -470,7 +470,7 @@ class ItemListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
 class ItemListExportView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         event_id = request.GET.get("event")
-        event = Event.objects.filter(pk=event_id, is_active=True).first() if event_id else Event.objects.filter(is_current=True, is_active=True).first()
+        event = Event.objects.filter(pk=event_id).first() if event_id else Event.objects.order_by("-is_current", "-start_date", "name").first()
         if event is None:
             return HttpResponse("No active event found.", status=404)
 

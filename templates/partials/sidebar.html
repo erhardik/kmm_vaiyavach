@@ -41,7 +41,11 @@
           <div class="d-flex align-items-center gap-2 w-100">
             <span class="sidebar-event-icon"><i class="bi bi-calendar3"></i></span>
             <div class="sidebar-event-text d-flex flex-column align-items-start">
-              <span>{{ block.event.name }}</span>
+              <span>
+                {{ block.event.name }}
+                {% if not block.event.is_active %}<span class="badge text-bg-secondary ms-1" style="font-size:9px;">Inactive</span>{% endif %}
+                {% if block.event.is_current %}<span class="badge text-bg-warning ms-1" style="font-size:9px;">Current</span>{% endif %}
+              </span>
               <small style="color: #e67e22;">{{ block.event.start_date }} - {{ block.event.end_date }}</small>
             </div>
           </div>
@@ -66,7 +70,7 @@
       </div>
     </div>
   {% empty %}
-    <div class="px-3 py-2 text-body-secondary small">No active events found.</div>
+    <div class="px-3 py-2 text-body-secondary small">No events found.</div>
   {% endfor %}
 </div>
 

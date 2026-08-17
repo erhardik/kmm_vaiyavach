@@ -105,16 +105,16 @@ def _event_metrics(event):
 
 def portal_navigation(request):
     visible_items = _visible_links(request, UTILITY_LINKS)
-    active_events = Event.objects.filter(is_active=True).order_by("-is_current", "-start_date", "name")
+    all_events = Event.objects.order_by("-is_current", "-start_date", "name")
     selected_event_id = request.GET.get("event")
-    selected_event = active_events.filter(pk=selected_event_id).first() if selected_event_id else active_events.filter(is_current=True).first()
+    selected_event = all_events.filter(pk=selected_event_id).first() if selected_event_id else all_events.first()
     metrics = _event_metrics(selected_event)
     confirmed_count = RequirementHeader.objects.filter(
         event=selected_event, is_active=True,
         status__in=[RequirementStatus.CONFIRMED, RequirementStatus.NOT_CONFIRMED]
     ).count() if selected_event else 0
     badge_map = {
-        "masters:event-list": f"{Event.objects.filter(is_active=True).count()}",
+        "masters:event-list": f"{Event.objects.count()}",
         "requirements:collect": f"{metrics.get('requirements', 0)}",
         "requirements:header-list": f"{metrics.get('requirements', 0)}",
         "masters:item-list": f"{metrics.get('items', 0)}",
@@ -132,10 +132,11 @@ def portal_navigation(request):
         "requirements:pack-by-order": f"{confirmed_count}",
     }
     sidebar_events = []
-    for event in active_events:
+    for event in all_events:
         sidebar_events.append(
             {
                 "event": event,
+                "is_active": event.is_active,
                 "is_selected": selected_event.pk == event.pk if selected_event else event.is_current,
                 "menu_items": [
                     {**item, "badge": badge_map.get(item["url_name"], "")}

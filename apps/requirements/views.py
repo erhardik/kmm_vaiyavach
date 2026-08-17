@@ -45,7 +45,7 @@ from apps.common.pdf_utils import (
     NumberedCanvas as SharedNumberedCanvas,
 )
 
-from apps.common.views import EventScopedCreateView, EventScopedDeleteView, EventScopedListView, EventScopedUpdateView
+from apps.common.views import EventScopedCreateView, EventScopedDeleteView, EventScopedListView, EventScopedUpdateView, all_events_queryset, resolve_event
 from apps.dashboard.services import build_public_item_preview
 from apps.inventory.models import InventoryTransaction, InventoryTransactionType
 from apps.inventory.services import apply_requirement_packing
@@ -356,10 +356,10 @@ class RequirementHeaderListView(EventScopedListView):
             "top_route_count": top_route[1] if top_route else 0,
         }
 
-        event = Event.objects.filter(is_current=True, is_active=True).first()
+        event = resolve_event(self.request)
         event_id = self.request.GET.get("event")
         if event_id:
-            event = Event.objects.filter(pk=event_id, is_active=True).first()
+            event = Event.objects.filter(pk=event_id).first()
         if event:
             all_reqs = RequirementHeader.objects.filter(event=event, is_active=True)
             status_counts = all_reqs.values("status").annotate(cnt=Count("pk"))
@@ -428,7 +428,7 @@ class RequirementHeaderListView(EventScopedListView):
 class RequirementHeaderExportView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         event_id = request.GET.get("event")
-        event = Event.objects.filter(pk=event_id, is_active=True).first() if event_id else Event.objects.filter(is_current=True, is_active=True).first()
+        event = Event.objects.filter(pk=event_id).first() if event_id else all_events_queryset().first()
         if event is None:
             return HttpResponse("No active event found.", status=404)
 
@@ -633,8 +633,8 @@ class RequirementCollectionView(View):
                 event_id = int(event_id)
             except (ValueError, TypeError):
                 return None
-            return Event.objects.filter(pk=event_id, is_active=True).first()
-        return Event.objects.filter(is_current=True, is_active=True).first()
+            return Event.objects.filter(pk=event_id).first()
+        return all_events_queryset().first()
 
     def _is_public_flow(self):
         return bool(self.kwargs.get("event_token"))
@@ -1598,13 +1598,7 @@ class RequirementCollectionDetailView(View):
 
 class ViewControlView(LoginRequiredMixin, View):
     def get_event(self, request):
-        event_id = request.GET.get("event") or request.POST.get("event")
-        if event_id:
-            try:
-                return Event.objects.filter(pk=int(event_id), is_active=True).first()
-            except (ValueError, TypeError):
-                pass
-        return Event.objects.filter(is_current=True, is_active=True).first()
+        return resolve_event(request)
 
     def get(self, request):
         event = self.get_event(request)
@@ -1784,11 +1778,11 @@ class EditRequestListView(LoginRequiredMixin, View):
         event = None
         if event_id:
             try:
-                event = Event.objects.filter(pk=int(event_id), is_active=True).first()
+                event = Event.objects.filter(pk=int(event_id)).first()
             except (ValueError, TypeError):
                 pass
         if not event:
-            event = Event.objects.filter(is_current=True, is_active=True).first()
+            event = all_events_queryset().first()
         if not event:
             messages.error(request, "No active event found.")
             return redirect("dashboard:home")
@@ -2048,7 +2042,7 @@ class StockBasedPackingView(LoginRequiredMixin, View):
         event_id = request.GET.get("event")
         if event_id:
             return get_object_or_404(Event, pk=event_id)
-        return Event.objects.filter(is_active=True, is_current=True).first()
+        return all_events_queryset().first()
 
     def _compute_stock_data(self, event):
         acquired_statuses = [
