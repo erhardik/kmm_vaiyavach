@@ -115,8 +115,19 @@ class EventUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     def form_valid(self, form):
         before = serialize_instance(self.get_object())
         obj = form.save()
+        if not obj.is_active:
+            obj.is_current = False
+            obj.save(update_fields=["is_current", "updated_at"])
         if obj.is_current:
             Event.objects.exclude(pk=obj.pk).update(is_current=False)
+        if not Event.objects.filter(is_current=True, is_active=True).exists():
+            candidates = Event.objects.filter(is_active=True)
+            if not obj.is_current:
+                candidates = candidates.exclude(pk=obj.pk)
+            successor = candidates.order_by("-is_current", "-start_date", "name").first()
+            if successor:
+                successor.is_current = True
+                successor.save(update_fields=["is_current", "updated_at"])
         self.object = obj
         log_activity(
             user=self.request.user,
