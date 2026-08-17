@@ -32,6 +32,7 @@ class PublicLandingView(TemplateView):
         context = super().get_context_data(**kwargs)
         event = Event.objects.filter(is_active=True).order_by("-is_current", "-start_date", "name").first()
         context["event"] = event
+        context["accepting_responses"] = bool(event and event.accepting_responses)
         context["status_summary"] = build_public_status_summary(event) if event else {}
         context["public_items"] = build_public_item_preview(event) if event else []
         context["request_form_url"] = reverse_lazy("requirements:public-collect", kwargs={"event_token": event.public_form_token}) if event else reverse_lazy("dashboard:home")

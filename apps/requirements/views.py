@@ -639,6 +639,21 @@ class RequirementCollectionView(View):
     def _is_public_flow(self):
         return bool(self.kwargs.get("event_token"))
 
+    def _render_closed(self, request, event):
+        language_code = _lang_code(request)
+        return render(
+            request,
+            "public/event_completed.html",
+            {
+                "event": event,
+                "lang": language_code,
+                "login_url": reverse_lazy("login"),
+                "requests_url": reverse_lazy("public-requests"),
+                "landing_url": reverse_lazy("public-landing"),
+                "feedback_url": reverse_lazy("feedback"),
+            },
+        )
+
     def _get_header(self, event):
         token = self.kwargs.get("token") or self.request.POST.get("token") or self.request.GET.get("token")
         if token:
@@ -813,6 +828,8 @@ class RequirementCollectionView(View):
 
     def get(self, request, *args, **kwargs):
         event = self._get_event()
+        if event is not None and not event.accepting_responses:
+            return self._render_closed(request, event)
         header = self._get_header(event) if event else None
         items = self._get_items(event) if event else []
         existing_quantities = {line.item_id: int(line.required_qty) for line in header.lines.all()} if header else {}
@@ -823,6 +840,8 @@ class RequirementCollectionView(View):
     @transaction.atomic
     def post(self, request, *args, **kwargs):
         event = self._get_event()
+        if event is not None and not event.accepting_responses:
+            return self._render_closed(request, event)
         language_code = _lang_code(request)
         if event is None:
             messages.error(request, "સક્રિય ઇવેન્ટ મળી નથી." if language_code == "gu" else "No active event found.")
@@ -2000,6 +2019,7 @@ class PublicRequirementListView(View):
                 "status_summary": self._status_summary(headers),
                 "total_items": total_items,
                 "public_collect_url": reverse("requirements:public-collect", kwargs={"event_token": event.public_form_token}) if event else None,
+                "accepting_responses": bool(event and event.accepting_responses),
                 "public_landing_url": reverse("public-landing"),
                 "public_items": build_public_item_preview(event) if event else [],
                 "requests_count": len(headers),

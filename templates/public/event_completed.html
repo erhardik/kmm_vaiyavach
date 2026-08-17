@@ -1,0 +1,108 @@
+{% load static %}
+<!doctype html>
+<html lang="{{ LANGUAGE_CODE|default:'en' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ઇવેન્ટ પૂર્ણ | કલ્યાણ મિત્ર મંડળ</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <link rel="icon" type="image/png" href="{% static 'images/kmm.png' %}">
+  <style>
+    @font-face {
+      font-family: 'Noto Sans Gujarati';
+      src: url('{% static "fonts/NotoSansGujarati-Regular.ttf" %}') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'BalooBhai2';
+      src: url('{% static "fonts/BalooBhai2-Bold.ttf" %}') format('truetype');
+      font-weight: bold;
+      font-style: normal;
+    }
+    body {
+      font-family: 'Noto Sans Gujarati', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+    }
+    .completed-kicker,
+    .completed-title,
+    .completed-card .display-4 {
+      font-family: 'BalooBhai2', 'Noto Sans Gujarati', system-ui, sans-serif !important;
+    }
+    .completed-hero {
+      background: linear-gradient(135deg, #3a1420, #6f2333);
+      color: #fff;
+    }
+    .completed-check {
+      width: 84px;
+      height: 84px;
+      border-radius: 50%;
+      background: #fff;
+      color: #3f7d4a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.4rem;
+      margin: 0 auto;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+    }
+    .completed-social .btn {
+      border-radius: 999px;
+    }
+  </style>
+</head>
+<body class="bg-soft">
+  <div class="public-landing">
+    {% include "public/_nav.html" %}
+
+    <main class="completed-hero">
+      <div class="container py-5 py-lg-6 text-center">
+        <div class="completed-check mb-4"><i class="bi bi-check-lg"></i></div>
+        <div class="completed-kicker text-uppercase text-white-50 mb-2" style="letter-spacing:.12em;">Kalyan Mitra Mandal</div>
+        <h1 class="completed-title display-5 fw-bold mb-3">ઇવેન્ટ પૂર્ણ થઈ ગઈ છે</h1>
+        <p class="lead text-white-75 mb-2">આ ઇવેન્ટ પૂર્ણ થઈ ગઈ છે. તમારા સહકાર બદલ આભાર.</p>
+        <p class="text-white-50 mb-4">
+          {% if event %}{{ event.name }}{% endif %} — વિનંતી સ્વીકારવાનું બંધ કરી દેવામાં આવ્યું છે. આ ઇવેન્ટમાં ભાગ લીધો તે બદલ તમારો હૃદયપૂર્વક આભાર.
+        </p>
+        <div class="d-flex flex-wrap justify-content-center gap-2 mb-4">
+          <a class="btn btn-warning btn-lg" href="{{ feedback_url }}"><i class="bi bi-chat-heart me-1"></i>અભિપ્રાય આપો</a>
+          <a class="btn btn-outline-light btn-lg" href="{{ requests_url }}">બધી વિનંતીઓ જુઓ</a>
+        </div>
+      </div>
+    </main>
+
+    <section class="container py-4 py-lg-5">
+      <div class="completed-card card border-0 shadow-sm mx-auto" style="max-width: 720px;">
+        <div class="card-body p-4 p-lg-5 text-center">
+          <div class="display-4 mb-3">🙏</div>
+          <h2 class="h4 fw-bold mb-2">આપના સહયોગ માટે આભાર</h2>
+          <p class="text-body-secondary mb-0">
+            તમારા સમય, શક્તિ અને સેવાભાવથી આ ચાતુર્માસ વૈયાવચ્ચ કાર્ય સફળ બન્યું છે.
+            આવનારી સેવાઓમાં ફરી જોડાવા આપનું સ્વાગત છે.
+          </p>
+        </div>
+      </div>
+
+      <div class="completed-social text-center mt-5">
+        <div class="small text-uppercase text-body-secondary mb-3" style="letter-spacing:.1em;">અમારી સાથે જોડાઓ</div>
+        <div class="d-flex flex-wrap gap-2 justify-content-center">
+          <a class="btn btn-outline-secondary btn-sm" href="https://instagram.com/jainkmm" target="_blank" rel="noopener"><i class="bi bi-instagram me-1"></i>Instagram</a>
+          <a class="btn btn-outline-secondary btn-sm" href="https://facebook.com/jainkalyanmitramandal" target="_blank" rel="noopener"><i class="bi bi-facebook me-1"></i>Facebook</a>
+          <a class="btn btn-outline-secondary btn-sm" href="https://twitter.com/jainkmm" target="_blank" rel="noopener"><i class="bi bi-twitter-x me-1"></i>Twitter</a>
+          <a class="btn btn-outline-secondary btn-sm" href="mailto:jainkalyanmitramandal@gmail.com"><i class="bi bi-envelope me-1"></i>Email</a>
+          <a class="btn btn-outline-secondary btn-sm" href="http://www.youtube.com/@KalyanMitraMandalAhmedabad" target="_blank" rel="noopener"><i class="bi bi-youtube me-1"></i>YouTube</a>
+        </div>
+      </div>
+    </section>
+
+    <footer class="public-footer">
+      <div class="container py-4 text-center">
+        <div class="small text-white-50">© કલ્યાણ મિત્ર મંડળ · સેવા, સંવેદના અને પારદર્શિતા</div>
+      </div>
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

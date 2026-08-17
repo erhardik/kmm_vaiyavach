@@ -56,7 +56,9 @@
               <h1>ચાતુર્માસ વૈયાવચ્ચ 2026</h1>
               <p>વિનંતી, પેકિંગ, સ્ટોક અને વિતરણની પારદર્શક વ્યવસ્થા.</p>
               <div class="d-flex flex-wrap gap-2">
-                <a class="btn btn-warning btn-lg" href="{{ request_form_url }}">વૈયાવચ્ચ વિનંતી ફોર્મ ભરો</a>
+                {% if accepting_responses %}
+                  <a class="btn btn-warning btn-lg" href="{{ request_form_url }}">વૈયાવચ્ચ વિનંતી ફોર્મ ભરો</a>
+                {% endif %}
                 <a class="btn btn-outline-light btn-lg" href="{{ requests_url }}">બધી વિનંતીઓ જુઓ</a>
               </div>
             </div>
@@ -195,9 +197,11 @@
               <a class="btn btn-outline-light btn-sm" href="mailto:jainkalyanmitramandal@gmail.com"><i class="bi bi-envelope me-1"></i>Email</a>
               <a class="btn btn-outline-light btn-sm" href="http://www.youtube.com/@KalyanMitraMandalAhmedabad" target="_blank" rel="noopener"><i class="bi bi-youtube me-1"></i>YouTube</a>
             </div>
-            <div class="d-flex flex-wrap gap-2 justify-content-lg-end mt-3">
-              <a class="btn btn-warning btn-sm" href="{{ request_form_url }}">ફોર્મ ભરો</a>
-              <a class="btn btn-outline-light btn-sm" href="{{ requests_url }}">વિનંતીઓ જુઓ</a>
+<div class="d-flex flex-wrap gap-2 justify-content-lg-end mt-3">
+              {% if accepting_responses %}
+                <a class="btn btn-warning btn-sm" href="{{ request_form_url }}">ફોર્મ ભરો</a>
+              {% endif %}
+              <a class="btn btn-outline-light btn-sm" href="{{ requests_url }}">વિનંતિઓ જુઓ</a>
               <a class="btn btn-light btn-sm" href="{{ login_url }}">સભ્ય લોગિન</a>
             </div>
           </div>

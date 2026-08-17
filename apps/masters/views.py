@@ -110,11 +110,14 @@ class EventUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
         context["manager_contacts_list_url"] = reverse("masters:event-contact-list", kwargs={"event_pk": self.object.pk})
         context["public_share_url"] = reverse("requirements:public-collect", kwargs={"event_token": self.object.public_form_token})
         context["public_share_label"] = "Public Requirement Form Link"
+        context["accepting_responses_event"] = self.object
         return context
 
     def form_valid(self, form):
         before = serialize_instance(self.get_object())
-        obj = form.save()
+        obj = form.save(commit=False)
+        obj.accepting_responses = self.request.POST.get("accepting_responses") == "on"
+        obj.save()
         if not obj.is_active:
             obj.is_current = False
             obj.save(update_fields=["is_current", "updated_at"])

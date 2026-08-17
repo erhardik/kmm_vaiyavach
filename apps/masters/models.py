@@ -44,6 +44,10 @@ class Event(TimeStampedModel):
     status = models.CharField(max_length=40, choices=EventStatus.choices, default=EventStatus.PLANNING)
     is_current = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
+    accepting_responses = models.BooleanField(
+        default=True,
+        help_text="When enabled, anyone can see and submit the Collect Requirement form. When disabled, the form is hidden and a completion message is shown instead.",
+    )
 
     class Meta:
         ordering = ["-start_date", "name"]
