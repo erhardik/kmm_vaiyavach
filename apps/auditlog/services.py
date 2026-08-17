@@ -1,6 +1,8 @@
 
 from __future__ import annotations
 
+import json
+import uuid
 from dataclasses import asdict, is_dataclass
 from datetime import date, datetime
 from decimal import Decimal
@@ -14,9 +16,15 @@ def _normalize_value(value: Any):
         return str(value)
     if isinstance(value, (date, datetime)):
         return value.isoformat()
+    if isinstance(value, uuid.UUID):
+        return str(value)
     if is_dataclass(value):
         return asdict(value)
     if hasattr(value, "pk") and hasattr(value, "__class__"):
+        return str(value)
+    try:
+        json.dumps(value)
+    except TypeError:
         return str(value)
     return value
 
