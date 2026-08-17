@@ -132,6 +132,75 @@ class Item(EventScopedModel):
         return self.item_name
 
 
+GUJARATI_MONTHS = {
+    "જાન્યુઆરી": 1,
+    "ફેબ્રુઆરી": 2,
+    "માર્ચ": 3,
+    "એપ્રિલ": 4,
+    "મે": 5,
+    "જૂન": 6,
+    "જુલાઈ": 7,
+    "ઓગસ્ટ": 8,
+    "સપ્ટેમ્બર": 9,
+    "ઓક્ટોબર": 10,
+    "નવેમ્બર": 11,
+    "ડિસેમ્બર": 12,
+}
+
+
+def _month_order_from_label(label: str) -> int:
+    """Return 1-12 for the first Gujarati month found in the label, else 13."""
+    for month_name, number in GUJARATI_MONTHS.items():
+        if month_name in (label or ""):
+            return number
+    return 13
+
+
+class JourneyCategory(models.TextChoices):
+    ANIMAL = "animal", "જીવદયા (Animal Welfare)"
+    MEDICAL = "medical", "મેડિકલ રાહત (Healthcare)"
+    EDUCATION = "education", "શિક્ષણ/પાઠશાળા (Education)"
+    SOCIAL = "social", "અનુકંપાદાન (Social Relief)"
+
+
+class JourneyCard(TimeStampedModel):
+    year = models.IntegerField(help_text="ઈવેન્ટનું વર્ષ (e.g. 2024)")
+    month = models.CharField(
+        max_length=60,
+        help_text="ગુજરાતીમાં મહિનો અથવા તારીખોની રેન્જ લખો, e.g. 'ફેબ્રુઆરી' અથવા 'જૂન–જુલાઈ'.",
+    )
+    month_order = models.SmallIntegerField(default=13, editable=False)
+    title = models.CharField(
+        max_length=200,
+        help_text="હેડિંગ ગુજરાતીમાં લખો. 200 અક્ષરથી વધુ નહીં.",
+    )
+    description = models.TextField(
+        max_length=600,
+        help_text="વર્ણન ગુજરાતીમાં લખો. કાર્ડની ઊંચાઈ જાળવવા માટે 600 અક્ષરની મર્યાદામાં રહો (લગભગ 30 શબ્દો).",
+    )
+    category = models.CharField(
+        max_length=40,
+        choices=JourneyCategory.choices,
+        default=JourneyCategory.SOCIAL,
+        help_text="કાર્ડનું વર્ગીકરણ (ટાઈમલાઈનમાં રંગ અને ફિલ્ટર માટે).",
+    )
+
+    class Meta:
+        ordering = ["year", "month_order", "id"]
+        verbose_name = "Journey card"
+        verbose_name_plural = "Journey cards"
+
+    def __str__(self) -> str:
+        return f"{self.month} {self.year} — {self.title}"
+
+    def date_label(self) -> str:
+        return f"{self.month} {self.year}".strip()
+
+    def save(self, *args, **kwargs):
+        self.month_order = _month_order_from_label(self.month)
+        super().save(*args, **kwargs)
+
+
 class RouteArea(models.Model):
     name = models.CharField(max_length=200)
     display_code = models.CharField(max_length=20, blank=True)

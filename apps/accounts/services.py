@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 
-from apps.masters.models import Event, Item, Sponsor, Upashray, Vendor, Volunteer
+from apps.masters.models import Event, Item, JourneyCard, Sponsor, Upashray, Vendor, Volunteer
 from apps.requirements.models import RequirementHeader, RequirementLine, SpecialRequirement
 from apps.sponsorship.models import SponsorMaterialReceipt, SponsorshipCommitment
 from apps.vendors.models import VendorQuote
@@ -25,6 +25,7 @@ ROLE_GROUPS = {
 MODEL_CLASSES = [
     Event,
     Item,
+    JourneyCard,
     Upashray,
     Volunteer,
     Sponsor,

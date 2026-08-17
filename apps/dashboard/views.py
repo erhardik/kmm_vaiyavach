@@ -22,7 +22,7 @@ from apps.dashboard.services import (
     get_dashboard_event_queryset,
     resolve_dashboard_event,
 )
-from apps.masters.models import Event
+from apps.masters.models import Event, JourneyCard
 
 
 class PublicLandingView(TemplateView):
@@ -38,6 +38,12 @@ class PublicLandingView(TemplateView):
         context["request_form_url"] = reverse_lazy("requirements:public-collect", kwargs={"event_token": event.public_form_token}) if event else reverse_lazy("dashboard:home")
         context["requests_url"] = reverse_lazy("public-requests")
         context["login_url"] = reverse_lazy("login")
+        journey = list(
+            JourneyCard.objects.order_by("year", "month_order", "id").values(
+                "year", "month", "title", "description", "category"
+            )
+        )
+        context["journey_data_json"] = json.dumps(journey, ensure_ascii=False)
         return context
 
 

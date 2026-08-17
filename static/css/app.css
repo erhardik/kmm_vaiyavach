@@ -1171,3 +1171,308 @@ body.sidebar-collapsed .sidebar-accordion .list-group-item {
   }
 }
 
+/* ============================================================
+   KMM Journey timeline (past-events section)
+   ============================================================ */
+.kmm-journey-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.kmm-journey-kicker {
+  display: inline-block;
+  padding: 0.3rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(211, 111, 18, 0.1);
+  border: 1px solid rgba(211, 111, 18, 0.22);
+  color: #d36f12;
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+.kmm-journey-title {
+  color: var(--kmm-navy);
+  font-family: 'BalooBhai2', 'Noto Sans Gujarati', system-ui, sans-serif;
+  font-size: clamp(1.9rem, 3.4vw, 3rem);
+  font-weight: 900;
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  margin-bottom: 0.6rem;
+}
+
+.kmm-journey-subtitle {
+  color: #42566b;
+  font-size: 1.02rem;
+  line-height: 1.7;
+  margin-bottom: 0;
+}
+
+.kmm-journey-filters {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(20, 50, 79, 0.08);
+  border-radius: 1.1rem;
+  box-shadow: 0 0.6rem 1.6rem rgba(20, 50, 79, 0.08);
+  padding: 0.85rem;
+  margin-bottom: 2.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.kmm-journey-yearbar {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding-bottom: 0.15rem;
+}
+
+.kmm-journey-year-btn {
+  flex: 0 0 auto;
+  padding: 0.45rem 0.95rem;
+  border: 0;
+  border-radius: 0.7rem;
+  background: rgba(20, 50, 79, 0.07);
+  color: #42566b;
+  font-weight: 800;
+  font-size: 0.95rem;
+  transition: background 150ms ease, color 150ms ease, transform 150ms ease;
+}
+
+.kmm-journey-year-btn:hover {
+  background: rgba(20, 50, 79, 0.13);
+  color: var(--kmm-navy);
+}
+
+.kmm-journey-year-btn.active {
+  background: var(--kmm-navy);
+  color: #fff;
+}
+
+.kmm-journey-cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.kmm-journey-cat-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 0.8rem;
+  border: 1px solid rgba(20, 50, 79, 0.12);
+  background: #fff;
+  color: #42566b;
+  font-size: 0.86rem;
+  font-weight: 700;
+  transition: transform 150ms ease, box-shadow 150ms ease, color 150ms ease, background 150ms ease;
+}
+
+.kmm-journey-cat-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0.5rem 1.2rem rgba(20, 50, 79, 0.1);
+}
+
+.kmm-journey-f-all.active {
+  background: #14324f;
+  border-color: #14324f;
+  color: #fff;
+}
+
+.kmm-journey-f-animal.active {
+  background: #059669;
+  border-color: #059669;
+  color: #fff;
+}
+
+.kmm-journey-f-medical.active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+.kmm-journey-f-education.active {
+  background: #d97706;
+  border-color: #d97706;
+  color: #fff;
+}
+
+.kmm-journey-f-social.active {
+  background: #e11d48;
+  border-color: #e11d48;
+  color: #fff;
+}
+
+.kmm-journey-empty {
+  text-align: center;
+  padding: 4rem 1rem;
+  background: #fff;
+  border: 1px solid rgba(20, 50, 79, 0.08);
+  border-radius: 1.4rem;
+  color: #8b98a8;
+}
+
+.kmm-journey-empty i {
+  font-size: 2.5rem;
+  display: block;
+  margin-bottom: 0.8rem;
+}
+
+.kmm-journey-empty p {
+  margin-bottom: 0;
+}
+
+.kmm-journey-line {
+  position: relative;
+  border-left: 3px solid rgba(211, 111, 18, 0.22);
+  margin-left: 1.1rem;
+  padding-left: 2rem;
+}
+
+.kmm-journey-year-section {
+  position: relative;
+  scroll-margin-top: 8.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.kmm-journey-year-label {
+  display: inline-block;
+  padding: 0.4rem 1.1rem;
+  border-radius: 0.9rem;
+  background: var(--kmm-navy);
+  color: #fff;
+  font-weight: 900;
+  font-size: 1.05rem;
+  box-shadow: 0 0.5rem 1.2rem rgba(20, 50, 79, 0.2);
+  margin-bottom: 1.4rem;
+}
+
+.kmm-journey-item {
+  position: relative;
+  margin-bottom: 1.1rem;
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 520ms ease, transform 520ms ease;
+}
+
+.kmm-journey-item.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.kmm-journey-node {
+  position: absolute;
+  left: -2.62rem;
+  top: 1.05rem;
+  width: 2.05rem;
+  height: 2.05rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 1rem;
+  border: 3px solid #fff;
+  box-shadow: 0 0.4rem 0.9rem rgba(20, 50, 79, 0.18);
+}
+
+.kmm-journey-node.kmm-journey-f-all { background: #14324f; }
+.kmm-journey-node.kmm-journey-f-animal { background: #059669; }
+.kmm-journey-node.kmm-journey-f-medical { background: #2563eb; }
+.kmm-journey-node.kmm-journey-f-education { background: #d97706; }
+.kmm-journey-node.kmm-journey-f-social { background: #e11d48; }
+
+.kmm-journey-card {
+  display: flex;
+  align-items: stretch;
+  background: #fff;
+  border: 1px solid rgba(20, 50, 79, 0.08);
+  border-radius: 1.2rem;
+  box-shadow: 0 0.7rem 1.6rem rgba(20, 50, 79, 0.07);
+  overflow: hidden;
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.kmm-journey-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 1rem 2rem rgba(20, 50, 79, 0.12);
+  border-color: rgba(211, 111, 18, 0.28);
+}
+
+.kmm-journey-card-side {
+  flex: 0 0 20%;
+  max-width: 20%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.15rem 0.6rem;
+  background: #14324f;
+  color: #fff;
+  font-size: 1.15rem;
+  font-weight: 800;
+  text-align: center;
+  line-height: 1.35;
+}
+
+.kmm-journey-card-side.kmm-journey-f-animal { background: #059669; }
+.kmm-journey-card-side.kmm-journey-f-medical { background: #2563eb; }
+.kmm-journey-card-side.kmm-journey-f-education { background: #d97706; }
+.kmm-journey-card-side.kmm-journey-f-social { background: #e11d48; }
+
+.kmm-journey-card-main {
+  flex: 1 1 80%;
+  min-width: 0;
+  padding: 1.05rem 1.25rem;
+}
+
+.kmm-journey-card-main h3 {
+  color: var(--kmm-navy);
+  font-size: 1.06rem;
+  font-weight: 850;
+  margin-bottom: 0.4rem;
+}
+
+.kmm-journey-summary {
+  color: #5c6d7f;
+  line-height: 1.75;
+  font-size: 0.95rem;
+  margin-bottom: 0;
+}
+
+.kmm-journey-summary b {
+  color: #c75f00;
+  font-weight: 800;
+}
+
+@media (max-width: 575.98px) {
+  .kmm-journey-line {
+    margin-left: 0.35rem;
+    padding-left: 1.4rem;
+  }
+
+  .kmm-journey-node {
+    left: -2rem;
+    width: 1.7rem;
+    height: 1.7rem;
+    font-size: 0.85rem;
+  }
+
+  .kmm-journey-card-side {
+    flex-basis: 30%;
+    max-width: 30%;
+    font-size: 1rem;
+    padding: 0.9rem 0.4rem;
+  }
+
+  .kmm-journey-card-main {
+    padding: 0.9rem 0.9rem;
+  }
+}
+

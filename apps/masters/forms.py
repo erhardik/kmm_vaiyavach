@@ -1,7 +1,7 @@
 from django import forms
 from django.utils.text import slugify
 
-from apps.masters.models import Event, EventManagerContact, Item, Sponsor, Upashray, Vendor, Volunteer
+from apps.masters.models import Event, EventManagerContact, Item, JourneyCard, Sponsor, Upashray, Vendor, Volunteer
 
 
 class BootstrapModelForm(forms.ModelForm):
@@ -143,3 +143,24 @@ class VendorForm(BootstrapModelForm):
     class Meta:
         model = Vendor
         fields = ["vendor_name", "contact_person", "mobile", "address", "gst_no", "remarks"]
+
+
+class JourneyCardForm(BootstrapModelForm):
+    class Meta:
+        model = JourneyCard
+        fields = ["year", "month", "title", "description", "category"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["year"].help_text = "ઈવેન્ટનું વર્ષ લખો, દા.ત. 2024. (નોંધ: કૃપા કરીને બધું ગુજરાતીમાં લખો.)"
+        self.fields["month"].help_text = (
+            "મહિનો અથવા તારીખોની રેન્જ ગુજરાતીમાં લખો, દા.ત. 'ફેબ્રુઆરી' અથવા 'જૂન–જુલાઈ'. "
+            "લેન્ડિંગ પેજની ટાઈમલાઈનમાં કાર્ડ મહિના-વર્ષના ક્રમમાં ગોઠવાશે."
+        )
+        self.fields["title"].help_text = (
+            "હેડિંગ ગુજરાતીમાં લખો. મહત્તમ 200 અક્ષર — કાર્ડની પહોળાઈ સાચવવા માટે ટૂંકું રાખો."
+        )
+        self.fields["description"].help_text = (
+            "વર્ણન ગુજરાતીમાં લખો. મહત્તમ 600 અક્ષર (લગભગ 30 શબ્દો) — "
+            "જેથી કાર્ડની ઊંચાઈ-પહોળાઈ હાલના કાર્ડ જેટલી જ રહે."
+        )

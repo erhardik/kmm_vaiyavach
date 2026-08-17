@@ -19,9 +19,9 @@ from openpyxl.utils import get_column_letter
 from apps.auditlog.services import log_activity, serialize_instance
 from apps.common.views import EventScopedCreateView, EventScopedDeleteView, EventScopedListView, EventScopedUpdateView
 from apps.inventory.models import InventoryBalance, InventoryTransaction, InventoryTransactionType, PurchaseLot
-from apps.masters.forms import EventCreateForm, EventManagerContactForm, EventUpdateForm, ItemForm, SponsorForm, UpashrayForm, VendorForm, VolunteerForm
+from apps.masters.forms import EventCreateForm, EventManagerContactForm, EventUpdateForm, ItemForm, JourneyCardForm, SponsorForm, UpashrayForm, VendorForm, VolunteerForm
 from apps.requirements.models import RequirementHeader, RequirementLine, RequirementStatus
-from apps.masters.models import Event, EventManagerContact, Item, Sponsor, Upashray, Vendor, Volunteer
+from apps.masters.models import Event, EventManagerContact, Item, JourneyCard, Sponsor, Upashray, Vendor, Volunteer
 
 
 class EventContextMixin:
@@ -1057,3 +1057,130 @@ class VendorDeleteView(EventScopedDeleteView):
         context = super().get_context_data(**kwargs)
         context["list_url"] = self.success_url
         return context
+
+
+class JourneyCardListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
+    model = JourneyCard
+    template_name = "masters/journey_list.html"
+    paginate_by = 50
+    permission_required = "masters.view_journeycard"
+    raise_exception = True
+
+    def get_queryset(self):
+        qs = JourneyCard.objects.order_by("year", "month_order", "id")
+        search = self.request.GET.get("q", "").strip()
+        if search:
+            qs = qs.filter(Q(title__icontains=search) | Q(description__icontains=search) | Q(month__icontains=search))
+        year = self.request.GET.get("year", "").strip()
+        if year.isdigit():
+            qs = qs.filter(year=int(year))
+        return qs
+
+    def _perm(self, action):
+        meta = self.model._meta
+        return f"{meta.app_label}.{action}_{meta.model_name}"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["page_title"] = "Journey"
+        context["page_subtitle"] = "Cards shown on the public landing page timeline (month–year order)."
+        context["create_url"] = reverse_lazy("masters:journey-create")
+        context["edit_url_name"] = "masters:journey-update"
+        context["delete_url_name"] = "masters:journey-delete"
+        context["can_add"] = self.request.user.has_perm(self._perm("add"))
+        context["can_change"] = self.request.user.has_perm(self._perm("change"))
+        context["can_delete"] = self.request.user.has_perm(self._perm("delete"))
+        context["years"] = list(
+            JourneyCard.objects.order_by("year").values_list("year", flat=True).distinct()
+        )
+        return context
+
+
+class JourneyCardCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+    model = JourneyCard
+    form_class = JourneyCardForm
+    template_name = "common/form.html"
+    permission_required = "masters.add_journeycard"
+    raise_exception = True
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["page_title"] = "Add Journey Card"
+        context["page_subtitle"] = "Write the card content in Gujarati."
+        context["list_url"] = reverse_lazy("masters:journey-list")
+        return context
+
+    def form_valid(self, form):
+        obj = form.save()
+        self.object = obj
+        log_activity(
+            user=self.request.user,
+            event=None,
+            action="created",
+            module=self.model._meta.label_lower,
+            record_id=obj.pk,
+            new_value=serialize_instance(obj),
+            request=self.request,
+        )
+        messages.success(self.request, "Journey card created successfully.")
+        return redirect(reverse_lazy("masters:journey-list"))
+
+
+class JourneyCardUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    model = JourneyCard
+    form_class = JourneyCardForm
+    template_name = "common/form.html"
+    permission_required = "masters.change_journeycard"
+    raise_exception = True
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["page_title"] = "Edit Journey Card"
+        context["page_subtitle"] = "Write the card content in Gujarati."
+        context["list_url"] = reverse_lazy("masters:journey-list")
+        return context
+
+    def form_valid(self, form):
+        before = serialize_instance(self.get_object())
+        obj = form.save()
+        self.object = obj
+        log_activity(
+            user=self.request.user,
+            event=None,
+            action="updated",
+            module=self.model._meta.label_lower,
+            record_id=obj.pk,
+            old_value=before,
+            new_value=serialize_instance(obj),
+            request=self.request,
+        )
+        messages.success(self.request, "Journey card updated successfully.")
+        return redirect(reverse_lazy("masters:journey-list"))
+
+
+class JourneyCardDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+    model = JourneyCard
+    template_name = "common/confirm_delete.html"
+    success_url = reverse_lazy("masters:journey-list")
+    permission_required = "masters.delete_journeycard"
+    raise_exception = True
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["list_url"] = self.success_url
+        return context
+
+    def delete(self, request, *args, **kwargs):
+        obj = self.get_object()
+        old_value = serialize_instance(obj)
+        log_activity(
+            user=request.user,
+            event=None,
+            action="deleted",
+            module=self.model._meta.label_lower,
+            record_id=obj.pk,
+            old_value=old_value,
+            request=request,
+        )
+        messages.success(request, "Journey card deleted successfully.")
+        return super().delete(request, *args, **kwargs)

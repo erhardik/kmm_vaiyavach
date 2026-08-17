@@ -135,43 +135,7 @@
 
       <section class="public-band public-band-soft" id="past-events">
         <div class="container">
-          <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
-            <div>
-              <div class="section-band mb-3">સેવા કાર્યો</div>
-              <h2 class="public-section-title mb-1">અન્ય મહત્વપૂર્ણ કાર્યો</h2>
-              <p class="text-body-secondary mb-0">સમાજમાં બોજ ઓછો કરવાના નાના અને મોટા પ્રયાસો.</p>
-            </div>
-          </div>
-          <div class="row g-3">
-            <div class="col-12 col-md-6 col-xl-3">
-              <div class="past-event-card">
-                <div class="past-event-icon"><i class="bi bi-heart-pulse"></i></div>
-                <h3>Medical Support</h3>
-                <p>જ્યાં જરૂર પડે ત્યાં સારવાર અને આરોગ્ય સંબંધિત સહાય.</p>
-              </div>
-            </div>
-            <div class="col-12 col-md-6 col-xl-3">
-              <div class="past-event-card">
-                <div class="past-event-icon"><i class="bi bi-book"></i></div>
-                <h3>Education Help</h3>
-                <p>શિક્ષણ અને માર્ગદર્શનથી જીવનમાં આશાનો દીવો પ્રગટાવવાનો પ્રયાસ.</p>
-              </div>
-            </div>
-            <div class="col-12 col-md-6 col-xl-3">
-              <div class="past-event-card">
-                <div class="past-event-icon"><i class="bi bi-basket"></i></div>
-                <h3>Food Seva</h3>
-                <p>જરૂરિયાતમંદ સુધી ખોરાક અને જરૂરી વસ્તુઓ પહોંચાડવાનું કાર્ય.</p>
-              </div>
-            </div>
-            <div class="col-12 col-md-6 col-xl-3">
-              <div class="past-event-card">
-                <div class="past-event-icon"><i class="bi bi-people"></i></div>
-                <h3>Respect & Care</h3>
-                <p>પ્રેમ, સન્માન અને સાથ દ્વારા સમાજમાં માનવતા જીવંત રાખવી.</p>
-              </div>
-            </div>
-          </div>
+          <div id="kmm-journey"></div>
         </div>
       </section>
     </main>
@@ -211,6 +175,8 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>window.KMM_JOURNEY_DATA = {{ journey_data_json|safe }};</script>
+  <script src="{% static 'js/kmm_journey.js' %}"></script>
   <script>
     (function() {
       const input = document.getElementById("publicItemSearch");
