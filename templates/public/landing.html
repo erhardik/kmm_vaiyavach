@@ -9,6 +9,11 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
   <link rel="icon" type="image/png" href="{% static 'images/kmm.png' %}">
+  <script>
+    tailwind = { config: { prefix: 'tw-', corePlugins: { preflight: false } } };
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
   <style>
     @font-face {
       font-family: 'Noto Sans Gujarati';
@@ -40,57 +45,43 @@
   <div class="public-landing">
     {% include "public/_nav.html" %}
 
-    <header id="top" class="public-carousel-wrap">
-      <div id="kmmHeroCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel" data-bs-interval="4800">
-        <div class="carousel-indicators">
-          <button type="button" data-bs-target="#kmmHeroCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
-          <button type="button" data-bs-target="#kmmHeroCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
-          <button type="button" data-bs-target="#kmmHeroCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
-        </div>
-        <div class="carousel-inner">
-          <div class="carousel-item active">
-            <img src="{% static 'images/kmm.png' %}" class="d-block w-100 public-carousel-image public-carousel-logo-image" alt="Chaturmas Vaiyavachch 2026">
-            <div class="public-carousel-overlay"></div>
-            <div class="carousel-caption public-carousel-caption text-start">
-              <div class="public-kicker">Kalyan Mitra Mandal</div>
-              <h1>ચાતુર્માસ વૈયાવચ્ચ 2026</h1>
-              <p>વિનંતી, પેકિંગ, સ્ટોક અને વિતરણની પારદર્શક વ્યવસ્થા.</p>
-              <div class="d-flex flex-wrap gap-2">
-                {% if accepting_responses %}
-                  <a class="btn btn-warning btn-lg" href="{{ request_form_url }}">વૈયાવચ્ચ વિનંતી ફોર્મ ભરો</a>
-                {% endif %}
-                <a class="btn btn-outline-light btn-lg" href="{{ requests_url }}">બધી વિનંતીઓ જુઓ</a>
+<header id="top" x-data="kmmHeroCarousel()" x-init="startAutoRotate()" class="tw-relative tw-w-full tw-overflow-hidden tw-bg-slate-950 tw-h-[500px] md:tw-h-[600px]">
+      <div class="tw-relative tw-h-full tw-w-full">
+        <template x-for="slide in slides" :key="slide.id">
+          <div
+            x-show="activeSlide === slide.id"
+            x-transition:enter="tw-transition tw-ease-out tw-duration-700"
+            x-transition:enter-start="tw-opacity-0 tw-translate-x-10"
+            x-transition:enter-end="tw-opacity-100 tw-translate-x-0"
+            x-transition:leave="tw-transition tw-ease-in tw-duration-500"
+            x-transition:leave-start="tw-opacity-100 tw-translate-x-0"
+            x-transition:leave-end="tw-opacity-0 -tw-translate-x-10"
+            class="tw-absolute tw-inset-0"
+            :class="'kmm-hero-bg-' + slide.id"
+          >
+            <div class="tw-absolute tw-inset-0 tw-bg-gradient-to-t tw-from-slate-950 tw-via-slate-900/60 tw-to-transparent"></div>
+            <div class="tw-relative tw-z-10 tw-flex tw-h-full tw-items-center">
+              <div class="tw-mx-auto tw-w-full tw-max-w-4xl tw-px-6 tw-pt-8 tw-pb-20 tw-text-center md:tw-text-left">
+                <span class="kmm-hero-badge tw-inline-flex tw-items-center tw-gap-2 tw-rounded-full tw-border tw-border-white/10 tw-bg-white/10 tw-px-4 tw-py-1.5 tw-text-xs tw-font-semibold tw-tracking-widest tw-text-emerald-300 tw-backdrop-blur-md" x-text="slide.badge"></span>
+                <h1 class="kmm-hero-title tw-mt-4 tw-text-3xl tw-font-bold tw-leading-tight tw-text-white md:tw-text-5xl" x-html="slide.heading"></h1>
+                <p class="kmm-hero-sub tw-mx-auto tw-mt-4 tw-max-w-2xl tw-text-sm tw-leading-relaxed tw-text-slate-300 md:tw-mx-0 md:tw-text-lg" x-text="slide.subtext"></p>
+                <div class="tw-mt-7 tw-flex tw-flex-wrap tw-justify-center tw-gap-3 md:tw-justify-start" x-html="slide.ctas"></div>
               </div>
             </div>
           </div>
-          <div class="carousel-item">
-            <img src="{% static 'images/kmm.png' %}" class="d-block w-100 public-carousel-image public-carousel-logo-image" alt="Kalyan Mitra Mandal logo">
-            <div class="public-carousel-overlay"></div>
-            <div class="carousel-caption public-carousel-caption text-start">
-              <div class="public-kicker">Since 2008</div>
-              <h1>સેવા, સંવેદના અને પારદર્શિતા</h1>
-              <p>મિત્રોના સમય, કુશળતા, ઉર્જા અને પ્રેમથી ચાલતું સમાજસેવાનું કાર્ય.</p>
-              <a class="btn btn-outline-light btn-lg" href="#about">અમારી વાર્તા વાંચો</a>
-            </div>
-          </div>
-          <div class="carousel-item">
-            <img src="{% static 'images/kmm.png' %}" class="d-block w-100 public-carousel-image public-carousel-logo-image" alt="Vaiyavachch management">
-            <div class="public-carousel-overlay"></div>
-            <div class="carousel-caption public-carousel-caption text-start">
-              <div class="public-kicker">Live Public Board</div>
-              <h1>દરેક ઓર્ડરનો સ્ટેટસ એક જ જગ્યાએ</h1>
-              <p>Open, Pending, Packing done, On route, Recieved by M.S. અને Return status સુધી.</p>
-            </div>
-          </div>
-        </div>
-        <button class="carousel-control-prev" type="button" data-bs-target="#kmmHeroCarousel" data-bs-slide="prev">
-          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-          <span class="visually-hidden">Previous</span>
-        </button>
-        <button class="carousel-control-next" type="button" data-bs-target="#kmmHeroCarousel" data-bs-slide="next">
-          <span class="carousel-control-next-icon" aria-hidden="true"></span>
-          <span class="visually-hidden">Next</span>
-        </button>
+        </template>
+      </div>
+
+      <div class="tw-absolute tw-bottom-5 tw-left-1/2 tw-z-20 tw-flex -tw-translate-x-1/2 tw-items-center tw-gap-2 tw-rounded-full tw-bg-slate-950/40 tw-border tw-border-white/5 tw-px-4 tw-py-2 tw-backdrop-blur-md">
+        <template x-for="n in slideCount" :key="n">
+          <button
+            type="button"
+            @click="goTo(n)"
+            :class="activeSlide === n ? 'tw-w-8 tw-bg-emerald-400' : 'tw-w-2.5 tw-bg-white/40 hover:tw-bg-white/70'"
+            class="tw-h-2.5 tw-rounded-full tw-border-0 tw-transition-all tw-duration-500"
+            :aria-label="'Slide ' + n"
+          ></button>
+        </template>
       </div>
     </header>
 
@@ -174,6 +165,76 @@
     </footer>
   </div>
 
+  <script>
+    function kmmHeroCarousel() {
+      const ctaEm = (label, href) =>
+        '<a href="' + href + '" class="tw-inline-flex tw-items-center tw-gap-2 tw-rounded-full tw-bg-emerald-600 tw-px-6 tw-py-3 tw-text-sm tw-font-semibold tw-text-white tw-shadow-lg tw-shadow-emerald-900/30 tw-transition tw-duration-300 hover:tw-bg-emerald-500 hover:tw-shadow-emerald-700/40">' + label + '</a>';
+      const ctaGlass = (label, href) =>
+        '<a href="' + href + '" class="tw-inline-flex tw-items-center tw-gap-2 tw-rounded-full tw-border tw-border-white/20 tw-bg-white/10 tw-px-6 tw-py-3 tw-text-sm tw-font-semibold tw-text-white tw-backdrop-blur-md tw-transition tw-duration-300 hover:tw-bg-white/20">' + label + '</a>';
+      const ctaAmber = (label, href) =>
+        '<a href="' + href + '" class="tw-inline-flex tw-items-center tw-gap-2 tw-rounded-full tw-bg-amber-500 tw-px-6 tw-py-3 tw-text-sm tw-font-semibold tw-text-slate-950 tw-shadow-lg tw-shadow-amber-900/30 tw-transition tw-duration-300 hover:tw-bg-amber-400">' + label + '</a>';
+
+      return {
+        activeSlide: 1,
+        slideCount: 6,
+        timer: null,
+        slides: [
+          {
+            id: 1,
+            badge: 'Since 2008  |  ૧૫+ વર્ષનો સ્થાપના સ્તંભ',
+            heading: '૧૫+ વર્ષથી નિઃસ્વાર્થ <span class="tw-text-emerald-400">માનવતા અને જિનાજ્ઞા</span> સેવા',
+            subtext: 'વિનંતી, પેકિંગ, સ્ટોક અને વિતરણની પારદર્શક વ્યવસ્થા. ૨,૦૦૦+ સાધુ-સાધ્વીજીની વૈયાવચ્ચ સેવા, જિનાજ્ઞાનું સંરક્ષણ અને ચાતુર્માસ સંવર્ધન.',
+            ctas: {% if accepting_responses %}ctaEm('વૈયાવચ્ચ વિનંતી ફોર્મ ભરો', '{{ request_form_url }}') + {% endif %}ctaEm('અમારી સફર જુઓ', '#kmm-journey') + ctaGlass('અમારા વિશે', '#about')
+          },
+          {
+            id: 2,
+            badge: 'વૈયાવચ્ચ અને સુપાત્રદાન',
+            heading: 'ચાતુર્માસ અને ઉનાળુ <span class="tw-text-emerald-400">સેવા ભક્તિ</span>',
+            subtext: '૪૫૦+ ઉપાશ્રયો અને ૯૫+ પ્રકારની વૈયાવચ્ચ સામગ્રી — સુપાત્રદાન સાથે પારદર્શક વિતરણ.',
+            ctas: ctaEm('વિનંતીઓ અને સ્ટોક જુઓ', '{{ requests_url }}')
+          },
+          {
+            id: 3,
+            badge: 'તીર્થ રક્ષા, જયણા અને સંવર્ધન',
+            heading: '<span class="tw-text-amber-400">રક્ષા, ભક્તિ અને જીર્ણોદ્ધાર</span> તીર્થ સેવા',
+            subtext: 'ગિરનાર અને શત્રુંજય સહિત તીર્થો પર જયણા, હોટ-કોટિંગ પેઇન્ટિંગ, તીર્થ શુદ્ધિ અભિયાન અને જિનાલય જીર્ણોદ્ધાર.',
+            ctas: ctaAmber('તીર્થ સેવા પ્રવૃત્તિઓ જુઓ', '#kmm-journey')
+          },
+          {
+            id: 4,
+            badge: 'અબોલ જીવ રક્ષા અને અભયદાન',
+            heading: 'કસાઈના મુખમાંથી <span class="tw-text-emerald-400">જીવ મુક્તિ</span> અને પાંજરાપોળ નિભાવ',
+            subtext: 'પર્યુષણ મહાપર્વ સેવા, અબોલ જીવોની રક્ષા અને પાંચસર મહાજન પાંજરાપોળ નિભાવ.',
+            ctas: ctaEm('જીવદયા પ્રવૃત્તિઓ જુઓ', '#kmm-journey')
+          },
+          {
+            id: 5,
+            badge: 'અનુકંપાદાન અને ગ્રીષ્મ રાહત',
+            heading: 'ભરઉનાળે <span class="tw-text-emerald-400">કેરી રસ-પૂરી ભોજન પ્રસાદ</span> અને શીતળતા વિતરણ',
+            subtext: '૧,૧૦૦+ શ્રમિક પરિવારોને કેરી રસ, પૂરી-શાક; પાણીની પરબ, છાશ અને સન-કેપ ચેરિટી.',
+            ctas: ctaEm('રાહત કાર્યોની વિગતો', '#kmm-journey')
+          },
+          {
+            id: 6,
+            badge: 'શિયાળુ રાહત ઝુંબેશ',
+            heading: 'કડકડતી ઠંડીમાં <span class="tw-text-emerald-400">મધ્યરાત્રિ સેવા</span> અને બ્લેન્કેટ વિતરણ',
+            subtext: '9.0°C ની કડકડતી ઠંડીમાં મધ્યરાત્રિ સેવા, બ્લેન્કેટ, કનપટ્ટી અને બાજરા-ખીચડી કિટ વિતરણ.',
+            ctas: ctaEm('સેવા રેકોર્ડ જુઓ', '#kmm-journey')
+          }
+        ],
+        startAutoRotate() {
+          clearInterval(this.timer);
+          this.timer = setInterval(() => {
+            this.activeSlide = this.activeSlide >= this.slideCount ? 1 : this.activeSlide + 1;
+          }, 6000);
+        },
+        goTo(n) {
+          this.activeSlide = n;
+          this.startAutoRotate();
+        }
+      };
+    }
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>window.KMM_JOURNEY_DATA = {{ journey_data_json|safe }};</script>
   <script src="{% static 'js/kmm_journey.js' %}"></script>
